@@ -1,0 +1,1538 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>800</width>
+    <height>600</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="qtsqueeze3.qrc">
+    <normaloff>:/img/lib/images/squeezeplayer.png</normaloff>:/img/lib/images/squeezeplayer.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>6</x>
+      <y>299</y>
+      <width>761</width>
+      <height>291</height>
+     </rect>
+    </property>
+    <property name="tabShape">
+     <enum>QTabWidget::Rounded</enum>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>20</width>
+      <height>20</height>
+     </size>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Current</string>
+     </attribute>
+     <widget class="QWidget" name="cfWidget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>761</width>
+        <height>271</height>
+       </rect>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>760</width>
+        <height>270</height>
+       </size>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Artists</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Albums</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_4">
+     <attribute name="title">
+      <string>Genres</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_5">
+     <attribute name="title">
+      <string>Years</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_6">
+     <attribute name="title">
+      <string>Web</string>
+     </attribute>
+     <widget class="QWebView" name="webView">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>751</width>
+        <height>261</height>
+       </rect>
+      </property>
+      <property name="url">
+       <url>
+        <string>http://10.6.75.81:9000/</string>
+       </url>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_7">
+     <attribute name="title">
+      <string>Interface Settings</string>
+     </attribute>
+     <widget class="QPushButton" name="btnApplyDisplay">
+      <property name="geometry">
+       <rect>
+        <x>530</x>
+        <y>212</y>
+        <width>108</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Apply</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnDefaultsDisplay">
+      <property name="geometry">
+       <rect>
+        <x>642</x>
+        <y>212</y>
+        <width>108</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Defaults</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnCoverFlowColor">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>230</width>
+        <height>29</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Coverflow Background Color</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnDisplayBackgroundColor">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>45</y>
+        <width>230</width>
+        <height>29</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Display Background Color</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnDisplayTextColor">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>80</y>
+        <width>230</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Display Text Color</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_2">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>184</y>
+        <width>154</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Text Scroll Speed:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spnSpeed">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>179</y>
+        <width>65</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>100</number>
+      </property>
+      <property name="value">
+       <number>30</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>149</y>
+        <width>201</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Interval Before Scroll Begins:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spnInterval">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>142</y>
+        <width>65</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>1000</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="singleStep">
+       <number>100</number>
+      </property>
+      <property name="value">
+       <number>5000</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lblCoverFlowColor">
+      <property name="geometry">
+       <rect>
+        <x>261</x>
+        <y>3</y>
+        <width>64</width>
+        <height>37</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Sunken</enum>
+      </property>
+      <property name="lineWidth">
+       <number>1</number>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lblDisplayBackgroundColor">
+      <property name="geometry">
+       <rect>
+        <x>261</x>
+        <y>39</y>
+        <width>64</width>
+        <height>37</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Sunken</enum>
+      </property>
+      <property name="lineWidth">
+       <number>1</number>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lblDisplayTextColor">
+      <property name="geometry">
+       <rect>
+        <x>261</x>
+        <y>74</y>
+        <width>64</width>
+        <height>37</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Sunken</enum>
+      </property>
+      <property name="lineWidth">
+       <number>1</number>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_8">
+     <attribute name="title">
+      <string>Connection Settings</string>
+     </attribute>
+     <widget class="QLabel" name="label_3">
+      <property name="geometry">
+       <rect>
+        <x>19</x>
+        <y>175</y>
+        <width>148</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Select Audio Output:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="txtHttpPort">
+      <property name="geometry">
+       <rect>
+        <x>179</x>
+        <y>77</y>
+        <width>200</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="inputMask">
+       <string>000000; </string>
+      </property>
+      <property name="text">
+       <string>9000</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="txtServerAddress">
+      <property name="geometry">
+       <rect>
+        <x>179</x>
+        <y>7</y>
+        <width>200</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="inputMask">
+       <string>000.000.000.000; </string>
+      </property>
+      <property name="text">
+       <string>127.0.0.1</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>19</x>
+        <y>81</y>
+        <width>108</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>LMS Http Port:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="lblUpdateOnRestart">
+      <property name="geometry">
+       <rect>
+        <x>19</x>
+        <y>213</y>
+        <width>478</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="palette">
+       <palette>
+        <active>
+         <colorrole role="WindowText">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Text">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </active>
+        <inactive>
+         <colorrole role="WindowText">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Text">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </inactive>
+        <disabled>
+         <colorrole role="WindowText">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>141</red>
+            <green>138</green>
+            <blue>136</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Text">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>166</red>
+            <green>165</green>
+            <blue>165</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </disabled>
+       </palette>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_4">
+      <property name="geometry">
+       <rect>
+        <x>19</x>
+        <y>116</y>
+        <width>156</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>LMS CLI Interfact Port:</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="cbAudioOutput">
+      <property name="geometry">
+       <rect>
+        <x>179</x>
+        <y>171</y>
+        <width>565</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="txtAudioPort">
+      <property name="geometry">
+       <rect>
+        <x>179</x>
+        <y>42</y>
+        <width>200</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="inputMask">
+       <string>000000; </string>
+      </property>
+      <property name="text">
+       <string>3483</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="txtCLIPort">
+      <property name="geometry">
+       <rect>
+        <x>179</x>
+        <y>112</y>
+        <width>200</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="inputMask">
+       <string>000000; </string>
+      </property>
+      <property name="text">
+       <string>9090</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_6">
+      <property name="geometry">
+       <rect>
+        <x>21</x>
+        <y>46</y>
+        <width>122</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>LMS Audio Port:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>19</x>
+        <y>11</y>
+        <width>149</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>LMS Server Address:</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnDefaultsConnection">
+      <property name="geometry">
+       <rect>
+        <x>640</x>
+        <y>210</y>
+        <width>108</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Defaults</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnApplyConnection">
+      <property name="geometry">
+       <rect>
+        <x>530</x>
+        <y>210</y>
+        <width>108</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Apply</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>-10</x>
+      <y>-10</y>
+      <width>771</width>
+      <height>306</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QLabel" name="lblSlimDisplay">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>751</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Sunken</enum>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+    </widget>
+    <widget class="QFrame" name="frame_2">
+     <property name="geometry">
+      <rect>
+       <x>590</x>
+       <y>90</y>
+       <width>161</width>
+       <height>210</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <widget class="QPushButton" name="btn9">
+      <property name="geometry">
+       <rect>
+        <x>105</x>
+        <y>104</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_9.png</normalon>
+        <selectedon>:/img/lib/images/btn_9_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn2">
+      <property name="geometry">
+       <rect>
+        <x>55</x>
+        <y>6</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_2.png</normalon>
+        <selectedon>:/img/lib/images/btn_2_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn4">
+      <property name="geometry">
+       <rect>
+        <x>5</x>
+        <y>55</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_4.png</normalon>
+        <selectedon>:/img/lib/images/btn_4_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn3">
+      <property name="geometry">
+       <rect>
+        <x>104</x>
+        <y>6</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_3.png</normalon>
+        <selectedon>:/img/lib/images/btn_3_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn6">
+      <property name="geometry">
+       <rect>
+        <x>105</x>
+        <y>55</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_6.png</normalon>
+        <selectedon>:/img/lib/images/btn_6_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn8">
+      <property name="geometry">
+       <rect>
+        <x>55</x>
+        <y>104</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_8.png</normalon>
+        <selectedon>:/img/lib/images/btn_8_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn5">
+      <property name="geometry">
+       <rect>
+        <x>55</x>
+        <y>55</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_5.png</normalon>
+        <selectedon>:/img/lib/images/btn_5_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn1">
+      <property name="geometry">
+       <rect>
+        <x>5</x>
+        <y>6</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_1.png</normalon>
+        <selectedon>:/img/lib/images/btn_1_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn7">
+      <property name="geometry">
+       <rect>
+        <x>5</x>
+        <y>104</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_7.png</normalon>
+        <selectedon>:/img/lib/images/btn_7_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btn0">
+      <property name="geometry">
+       <rect>
+        <x>54</x>
+        <y>154</y>
+        <width>51</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/btn_0.png</normalon>
+        <selectedon>:/img/lib/images/btn_0_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QFrame" name="frame_3">
+     <property name="geometry">
+      <rect>
+       <x>345</x>
+       <y>90</y>
+       <width>244</width>
+       <height>210</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <widget class="QPushButton" name="btnNowPlaying">
+      <property name="geometry">
+       <rect>
+        <x>5</x>
+        <y>149</y>
+        <width>234</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/nowPlaying.png</normalon>
+        <selectedon>:/img/lib/images/nowPlaying_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>120</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnLeftArrow">
+      <property name="geometry">
+       <rect>
+        <x>5</x>
+        <y>51</y>
+        <width>117</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/leftArrow.png</normalon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnUpArrow">
+      <property name="geometry">
+       <rect>
+        <x>5</x>
+        <y>2</y>
+        <width>234</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/upArrow.png</normalon>
+        <selectedon>:/img/lib/images/upArrow_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnDownArrow">
+      <property name="geometry">
+       <rect>
+        <x>5</x>
+        <y>96</y>
+        <width>234</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/downArrow.png</normalon>
+        <selectedon>:/img/lib/images/downArrow_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnRightArrow">
+      <property name="geometry">
+       <rect>
+        <x>122</x>
+        <y>51</y>
+        <width>117</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/rightArrow.png</normalon>
+        <selectedon>:/img/lib/images/rightArrow_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QFrame" name="frame_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>331</width>
+       <height>210</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <widget class="QPushButton" name="btnPower">
+      <property name="geometry">
+       <rect>
+        <x>13</x>
+        <y>55</y>
+        <width>60</width>
+        <height>60</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Power</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnStop">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>0</y>
+        <width>51</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/stop.png</normalon>
+        <selectedon>:/img/lib/images/stop_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnUpVolume">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>60</y>
+        <width>51</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/volup.png</normalon>
+        <selectedon>:/img/lib/images/volup_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnMute">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>60</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/mute.png</normalon>
+        <selectedon>:/img/lib/images/mute_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnRepeat">
+      <property name="geometry">
+       <rect>
+        <x>57</x>
+        <y>120</y>
+        <width>55</width>
+        <height>55</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Repeat</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnDownVolume">
+      <property name="geometry">
+       <rect>
+        <x>110</x>
+        <y>60</y>
+        <width>51</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/voldown.png</normalon>
+        <selectedon>:/img/lib/images/voldown_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnAdd">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>0</y>
+        <width>51</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/add.png</normalon>
+        <selectedon>:/img/lib/images/add_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnRewind">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>51</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/rewind.png</normalon>
+        <selectedon>:/img/lib/images/rewind_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnSearch">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>120</y>
+        <width>55</width>
+        <height>55</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Search</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnFForward">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>0</y>
+        <width>51</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/fforward.png</normalon>
+        <selectedon>:/img/lib/images/fforward_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnSize">
+      <property name="geometry">
+       <rect>
+        <x>165</x>
+        <y>120</y>
+        <width>55</width>
+        <height>55</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Size</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnShuffle">
+      <property name="geometry">
+       <rect>
+        <x>4</x>
+        <y>120</y>
+        <width>55</width>
+        <height>55</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Shuffle</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnPlay">
+      <property name="geometry">
+       <rect>
+        <x>110</x>
+        <y>0</y>
+        <width>51</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/play.png</normalon>
+        <selectedon>:/img/lib/images/play_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnPause">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>0</y>
+        <width>51</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/img/lib/images/pause.png</normalon>
+        <selectedon>:/img/lib/images/pause_selected.png</selectedon>
+       </iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="autoRepeat">
+       <bool>true</bool>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnSleep">
+      <property name="geometry">
+       <rect>
+        <x>273</x>
+        <y>120</y>
+        <width>55</width>
+        <height>55</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Sleep</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnBright">
+      <property name="geometry">
+       <rect>
+        <x>111</x>
+        <y>120</y>
+        <width>55</width>
+        <height>55</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Bright</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QWebView</class>
+   <extends>QWidget</extends>
+   <header>QtWebKit/QWebView</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>btnRewind</tabstop>
+  <tabstop>btnStop</tabstop>
+  <tabstop>btnPlay</tabstop>
+  <tabstop>btnPause</tabstop>
+  <tabstop>btnFForward</tabstop>
+  <tabstop>btnAdd</tabstop>
+  <tabstop>btnDownVolume</tabstop>
+  <tabstop>btnUpVolume</tabstop>
+  <tabstop>btnMute</tabstop>
+  <tabstop>btnUpArrow</tabstop>
+  <tabstop>btnRightArrow</tabstop>
+  <tabstop>btnDownArrow</tabstop>
+  <tabstop>btnLeftArrow</tabstop>
+  <tabstop>btnNowPlaying</tabstop>
+  <tabstop>btn0</tabstop>
+  <tabstop>btn1</tabstop>
+  <tabstop>btn2</tabstop>
+  <tabstop>btn3</tabstop>
+  <tabstop>btn4</tabstop>
+  <tabstop>btn5</tabstop>
+  <tabstop>btn6</tabstop>
+  <tabstop>btn7</tabstop>
+  <tabstop>btn8</tabstop>
+  <tabstop>btn9</tabstop>
+  <tabstop>btnShuffle</tabstop>
+  <tabstop>btnRepeat</tabstop>
+  <tabstop>btnBright</tabstop>
+  <tabstop>btnSize</tabstop>
+  <tabstop>btnSearch</tabstop>
+  <tabstop>btnSleep</tabstop>
+  <tabstop>btnPower</tabstop>
+  <tabstop>tabWidget</tabstop>
+ </tabstops>
+ <resources>
+  <include location="qtsqueeze3.qrc"/>
+ </resources>
+ <connections/>
+ <designerdata>
+  <property name="gridDeltaX">
+   <number>10</number>
+  </property>
+  <property name="gridDeltaY">
+   <number>10</number>
+  </property>
+  <property name="gridSnapX">
+   <bool>false</bool>
+  </property>
+  <property name="gridSnapY">
+   <bool>false</bool>
+  </property>
+  <property name="gridVisible">
+   <bool>true</bool>
+  </property>
+ </designerdata>
+</ui>
