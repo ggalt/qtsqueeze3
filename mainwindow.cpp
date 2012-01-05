@@ -19,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     squeezePlayer = new QProcess( this );
     slimCLI = new SlimCLI( this );
+    serverInfo = new SlimServerInfo(this);
+
     mySettings = new QSettings("qtsqueeze3", "qtsqueeze3");
     vertTransTimer = new QTimeLine( 350, this );
     horzTransTimer = new QTimeLine( 700, this );
@@ -149,11 +151,13 @@ bool MainWindow::Create(void)
     slimCLI->SetMACAddress( MacAddress );
     slimCLI->SetSlimServerAddress( SlimServerAddr );
     slimCLI->SetCliPort(SlimServerCLIPort);
-    slimCLI->SetHttpPort(SlimServerHttpPort);
+//    slimCLI->SetHttpPort(SlimServerHttpPort);
 
     connect( slimCLI, SIGNAL(FinishedInitializingDevices()),
              this, SLOT(slotSetActivePlayer()) );              // we want to wait to set up the display until the devices are established
+    slimCLI->SetServerInfo(serverInfo);                         // give pointer so CLI can get server info and put into SlimServerInfo
     slimCLI->Init();
+
     SetUpDisplay();
 
     // establish the proper URL for the web interface
@@ -686,12 +690,12 @@ void MainWindow::slotSetActivePlayer( void )
 {
     if( this->isStartUp ) { // if this is the first time through, let's trigger a process to make sure we have all the images
     }
-    slotSetActivePlayer( slimCLI->GetDeviceFromMac( MacAddress.toPercentEncoding().toLower() ) );
+    slotSetActivePlayer( serverInfo->GetDeviceFromMac( MacAddress.toPercentEncoding().toLower() ) );
 }
 
 void MainWindow::slotSetActivePlayer( SlimDevice *d )
 {
-    slimCLI->SetCurrentDevice( d );
+    serverInfo->SetCurrentDevice( d );
     activeDevice = d;
     slotUpdateSlimDisplay();
     slotCreateCoverFlow();

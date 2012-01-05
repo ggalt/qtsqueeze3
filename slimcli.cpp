@@ -15,7 +15,7 @@
 #define VERBOSE(...)
 #endif
 
-#define PATH "./qtsqueezeimage.dat"
+//#define PATH "./qtsqueezeimage.dat"
 
 
 // ------------------------------------------------------------------------------------------------
@@ -25,19 +25,14 @@
 // ------------------------------------------------------------------------------------------------
 
 SlimCLI::SlimCLI( QObject *parent, const char *name ) : QObject( parent ) {
-    macAddress = '\0';
-    ipAddress = '\0';
     SlimServerAddr = "127.0.0.1";
     cliPort = 9090;        // default, but user can reset
-    httpPort = 9000;        // default, but user can reset
     MaxRequestSize = "100";    // max size of any cli request (used for limiting each request for albums, artists, songs, etc., so we don't time out or overload things)
     iTimeOut = 10000;             // number of milliseconds before CLI blocking requests time out
     useAuthentication = false;  // assume we don't need it unless we do
     isAuthenticated = true;   // we will assume that authentication is not used (and therefore we have been authenticated!!)
     maintainConnection = true;
-    imageSize = 200;
-    imageSizeStr = "/cover_200x200";
-    httpID = 0;               // ID of HTTP transaction
+    myCliState = CLI_DISCONNECTED;
     // NOTE: Init() must be called explicitly **after** we've set a few additional items such as the username and password if any
 }
 
@@ -47,16 +42,11 @@ SlimCLI::~SlimCLI(){
     SendCommand ( "exit" );  // shut down CLI interface
     slimCliSocket->flush();
     delete slimCliSocket;
-    delete imageURL;
-    WriteImageFile(); // save images
 }
 
 
 void SlimCLI::Init( void )
 {
-    imageURL = new QHttp( this );
-    imageURL->setHost( SlimServerAddr, httpPort );
-
     slimCliSocket = new QTcpSocket( this );
     bool ok;
     qint64 buffsize = MaxRequestSize.toInt( &ok ) * 5000;  // initialize the read buffer to read up to MaxRequestSize * 5000 bytes
@@ -64,15 +54,10 @@ void SlimCLI::Init( void )
         buffsize = 500000;
     slimCliSocket->setReadBufferSize( buffsize );
 
-
     if( !cliUsername.isEmpty() && !cliPassword.isEmpty() ) { // we need to authenticate
         useAuthentication = true;
         isAuthenticated = false;  // will be reset later if we succeed
     }
-
-    emit cliInfo( QString( "Loading Images" ) );
-
-    ReadImageFile();  // read in images
 
     connect( slimCliSocket, SIGNAL(connected()),
              this, SLOT( CLIConnectionOpen() ) );
@@ -84,152 +69,17 @@ void SlimCLI::Init( void )
     //NOTE: WE HAVE NOT YET CONNECTED THE READYREAD SIGNAL TO THE MSGWAITING SLOT SO THAT WE CAN DO SOME BLOCKING CALLS TO THE CLI
 }
 
-bool SlimCLI::SetupDevices( void )
-{
-    emit cliInfo( "Analyzing Attached Players" );
-    QByteArray cmd = QByteArray("player count ?\n" );
-
-    int loopCounter = 0;
-
-    while( !deviceList.contains( this->macAddress.toLower() ) && loopCounter++ < 5 ) {
-        if( !SendBlockingCommand( cmd ) ) {
-            QString myMsg = QString( "Error sending blocking command :" ) + cmd;
-            DEBUGF( myMsg );
-            return false;
-        }
-
-        QList<QByteArray> a = response.split( ' ' );  // response should be "player count #", split into 3 fields
-
-        int playerCount = QString( a.at(2) ).trimmed().toInt();
-
-        if( playerCount <= 0 ) { // we have a problem
-            DEBUGF( "NO DEVICES" );
-            return false;
-        }
-
-        for( int i = 0; i < playerCount; i++ ) {
-            cmd = QString( "player id %1 ?\n" ).arg( i ).toAscii();
-            if( !SendBlockingCommand( cmd ) )
-                return false;
-
-            a.clear();
-            a = response.split( ' ' );
-            QString thisId;
-            if( a.at( 3 ).contains( ':' ) )
-                thisId = a.at( 3 ).toLower().toPercentEncoding(); // escape encode the MAC address if necessary
-            else
-                thisId = a.at( 3 ).toLower();
-
-            cmd = QString( "player name %1 ?\n" ).arg( i ).toAscii();
-
-            if( !SendBlockingCommand( cmd ) )
-                return false;
-            a.clear();
-            a = response.split( ' ' );
-            QString thisName = a.at( 3 );
-            GetDeviceNameList().insert( thisName, thisId );  // insert hash of key=Devicename value=MAC address
-
-            cmd = QString( "player ip %1 ?\n" ).arg( i ).toAscii();
-
-            if( !SendBlockingCommand( cmd ) )
-                return false;
-            a.clear();
-            a = response.split( ' ' );
-            QString deviceIP = a.at( 3 );
-            deviceIP = deviceIP.section( QString( "%3A" ), 0, 0 );
-            DEBUGF( thisId.toAscii() << " | " << thisName.toAscii()  << " | " << deviceIP.toAscii()  << " | " << i );
-            deviceList.insert( thisId, new SlimDevice( thisId.toAscii(), thisName.toAscii(), deviceIP.toAscii(), QByteArray::number( i ) ) );
-        }
-    }
-    if( loopCounter >= 5 ) // we failed above
-        return false;
-    else
-        return true;
-}
-
-void SlimCLI::InitDevices( void )
-{
-    emit cliInfo( QString( "Initializing attached devices" ) );
-    QHashIterator< QString, SlimDevice* > i( deviceList );
-    while (i.hasNext()) {
-        i.next();
-        i.value()->Init( this );
-        DEBUGF( "Initializing device: " << i.value()->getDeviceMAC() );
-    }
-    command = "subscribe playlist,mixer,pause,sync,client \n";  // subscribe to playlist messages so that we can get info on it.
-
-    SendCommand( command ); // this will cause us to get messages on playlist change
-    // displaystatus subscribe:all is command to get messages
-    // we need to issue the command for each attached device, and since we're already at the end of the list, let's just go backwards
-
-    while (i.hasPrevious()) {
-        i.previous();
-        command = i.value()->getDeviceMAC() + " displaystatus subscribe:all";
-        DEBUGF( "SENDING DISPLAY COMMAND FOR DEVICE " << command );
-        SendCommand( command );
-    }
-    emit FinishedInitializingDevices();
-}
-
 bool SlimCLI::SetupLogin( void ){
     command.clear();
     QString cmd = QString ("login %1 %2\n" )
-                  .arg( QString( cliUsername.toLatin1() ) )
-                  .arg( QString( cliPassword.toLatin1() ) );
+            .arg( QString( cliUsername.toLatin1() ) )
+            .arg( QString( cliPassword.toLatin1() ) );
     command.append( cmd );
 
     if( !waitForResponse() ) // NOTE: WE HAVE NO NEED TO PROCESS THE RESPONSE SINCE SUCCESS GIVES NO INFO AND FAILURE TRIGGERS A DISCONNECT
         return false;
     else
         return true;
-}
-
-void SlimCLI::InitImageCollection( void )
-{
-    coverIterator = new QHashIterator< QString, QPixmap >( serverImageList );
-    connect( this, SIGNAL( ImageReceived(int) ), this, SLOT( slotImageCollection() ) );
-    slotImageCollection();
-}
-
-void SlimCLI::slotImageCollection( void )
-{
-    if( coverIterator->hasNext() ) {
-        coverIterator->next();
-        AlbumArtAvailable( coverIterator->key() );
-    }
-    else  // if we are done, disconnect
-        disconnect( this, SIGNAL( ImageReceived(int) ), this, SLOT( slotImageCollection() ) );
-}
-
-void SlimCLI::ReadImageFile( void )
-{
-    QFile file;
-    if( file.exists( PATH ) ) // there is a file, so read from it
-        file.setFileName( PATH );
-    else
-        return;
-
-    //update the images
-    file.open(QIODevice::ReadOnly);
-    QDataStream in(&file);   // read the data serialized from the file
-    in >> serverImageList;
-    DEBUGF( "Reading file of size: " << file.size() );
-    file.close();
-    return;
-}
-
-void SlimCLI::WriteImageFile( void )
-{
-    QFile file;
-    file.setFileName( PATH );
-
-    //update the images
-    file.open(QIODevice::WriteOnly);
-    QDataStream out(&file);   // read the data serialized from the file
-    out << serverImageList;
-    DEBUGF( "Writing file of size: " << file.size() );
-    file.close();
-    return;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -248,22 +98,22 @@ bool SlimCLI::CLIConnectionOpen( void ){
     // NOTE: these commands are sent from here rather than using the SendCommand() function because we DO NOT want to place the MAC address in front of them
     // we'll use a blocking call for authentication and grabbing the available players because it's easier and it's quick
 
+    myCliState = CLI_CONNECTED;
     emit cliInfo( QString( "Establishing Connection to Squeezebox Server" ) );
     DEBUGF( "Authenticating" );
     if( useAuthentication )
         if( !SetupLogin() ) {
-        emit cliError( 0, QString( "No login" ) );
-        return false;
-    }
+            emit cliError( 0, QString( "No login" ) );
+            return false;
+        }
 
     isAuthenticated = true;   // we've made it to here, so we are authenticated (either through u/p combo, or because there is no u/p
 
-    connect( imageURL, SIGNAL(requestFinished(int,bool)),
-             this, SLOT(slotImageReceived(int,bool)) );
-
-    DEBUGF( "Device Setup" );
-    if( !SetupDevices() ) {
-        emit cliError( 0, QString( "Error collecting information on devices attached to server" ) );
+    DEBUGF( "Get Server Info");
+    myCliState = SETUP_SERVER;
+    emit cliInfo(QString("Gather Server Info"));
+    if(!serverInfo->Init(this)) {
+        cliError(SETUP_DATABASEERROR,QString("Error setting up server info"));
         return false;
     }
 
@@ -271,7 +121,8 @@ bool SlimCLI::CLIConnectionOpen( void ){
     connect( slimCliSocket, SIGNAL(disconnected()),      this, SLOT( LostConnection() ) );
 
     DEBUGF( "Device Init" );
-    InitDevices();    // this will initalize the devices and set up receiving playing and display messages from the cli
+    myCliState = SETUP_DEVICES;
+    serverInfo->InitDevices();    // this will initalize the devices and set up receiving playing and display messages from the cli
 
     return true;
 }
@@ -323,6 +174,14 @@ bool SlimCLI::SendCommand( QByteArray c ){
     }
     else
         return false;
+}
+
+QByteArray SlimCLI::GetBlockingCommandResponse( QByteArray c )
+{
+    if(SendBlockingCommand(c))
+        return response;
+    else
+        return NULL;
 }
 
 bool SlimCLI::SendBlockingCommand( QByteArray c ) {
@@ -468,7 +327,7 @@ void SlimCLI::ProcessControlMsg( void )
 
 
 QPixmap SlimCLI::GetAlbumArt( QString albumArtID, bool waitforrequest )
-        // note, this blocks for up to 3 seconds (should make this value user configurable) as default
+// note, this blocks for up to 3 seconds (should make this value user configurable) as default
 {
     QTime t;
     t.start();
@@ -545,11 +404,6 @@ bool SlimCLI::SetMACAddress( QString addr )
         macAddress = addr.toAscii().toPercentEncoding();
     else
         macAddress = addr.toAscii();
-}
-
-bool SlimCLI::SetIPAddress( QString ipAddrs ){
-    ipAddress = ipAddrs;
-    return true;
 }
 
 void SlimCLI::SetSlimServerAddress( QString addr ){

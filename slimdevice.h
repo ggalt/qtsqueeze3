@@ -10,36 +10,7 @@
 #include <QWidget>
 
 
-#include "slimcli.h"
-
-class TrackData
-{
-public:
-    QByteArray playlist_index;
-    QByteArray title;
-    QByteArray genre;
-    QByteArray artist;
-    QByteArray album;
-    QByteArray tracknum;
-    QByteArray year;
-    QByteArray duration;
-    QByteArray artwork_track_id;
-};
-
-class DisplayBuffer
-{
-public:
-    QString displayUpdateType;
-    QString line0;
-    QString line1;
-    QString overlay0;
-    QString overlay1;
-    QString center0;
-    QString center1;
-};
-
-typedef QHash< QString, QString > SlimItem;
-typedef QList< TrackData > CurrentPlayList;
+#include "squeezedefines.h"
 
 class SlimDevice : public QObject
 {
