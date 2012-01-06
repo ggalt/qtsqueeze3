@@ -4,15 +4,16 @@
 #include <QHttp>
 #include <QFile>
 #include <QDataStream>
+#include <QBuffer>
 
 #include "squeezedefines.h"
-#include "slimcli.h"
+#include "ImageLoader.h"
 
-class slimImageLoader : public ImageLoader
+class SlimImageLoader : public ImageLoader
 {
 public:
-    slimImageLoader(SlimCLI *slimcli);
-    ~slimImageLoader();
+    SlimImageLoader(SlimCLI *slimcli);
+    ~SlimImageLoader();
 
     bool AlbumArtAvailable( QString albumArtID );
 

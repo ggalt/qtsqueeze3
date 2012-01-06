@@ -81,6 +81,7 @@
 class SlimCLI;          // forward declaration
 class SlimDevice;       // forward declaration
 class SlimServerInfo;   // forward declaration
+class SlimImageLoader;
 
 
 enum { NODEVICELIST = 0, YESDEVICELIST, PLUGINCONTROL, VFDCONTROL };
@@ -136,7 +137,7 @@ public:
     QByteArray tracknum;
     QByteArray year;
     QByteArray duration;
-    QByteArray artwork_track_id;
+    QByteArray coverid;
 };
 
 class DisplayBuffer

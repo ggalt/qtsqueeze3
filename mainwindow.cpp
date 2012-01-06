@@ -537,8 +537,8 @@ void MainWindow::slotCreateCoverFlow( void )
     while( i.hasNext() ) {
         TrackData j = i.next();
         QString title = QString( j.title + " - Artist: " + j.artist + " - Album: " + j.album );
-        CoverFlow->addSlide( slimCLI->GetAlbumArt( j.artwork_track_id ).toImage(), title );
-        DEBUGF( "Adding art work for track id: " << j.artwork_track_id );
+//        CoverFlow->addSlide( slimCLI->GetAlbumArt( j.coverid ).toImage(), title );
+        DEBUGF( "Adding art work for track id: " << j.coverid );
     }
     ui->cfWidget->setEnabled( true );
     DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );

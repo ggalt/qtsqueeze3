@@ -4,6 +4,7 @@
 #include <QtAlgorithms>
 #include "slimcli.h"
 #include "slimdevice.h"
+#include "slimserverinfo.h"
 
 // uncomment the following to turn on debugging
 // #define SLIMCLI_DEBUG
@@ -131,7 +132,6 @@ void SlimCLI::LostConnection( void ){
     // just in case we want to restart things, let's first disconnect the signals and slots that will be established at successful connection
     disconnect( slimCliSocket, SIGNAL(readyRead()), 0, 0 );
     disconnect( slimCliSocket, SIGNAL(disconnected()), 0, 0 );
-    disconnect( imageURL, SIGNAL( requestFinished ( int, bool ) ), 0, 0 );
 
     if( !isAuthenticated && useAuthentication ) // we probably lost the connection due to a bad password
         emit cliError( NOLOGIN );
@@ -273,16 +273,16 @@ void SlimCLI::DeviceMsgProcessing( void )
 {
     DEBUGF( "Device Message: " << this->response );
 
-    if( deviceList.contains( MacAddressOfResponse() ) ) { // check to see if the MAC address corresponds to a known player
+    if( serverInfo->GetDeviceList().contains( MacAddressOfResponse() ) ) { // check to see if the MAC address corresponds to a known player
         QByteArray res = ResponseLessMacAddress();
         if( res.startsWith( "status" ) ) {  // status message
-            deviceList.value( MacAddressOfResponse() )->ProcessStatusSetupMessage( res );
+            serverInfo->GetDeviceList().value( MacAddressOfResponse() )->ProcessStatusSetupMessage( res );
         }
         else if( res.startsWith( "displaystatus" ) ) { // display status message
-            deviceList.value( MacAddressOfResponse() )->ProcessDisplayStatusMsg( res );
+            serverInfo->GetDeviceList().value( MacAddressOfResponse() )->ProcessDisplayStatusMsg( res );
         }
         else {
-            deviceList.value( MacAddressOfResponse() )->ProcessPlayingMsg( res );
+            serverInfo->GetDeviceList().value( MacAddressOfResponse() )->ProcessPlayingMsg( res );
         }
     }
     else {  // wait!  Whose MAC address is this?
@@ -326,69 +326,69 @@ void SlimCLI::ProcessControlMsg( void )
 // ------------------------------------------------------------------------------------------------
 
 
-QPixmap SlimCLI::GetAlbumArt( QString albumArtID, bool waitforrequest )
-// note, this blocks for up to 3 seconds (should make this value user configurable) as default
-{
-    QTime t;
-    t.start();
-    if( !AlbumArtAvailable( albumArtID ) && waitforrequest ) { // check to see if we already have the image, and if not, start process of getting it
-        while( serverImageList.find( albumArtID ) == serverImageList.end() && t.elapsed() < 3000 ) {  // albumArtID isn't in current hash
-            qApp->processEvents();    // allow event queue to move
-        }
-    }
-    if( serverImageList.find( albumArtID ) == serverImageList.end() ) { // OK, we timed out and still didn't get an image, so return a blank image
-        return QPixmap( imageSize, imageSize );
-    }
-    else {
-        return serverImageList.value( albumArtID );   // return the image from the hash table.  This will return a default if no image available
-    }
-}
+////QPixmap SlimCLI::GetAlbumArt( QString albumArtID, bool waitforrequest )
+////// note, this blocks for up to 3 seconds (should make this value user configurable) as default
+////{
+////    QTime t;
+////    t.start();
+////    if( !AlbumArtAvailable( albumArtID ) && waitforrequest ) { // check to see if we already have the image, and if not, start process of getting it
+////        while( serverImageList.find( albumArtID ) == serverImageList.end() && t.elapsed() < 3000 ) {  // albumArtID isn't in current hash
+////            qApp->processEvents();    // allow event queue to move
+////        }
+////    }
+////    if( serverImageList.find( albumArtID ) == serverImageList.end() ) { // OK, we timed out and still didn't get an image, so return a blank image
+////        return QPixmap( imageSize, imageSize );
+////    }
+////    else {
+////        return serverImageList.value( albumArtID );   // return the image from the hash table.  This will return a default if no image available
+////    }
+////}
 
-bool SlimCLI::AlbumArtAvailable( QString albumArtID ) // call to see if image is currently available (it will ask for it and return false if not available)
-{
-    DEBUGF( "Requesting Album Art ID: " << albumArtID );
-    if( serverImageList.find( albumArtID ) == serverImageList.end() ) {  // albumArtID isn't in current hash
-        DEBUGF( "Requesting song cover" );
-        ba.resize( 0 );
-        if( !mybuffer.isOpen() ) {
-            mybuffer.setBuffer( &ba );
-            mybuffer.open( QIODevice::ReadWrite );
-        }
-        GetCoverImage( albumArtID, QString( "/music/" + albumArtID + imageSizeStr ), &mybuffer );
-        return false;
-    }
-    else {
-        return true;   // image is in the hash table
-    }
-}
+//bool SlimCLI::AlbumArtAvailable( QString albumArtID ) // call to see if image is currently available (it will ask for it and return false if not available)
+//{
+//    DEBUGF( "Requesting Album Art ID: " << albumArtID );
+//    if( serverImageList.find( albumArtID ) == serverImageList.end() ) {  // albumArtID isn't in current hash
+//        DEBUGF( "Requesting song cover" );
+//        ba.resize( 0 );
+//        if( !mybuffer.isOpen() ) {
+//            mybuffer.setBuffer( &ba );
+//            mybuffer.open( QIODevice::ReadWrite );
+//        }
+//        GetCoverImage( albumArtID, QString( "/music/" + albumArtID + imageSizeStr ), &mybuffer );
+//        return false;
+//    }
+//    else {
+//        return true;   // image is in the hash table
+//    }
+//}
 
-void SlimCLI::GetCoverImage( QString albumArtID, QString thisImageURL, QIODevice *buffer )
-{
-    if(  useAuthentication ) {  // set up authentication if we need it
-        imageURL->setUser( cliUsername, cliPassword );
-    }
+//void SlimCLI::GetCoverImage( QString albumArtID, QString thisImageURL, QIODevice *buffer )
+//{
+//    if(  useAuthentication ) {  // set up authentication if we need it
+//        imageURL->setUser( cliUsername, cliPassword );
+//    }
 
-    httpID = imageURL->get( thisImageURL, buffer );
-    HttpRequestImageId.insert( httpID, albumArtID );  // this associates the Album Art ID with the HTTP request, so that we can place the correct ID with the image we are receiving blindly back from the server
-}
+//    httpID = imageURL->get( thisImageURL, buffer );
+//    HttpRequestImageId.insert( httpID, albumArtID );  // this associates the Album Art ID with the HTTP request, so that we can place the correct ID with the image we are receiving blindly back from the server
+//}
 
-void SlimCLI::slotImageReceived( int httpId, bool error )
-{
-    QString imageID = HttpRequestImageId.value( httpId );
-    if( !error && imageID.length() > 0 ) {
-        DEBUGF( "Success retrieving image :" << imageID << " of size " << ba.size() );
-        QPixmap pic;
-        pic.loadFromData( ba );
-        DEBUGF( "HttpRequest for Image ID: " << imageID );
-        serverImageList.insert( imageID, pic );    // this gets the Album Art ID associated with this request from the list of HTTP requests and associates this Album Art ID with the image received from this HTTP request
-    }
-    else {
-        DEBUGF( "*****IMAGE ERROR*****" );
-        DEBUGF( "QHTTP Error code: " << imageURL->error() << " with error string: " << imageURL->errorString() );
-    }
-    mybuffer.close();
-    emit ImageReceived( httpId );   // used when we are retrieving a bunch of images
-}
+//void SlimCLI::slotImageReceived( int httpId, bool error )
+//{
+//    QString imageID = HttpRequestImageId.value( httpId );
+//    if( !error && imageID.length() > 0 ) {
+//        DEBUGF( "Success retrieving image :" << imageID << " of size " << ba.size() );
+//        QPixmap pic;
+//        pic.loadFromData( ba );
+//        DEBUGF( "HttpRequest for Image ID: " << imageID );
+//        serverImageList.insert( imageID, pic );    // this gets the Album Art ID associated with this request from the list of HTTP requests and associates this Album Art ID with the image received from this HTTP request
+//    }
+//    else {
+//        DEBUGF( "*****IMAGE ERROR*****" );
+//        DEBUGF( "QHTTP Error code: " << imageURL->error() << " with error string: " << imageURL->errorString() );
+//    }
+//    mybuffer.close();
+//    emit ImageReceived( httpId );   // used when we are retrieving a bunch of images
+//}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -448,9 +448,9 @@ void SlimCLI::RemoveNewLineFromResponse( void )
         response.replace( response.indexOf( '\n' ), 1, " " );
 }
 
-SlimDevice *SlimCLI::GetDeviceFromMac( QByteArray mac )   // use percent encoded MAC address
-{
-    return deviceList.value( QString( mac ), NULL );
-}
+//SlimDevice *SlimCLI::GetDeviceFromMac( QByteArray mac )   // use percent encoded MAC address
+//{
+//    return serverInfo->GetDeviceList().value( QString( mac ), NULL );
+//}
 
 /* vim: set expandtab tabstop=4 shiftwidth=4: */

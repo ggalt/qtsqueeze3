@@ -1,30 +1,41 @@
 #include "slimimageloader.h"
+#include "slimcli.h"
+// uncomment the following to turn on debugging
+//#define SLIMCLI_DEBUG
+
+#ifdef SLIMCLI_DEBUG
+#define DEBUGF(...) qDebug() << __VA_ARGS__
+#else
+#define DEBUGF(...)
+#endif
+
+
 
 #define PATH "./.qtsqueezeimage.dat"
 
-slimImageLoader::slimImageLoader(SlimCLI *slimcli)
+SlimImageLoader::SlimImageLoader(SlimCLI *slimcli)
 {
     cli = slimcli;
 }
 
-slimImageLoader::~slimImageLoader()
+SlimImageLoader::~SlimImageLoader()
 {
     WriteImageFile();
 }
 
-QPixmap slimImageLoader::GetAlbumArt( QString albumArtID, bool waitforrequest = true )
+QPixmap SlimImageLoader::GetAlbumArt( QString albumArtID, bool waitforrequest )
 {
 
 }
 
-void SlimCLI::InitImageCollection( void )
+void SlimImageLoader::InitImageCollection( void )
 {
     coverIterator = new QHashIterator< QString, QPixmap >( serverImageList );
     connect( this, SIGNAL( ImageReceived(int) ), this, SLOT( slotImageCollection() ) );
     slotImageCollection();
 }
 
-void SlimCLI::slotImageCollection( void )
+void SlimImageLoader::slotImageCollection( void )
 {
     if( coverIterator->hasNext() ) {
         coverIterator->next();
@@ -34,7 +45,7 @@ void SlimCLI::slotImageCollection( void )
         disconnect( this, SIGNAL( ImageReceived(int) ), this, SLOT( slotImageCollection() ) );
 }
 
-bool slimImageLoader::ReadImageFile( void )
+bool SlimImageLoader::ReadImageFile( void )
 {
     QFile file;
     ImageFile imgFile;
@@ -46,15 +57,16 @@ bool slimImageLoader::ReadImageFile( void )
     //update the images
     file.open(QIODevice::ReadOnly);
     QDataStream in(&file);   // read the data serialized from the file
-    in >> imgFile;
+    in >> lastRefresh;
+    in >> serverImageList;
     DEBUGF( "Reading file of size: " << file.size() );
     file.close();
-    lastRefresh = imgFile.refreshDate;
-    serverImageList = imgFile.imgList;
+//    lastRefresh = imgFile.refreshDate;
+//    serverImageList = imgFile.imgList;
     return true;
 }
 
-void slimImageLoader::WriteImageFile( void )
+void SlimImageLoader::WriteImageFile( void )
 {
     QFile file;
     ImageFile imgFile;
@@ -63,20 +75,22 @@ void slimImageLoader::WriteImageFile( void )
     //update the images
     file.open(QIODevice::WriteOnly);
     QDataStream out(&file);   // read the data serialized from the file
-    imgFile.refreshDate = lastRefresh;
-    imgFile.imgList = serverImageList;
-    out << imgFile;
+//    imgFile.refreshDate = lastRefresh;
+//    imgFile.imgList = serverImageList;
+    out << lastRefresh;
+    out << serverImageList;
+//    out << imgFile;
     DEBUGF( "Writing file of size: " << file.size() );
     file.close();
     return;
 }
 
-void slimImageLoader::GetCoverImage( QString albumArtID, QString thisImageURL, QIODevice *buffer )
+void SlimImageLoader::GetCoverImage( QString albumArtID, QString thisImageURL, QIODevice *buffer )
 {
 
 }
 
-bool slimImageLoader::checkRefreshDate(void)
+bool SlimImageLoader::checkRefreshDate(void)
 {
     ServerInfo s = cli->GetServerInfo();
     if(s.lastRefresh!=this->lastRefresh)
@@ -87,7 +101,7 @@ bool slimImageLoader::checkRefreshDate(void)
     return bNeedRefresh;
 }
 
-bool slimImageLoader::refreshImageFromServer(void)
+bool SlimImageLoader::refreshImageFromServer(void)
 {
 
 }
