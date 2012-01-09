@@ -1,5 +1,7 @@
 #include "slimimageloader.h"
 #include "slimcli.h"
+#include "slimserverinfo.h"
+
 // uncomment the following to turn on debugging
 //#define SLIMCLI_DEBUG
 
@@ -39,7 +41,7 @@ void SlimImageLoader::slotImageCollection( void )
 {
     if( coverIterator->hasNext() ) {
         coverIterator->next();
-        AlbumArtAvailable( coverIterator->key() );
+//        AlbumArtAvailable( coverIterator->key() );
     }
     else  // if we are done, disconnect
         disconnect( this, SIGNAL( ImageReceived(int) ), this, SLOT( slotImageCollection() ) );
@@ -92,12 +94,12 @@ void SlimImageLoader::GetCoverImage( QString albumArtID, QString thisImageURL, Q
 
 bool SlimImageLoader::checkRefreshDate(void)
 {
-    ServerInfo s = cli->GetServerInfo();
-    if(s.lastRefresh!=this->lastRefresh)
+    SlimServerInfo *s = cli->GetServerInfo();
+    if(s->GetLastRefresh()!=lastRefresh)
         bNeedRefresh = true;
     else
         bNeedRefresh = false;
-    this->lastRefresh = s.lastRefresh;  // this way we'll feed the latest refresh date into the file for next time
+    lastRefresh = s->GetLastRefresh();  // this way we'll feed the latest refresh date into the file for next time
     return bNeedRefresh;
 }
 

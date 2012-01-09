@@ -52,6 +52,7 @@ public:
   QByteArray GetMACAddress( void ) { return macAddress; }
 
   void SetServerInfo(SlimServerInfo *s) { serverInfo = s; }
+  SlimServerInfo *GetServerInfo(void) { return serverInfo; }
   // ------------------------------------------------------------------------------------------
   void    SetSlimServerAddress( QString addr );
   QString GetSlimServerAddress( void ) { return SlimServerAddr; }
@@ -70,9 +71,10 @@ public:
   void    SetCliTimeOutPeriod( QString t ) { iTimeOut = t.toInt(); }    // NOTE: NO ERROR CHECKING!!!
   // ------------------------------------------------------------------------------------------
   bool    NeedAuthentication( void ) { return useAuthentication; }
-
   // ------------------------------------------------------------------------------------------
-//  SlimDevices GetDeviceList( void ) { return deviceList; }
+  void EmitCliInfo(QString msg) { emit cliInfo(msg);}
+
+  //  SlimDevices GetDeviceList( void ) { return deviceList; }
 //  SlimDevice *GetDeviceFromMac( QByteArray mac );   // use percent encoded MAC address
 //  SlimDevice *GetCurrentDevice( void ) { return currentDevice; }
 ////  SlimItem GetDeviceNameList( void ) { return deviceNameList; }

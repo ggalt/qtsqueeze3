@@ -1,4 +1,15 @@
 #include "slimserverinfo.h"
+#include "slimcli.h"
+#include "slimdevice.h"
+
+// uncomment the following to turn on debugging
+//#define SLIMCLI_DEBUG
+
+#ifdef SLIMCLI_DEBUG
+#define DEBUGF(...) qDebug() << __VA_ARGS__
+#else
+#define DEBUGF(...)
+#endif
 
 SlimServerInfo::SlimServerInfo(QObject *parent) :
     QObject(parent)
@@ -13,7 +24,7 @@ bool SlimServerInfo::Init(SlimCLI *cliRef)
     SlimServerAddr = cli->GetSlimServerAddress();
     cliPort = cli->GetCliPort();
 
-    emit cli->cliInfo(QString("Getting Database info"));
+    cli->EmitCliInfo(QString("Getting Database info"));
     QByteArray cmd = QByteArray("serverstatus\n" );
     if(!cli->SendBlockingCommand(cmd))
         return false;
@@ -28,8 +39,9 @@ bool SlimServerInfo::SetupDevices( void )
 {
     QByteArray response;
     QList<QByteArray> respList;
+    QByteArray cmd;
 
-    emit cli->cliInfo( "Analyzing Attached Players" );
+    cli->EmitCliInfo( "Analyzing Attached Players" );
 
     //    int loopCounter = 0;
     //    while(loopCounter++ < 5 ) {
@@ -87,7 +99,7 @@ bool SlimServerInfo::SetupDevices( void )
 
 void SlimServerInfo::InitDevices( void )
 {
-    emit cli->cliInfo( QString( "Initializing attached devices" ) );
+    cli->EmitCliInfo( QString( "Initializing attached devices" ) );
 
     QHashIterator< QString, SlimDevice* > i( deviceList );
     while (i.hasNext()) {
@@ -105,9 +117,9 @@ void SlimServerInfo::InitDevices( void )
         i.previous();
         command = i.value()->getDeviceMAC() + " displaystatus subscribe:all";
         DEBUGF( "SENDING DISPLAY COMMAND FOR DEVICE " << command );
-        SendCommand( command );
+        cli->SendCommand( command );
     }
-    emit cli->FinishedInitializingDevices();
+//    emit cli->FinishedInitializingDevices();
 }
 
 SlimDevice *SlimServerInfo::GetDeviceFromMac( QByteArray mac )   // use percent encoded MAC address
@@ -123,7 +135,7 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
     while(fields.hasNext()){
         QString line = QString(fields.next());
         if(line.section("%3A",0,0)=="lastscan")
-            lastRefresh = line.section("%3A",1,1).toAscii();
+            lastRefresh = line.section("%3A",1,1).toAscii().toInt();
         else if(line.section("%3A",0,0)=="version")
             serverVersion=line.section("%3A",1,1).toAscii();
         else if(line.section("%3A",0,0)=="info%20total%20albums")

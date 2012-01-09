@@ -21,6 +21,7 @@ public:
     SlimDevice *GetDeviceFromMac( QByteArray mac );   // use percent encoded MAC address
     SlimDevice *GetCurrentDevice( void ) { return currentDevice; }
     void SetCurrentDevice( SlimDevice *d ) { currentDevice = d; }
+    int GetLastRefresh(void) { return lastRefresh; }
 
 
 signals:
@@ -36,7 +37,7 @@ private:
     int totalSongs;
     int playerCount;
     QByteArray serverVersion;
-    QByteArray lastRefresh;
+    int lastRefresh;
 
     SlimDevice *currentDevice;  // convenience pointer
     SlimItem deviceMACList;

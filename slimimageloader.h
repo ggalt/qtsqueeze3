@@ -21,6 +21,8 @@ public:
     bool ReadImageFile( void );   // read in existing images (if any) into serverImageList (save bandwidth)
     void WriteImageFile( void );  // write out contents of serverImageList
     void GetCoverImage( QString albumArtID, QString thisImageURL, QIODevice *buffer );
+    void InitImageCollection( void );
+    void slotImageCollection( void );
 
 private:
     bool checkRefreshDate(void);
@@ -38,7 +40,7 @@ private:
     QHash< int, QString > HttpRequestImageId;  // hash of HTTP request IDs to albumArtistID (for use in matching returned image requests to artwork IDs)
     QHashIterator< QString, QPixmap > *coverIterator;
     bool bNeedRefresh;          // the SqueezeServer database was updated since the last time we connected, so refresh
-    QByteArray lastRefresh;     // when was the database last refreshed
+    int lastRefresh;     // when was the database last refreshed
 };
 
 #endif // SLIMIMAGELOADER_H
