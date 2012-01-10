@@ -235,4 +235,6 @@ private:
     QSettings *mySettings;
 };
 
+
 #endif // MAINWINDOW_H
+

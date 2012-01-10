@@ -190,4 +190,5 @@ private:
     QTime playerTime;   // how long have we been playing?
 };
 
+
 #endif // SLIMDEVICE_H

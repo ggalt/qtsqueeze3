@@ -43,4 +43,5 @@ private:
     int lastRefresh;     // when was the database last refreshed
 };
 
+
 #endif // SLIMIMAGELOADER_H

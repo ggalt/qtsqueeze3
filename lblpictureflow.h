@@ -34,4 +34,6 @@ private:
   QColor titleColor;
 };
 
+
 #endif // LBLPICTUREFLOW_H
+

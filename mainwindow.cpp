@@ -153,7 +153,7 @@ bool MainWindow::Create(void)
     slimCLI->SetCliPort(SlimServerCLIPort);
 //    slimCLI->SetHttpPort(SlimServerHttpPort);
 
-    connect( slimCLI, SIGNAL(FinishedInitializingDevices()),
+    connect( serverInfo, SIGNAL(FinishedInitializingDevices()),
              this, SLOT(slotSetActivePlayer()) );              // we want to wait to set up the display until the devices are established
     slimCLI->SetServerInfo(serverInfo);                         // give pointer so CLI can get server info and put into SlimServerInfo
     slimCLI->Init();
@@ -932,6 +932,7 @@ bool MainWindow::Slimp3Display( QString txt )
         return true;
     else
         return false;
+
 }
 
 

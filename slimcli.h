@@ -140,4 +140,5 @@ private slots:
   void SentBytes( int b );          // bytes sent to SqueezeCenter
 };
 
+
 #endif // SLIMCLI_H

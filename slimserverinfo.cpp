@@ -119,7 +119,7 @@ void SlimServerInfo::InitDevices( void )
         DEBUGF( "SENDING DISPLAY COMMAND FOR DEVICE " << command );
         cli->SendCommand( command );
     }
-//    emit cli->FinishedInitializingDevices();
+    emit FinishedInitializingDevices();
 }
 
 SlimDevice *SlimServerInfo::GetDeviceFromMac( QByteArray mac )   // use percent encoded MAC address
@@ -150,6 +150,7 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
             playerCount=line.section("%3A",1,1).toAscii().toInt();
     }
     return true;
+
 }
 
 

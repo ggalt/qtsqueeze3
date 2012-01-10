@@ -231,4 +231,5 @@ typedef struct s_ImageFile {
 
 #define IR_muting         0x7689c43b
 
+
 #endif // SQUEEZEDEFINES_H

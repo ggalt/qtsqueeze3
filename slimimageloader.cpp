@@ -106,4 +106,5 @@ bool SlimImageLoader::checkRefreshDate(void)
 bool SlimImageLoader::refreshImageFromServer(void)
 {
 
+
 }

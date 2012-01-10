@@ -20,6 +20,7 @@
  *
  */
 
+
 #ifndef IMAGE_THUMBNAIL_H
 #define IMAGE_THUMBNAIL_H
 
@@ -62,6 +63,7 @@ private:
   QSize size;
   QImage img;
 };
+
 
 #endif // IMAGE_THUMBNAIL_H
 

@@ -25,7 +25,8 @@ public:
 
 
 signals:
-    
+   void FinishedInitializingDevices(void);
+
 public slots:
 
 private:
@@ -48,5 +49,6 @@ private:
     quint16 cliPort;          // port to use for cli, usually 9090, but we allow the user to change this
     quint16 httpPort;         // port for http connection to retrieve images, usually 9000.
 };
+
 
 #endif // SLIMSERVERINFO_H

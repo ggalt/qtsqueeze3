@@ -1045,3 +1045,4 @@ void PictureFlow::updateAnimation()
         emit centerIndexChanged(d->state->centerIndex);
 }
 
+/* vim: set expandtab tabstop=4 shiftwidth=4: */

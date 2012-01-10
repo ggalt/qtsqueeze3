@@ -379,5 +379,6 @@ void SlimDevice::slotTick( void )
         timeText = QString( t.toString( QString( "mm:ss" ) ) + " of " + s.toString( QString( "mm:ss" ) ) );
         //emit TimeText( timeText );
     }
+
 }
 /* vim: set expandtab tabstop=4 shiftwidth=4: */

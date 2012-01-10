@@ -446,6 +446,7 @@ void SlimCLI::RemoveNewLineFromResponse( void )
 {
     while( response.contains( '\n' ) )
         response.replace( response.indexOf( '\n' ), 1, " " );
+
 }
 
 //SlimDevice *SlimCLI::GetDeviceFromMac( QByteArray mac )   // use percent encoded MAC address

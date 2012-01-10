@@ -198,5 +198,6 @@ private:
     PictureFlowPrivate* d;
 };
 
+
 #endif // PICTUREFLOW_H
 
