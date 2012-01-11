@@ -11,10 +11,17 @@
 #define DEBUGF(...)
 #endif
 
+#define PATH "./.qtsqueezeimage.dat"
+
 SlimServerInfo::SlimServerInfo(QObject *parent) :
     QObject(parent)
 {
     httpPort = 9000;
+}
+
+SlimServerInfo::~SlimServerInfo()
+{
+    WriteImageFile();
 }
 
 bool SlimServerInfo::Init(SlimCLI *cliRef)
@@ -153,4 +160,74 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 
 }
 
+// ----------------------------------------------------------------------------------
+//  Image processing
 
+QPixmap SlimServerInfo::GetAlbumArt( QString album, QString artist )
+{
+    QString coverID = AlbumArtist2Art().value(album.trimmed()+artist.trimmed(),NULL);
+    if(coverID.isNull()) {  // no cover art id available
+
+    }
+}
+
+QList<Album> SlimServerInfo::GetArtistAlbumList(QString artist)
+{
+
+}
+
+bool SlimServerInfo::ReadImageFile( void )
+{
+    QFile file;
+    ImageFile imgFile;
+    if( file.exists( PATH ) ) // there is a file, so read from it
+        file.setFileName( PATH );
+    else
+        return false;
+
+    //update the images
+    file.open(QIODevice::ReadOnly);
+    QDataStream in(&file);   // read the data serialized from the file
+    in >> lastRefresh;
+    in >> serverImageList;
+    DEBUGF( "Reading file of size: " << file.size() );
+    file.close();
+//    lastRefresh = imgFile.refreshDate;
+//    serverImageList = imgFile.imgList;
+    return true;
+}
+
+void SlimServerInfo::WriteImageFile( void )
+{
+    QFile file;
+    ImageFile imgFile;
+    file.setFileName( PATH );
+
+    //update the images
+    file.open(QIODevice::WriteOnly);
+    QDataStream out(&file);   // read the data serialized from the file
+//    imgFile.refreshDate = lastRefresh;
+//    imgFile.imgList = serverImageList;
+    out << lastRefresh;
+    out << serverImageList;
+//    out << imgFile;
+    DEBUGF( "Writing file of size: " << file.size() );
+    file.close();
+    return;
+}
+
+bool SlimServerInfo::checkRefreshDate(void)
+{
+    if(GetLastRefresh()!=lastRefresh)
+        bNeedRefresh = true;
+    else
+        bNeedRefresh = false;
+    lastRefresh = GetLastRefresh();  // this way we'll feed the latest refresh date into the file for next time
+    return bNeedRefresh;
+}
+
+bool SlimServerInfo::refreshImageFromServer(void)
+{
+
+
+}

@@ -29,6 +29,7 @@
 // Qt
 #include <QDateTime>
 #include <QString>
+#include <QStringList>
 #include <QPixmap>
 #include <QHash>
 #include <QList>
@@ -152,11 +153,23 @@ public:
     QString center1;
 };
 
+class Album
+{
+public:
+    QByteArray title;
+    QByteArray year;
+    QByteArray artist;
+    QByteArray artist_id;
+    QByteArray coverid;
+};
+
 typedef QList< TrackData > CurrentPlayList;
 
 typedef QHash< QString, SlimDevice* > SlimDevices;
 typedef QHash< QString, QPixmap> SlimImageItem;
 typedef QHash< QString, QString > SlimItem;
+typedef QHash< QString, QStringList > SlimItemList;
+typedef QHash< QString, Album > SlimAlbumItem;
 
 typedef struct s_ImageFile {
     QByteArray refreshDate;
