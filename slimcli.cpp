@@ -233,7 +233,8 @@ bool SlimCLI::waitForResponse( void ){
     return true;
 }
 
-bool SlimCLI::msgWaiting( void ){
+bool SlimCLI::msgWaiting( void )
+{
     QTime t;
     t.start();
     while( slimCliSocket->bytesAvailable() && t.elapsed() < iTimeOut ) {  // we need to loop because we often get new messages while processing old and "readyread" misses them -- better to move socket to its own thread, but this works for now

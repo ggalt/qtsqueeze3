@@ -50,7 +50,6 @@ private:
     bool checkRefreshDate(void);
     bool refreshImageFromServer(void);
 
-
     int totalAlbums;
     int totalArtists;
     int totalGenres;
@@ -82,7 +81,6 @@ private:
     QHash< int, QString > HttpRequestImageId;  // hash of HTTP request IDs to albumArtistID (for use in matching returned image requests to artwork IDs)
     QHashIterator< QString, QPixmap > *coverIterator;
     bool bNeedRefresh;          // the SqueezeServer database was updated since the last time we connected, so refresh
-
 };
 
 

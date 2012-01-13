@@ -4,7 +4,6 @@
 // QT4 Headers
 #include <QObject>
 #include <QTcpSocket>
-//#include <QHttp>
 #include <QBuffer>
 #include <QTimer>
 #include <QVector>

@@ -163,6 +163,19 @@ public:
     QByteArray coverid;
 };
 
+class DatabaseInfo
+{
+public:
+    int totalAlbums;
+    int totalArtists;
+    int totalGenres;
+    int totalSongs;
+    SlimItem m_AlbumArtist2Art;         // Album+Artist name to coverid
+    SlimItemList m_Artist2AlbumIds;    // Artist name to list of albums
+    SlimImageItem m_Id2Art;       // coverid to artwork
+    SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
+};
+
 typedef QList< TrackData > CurrentPlayList;
 
 typedef QHash< QString, SlimDevice* > SlimDevices;
