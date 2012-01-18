@@ -4,7 +4,7 @@
 #include "ui_mainwindow.h"
 
 // uncomment the following to turn on debugging
-//#define SLIMCLI_DEBUG
+// #define SLIMCLI_DEBUG
 
 #ifdef SLIMCLI_DEBUG
 #define DEBUGF(...) qDebug() << __VA_ARGS__

@@ -3,7 +3,7 @@
 #include "slimdevice.h"
 
 // uncomment the following to turn on debugging
-//#define SLIMCLI_DEBUG
+// #define SLIMCLI_DEBUG
 
 #ifdef SLIMCLI_DEBUG
 #define DEBUGF(...) qDebug() << __VA_ARGS__
@@ -165,7 +165,7 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 
 QPixmap SlimServerInfo::GetAlbumArt( QString album, QString artist )
 {
-    QString coverID = AlbumArtist2Art().value(album.trimmed()+artist.trimmed(),NULL);
+    QString coverID = AlbumArtist2AlbumInfo().value(album.trimmed()+artist.trimmed()).coverid;
     if(coverID.isNull()) {  // no cover art id available
 
     }

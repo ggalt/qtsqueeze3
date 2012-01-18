@@ -17,7 +17,7 @@ SlimDatabaseFetch::~SlimDatabaseFetch(void)
 
 void SlimDatabaseFetch::Init(QString serveraddr,
                              qint16 cliport, qint16 httpport,
-                             QString cliuname = NULL, QString clipass = NULL)
+                             QString cliuname, QString clipass)
 {
     SlimServerAddr = serveraddr;
     cliPort = cliport;
@@ -697,7 +697,7 @@ QPixmap SlimDatabase::GetCoverImage( QString albumName )
     return p;
 }
 
+*/
 
 /* vim: set expandtab tabstop=4 shiftwidth=4: */
 
-  */

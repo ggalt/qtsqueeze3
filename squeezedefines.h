@@ -157,11 +157,20 @@ class Album
 {
 public:
     QByteArray title;
+    QByteArray album_id;
     QByteArray year;
     QByteArray artist;
     QByteArray artist_id;
     QByteArray coverid;
 };
+
+typedef QList< TrackData > CurrentPlayList;
+
+typedef QHash< QString, SlimDevice* > SlimDevices;
+typedef QHash< QString, QPixmap> SlimImageItem;
+typedef QHash< QString, QString > SlimItem;
+typedef QHash< QString, QStringList > SlimItemList;
+typedef QHash< QString, Album > SlimAlbumItem;
 
 class DatabaseInfo
 {
@@ -175,14 +184,6 @@ public:
     SlimImageItem m_Id2Art;       // coverid to artwork
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
 };
-
-typedef QList< TrackData > CurrentPlayList;
-
-typedef QHash< QString, SlimDevice* > SlimDevices;
-typedef QHash< QString, QPixmap> SlimImageItem;
-typedef QHash< QString, QString > SlimItem;
-typedef QHash< QString, QStringList > SlimItemList;
-typedef QHash< QString, Album > SlimAlbumItem;
 
 typedef struct s_ImageFile {
     QByteArray refreshDate;

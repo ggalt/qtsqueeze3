@@ -32,7 +32,7 @@ public:
     QPixmap GetAlbumArt(QString coverid) { return m_Id2Art.value(coverid,NULL); }
     QList<Album> GetArtistAlbumList(QString artist);
 
-    SlimItem &AlbumArtist2Art(void) {return m_AlbumArtist2Art;}
+    SlimAlbumItem &AlbumArtist2AlbumInfo(void) {return m_AlbumArtist2AlbumInfo;}
     SlimItemList &Artist2AlbumIds(void) {return m_Artist2AlbumIds;}
     SlimImageItem &Id2Art(void) {return m_Id2Art;}
     SlimAlbumItem &AlbumID2AlbumInfo(void) {return m_AlbumID2AlbumInfo;}
@@ -67,7 +67,7 @@ private:
     quint16 cliPort;          // port to use for cli, usually 9090, but we allow the user to change this
     quint16 httpPort;         // port for http connection to retrieve images, usually 9000.
 
-    SlimItem m_AlbumArtist2Art;         // Album+Artist name to coverid
+    SlimAlbumItem m_AlbumArtist2AlbumInfo;         // Album+Artist name to Album info (including coverid)
     SlimItemList m_Artist2AlbumIds;    // Artist name to list of albums
     SlimImageItem m_Id2Art;       // coverid to artwork
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info

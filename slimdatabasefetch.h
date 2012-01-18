@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QWaitCondition>
 #include <QTcpSocket>
 #include <QTimer>
 #include <QTime>
@@ -22,10 +23,10 @@ public:
     SlimDatabaseFetch(QObject *parent = 0);
     ~SlimDatabaseFetch(void);
 
-    void Init(QString serveraddr, qint16 cliport, qint16 httpport, QStringcliuname = NULL, QStringclipass = NULL);
+    void Init(QString serveraddr, qint16 cliport, qint16 httpport, QString cliuname = NULL, QString clipass = NULL);
 
 signals:
-    FinishedUpdatingDatabase(DatabaseInfo&);
+    void FinishedUpdatingDatabase(DatabaseInfo&);
 
 public slots:
     void cliConnected(void);
@@ -38,7 +39,7 @@ protected:
     void run();
 
 private:
-    bool ProcessRepsonse(void);
+    bool ProcessResponse(void);
     void RemoveNewLineFromResponse(void);
 
     QMutex mutex;
