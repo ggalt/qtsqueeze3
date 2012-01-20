@@ -83,6 +83,7 @@ class SlimCLI;          // forward declaration
 class SlimDevice;       // forward declaration
 class SlimServerInfo;   // forward declaration
 class SlimImageLoader;
+class SlimDatabaseFetch;
 
 
 enum { NODEVICELIST = 0, YESDEVICELIST, PLUGINCONTROL, VFDCONTROL };

@@ -1,6 +1,7 @@
 #include "slimserverinfo.h"
 #include "slimcli.h"
 #include "slimdevice.h"
+#include "slimdatabasefetch.h"
 
 // uncomment the following to turn on debugging
 // #define SLIMCLI_DEBUG
@@ -17,6 +18,7 @@ SlimServerInfo::SlimServerInfo(QObject *parent) :
     QObject(parent)
 {
     httpPort = 9000;
+    freshnessDate = 0;
 }
 
 SlimServerInfo::~SlimServerInfo()
@@ -40,6 +42,10 @@ bool SlimServerInfo::Init(SlimCLI *cliRef)
 
     if( !SetupDevices())
         return false;
+
+    ReadImageFile();
+
+    checkRefreshDate();     // see if we need to update the database
 }
 
 bool SlimServerInfo::SetupDevices( void )
@@ -97,11 +103,6 @@ bool SlimServerInfo::SetupDevices( void )
         return false;
     else
         return true;
-    //    }
-    //    if( loopCounter >= 5 ) // we failed above
-    //        return false;
-    //    else
-    //        return true;
 }
 
 void SlimServerInfo::InitDevices( void )
@@ -142,7 +143,7 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
     while(fields.hasNext()){
         QString line = QString(fields.next());
         if(line.section("%3A",0,0)=="lastscan")
-            lastRefresh = line.section("%3A",1,1).toAscii().toInt();
+            lastServerRefresh = line.section("%3A",1,1).toAscii().toInt();
         else if(line.section("%3A",0,0)=="version")
             serverVersion=line.section("%3A",1,1).toAscii();
         else if(line.section("%3A",0,0)=="info%20total%20albums")
@@ -165,10 +166,8 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 
 QPixmap SlimServerInfo::GetAlbumArt( QString album, QString artist )
 {
-    QString coverID = AlbumArtist2AlbumInfo().value(album.trimmed()+artist.trimmed()).coverid;
-    if(coverID.isNull()) {  // no cover art id available
-
-    }
+    QString coverID = AlbumArtist2AlbumInfo().value(album.trimmed()+artist.trimmed()).coverid;\
+    return Id2Art().value(coverID);
 }
 
 QList<Album> SlimServerInfo::GetArtistAlbumList(QString artist)
@@ -179,21 +178,49 @@ QList<Album> SlimServerInfo::GetArtistAlbumList(QString artist)
 bool SlimServerInfo::ReadImageFile( void )
 {
     QFile file;
-    ImageFile imgFile;
     if( file.exists( PATH ) ) // there is a file, so read from it
         file.setFileName( PATH );
     else
         return false;
 
+    quint16 albumCount;
+
     //update the images
     file.open(QIODevice::ReadOnly);
     QDataStream in(&file);   // read the data serialized from the file
-    in >> lastRefresh;
-    in >> serverImageList;
+    in >> freshnessDate;
+    in >> m_Artist2AlbumIds;
+    in >> m_Id2Art;
+    in >> albumCount;
+    m_AlbumArtist2AlbumInfo.clear();
+    m_AlbumID2AlbumInfo.clear();
+    for( int c = 0; c < albumCount; c++ ) {
+        QString key;
+        Album a;
+        in >> key;
+        in >> a.album_id;
+        in >> a.artist;
+        in >> a.artist_id;
+        in >> a.coverid;
+        in >> a.title;
+        in >> a.year;
+        m_AlbumArtist2AlbumInfo.insert(key,a);
+    }
+    in >> albumCount;
+    for( int c = 0; c < albumCount; c++ ) {
+        QString key;
+        Album a;
+        in >> key;
+        in >> a.album_id;
+        in >> a.artist;
+        in >> a.artist_id;
+        in >> a.coverid;
+        in >> a.title;
+        in >> a.year;
+        m_AlbumArtist2AlbumInfo.insert(key,a);
+    }
     DEBUGF( "Reading file of size: " << file.size() );
     file.close();
-//    lastRefresh = imgFile.refreshDate;
-//    serverImageList = imgFile.imgList;
     return true;
 }
 
@@ -206,28 +233,61 @@ void SlimServerInfo::WriteImageFile( void )
     //update the images
     file.open(QIODevice::WriteOnly);
     QDataStream out(&file);   // read the data serialized from the file
-//    imgFile.refreshDate = lastRefresh;
-//    imgFile.imgList = serverImageList;
-    out << lastRefresh;
-    out << serverImageList;
-//    out << imgFile;
+    out << lastServerRefresh;
+    out << m_Artist2AlbumIds;
+    out << m_Id2Art;
+    out << (qint16)m_AlbumArtist2AlbumInfo.count();
+    qDebug() << "writing out " << m_AlbumArtist2AlbumInfo.count() << " albums to file";
+    QHashIterator< QString, Album > aa(m_AlbumArtist2AlbumInfo);
+    aa.toBack();
+    qint16 cnt = m_AlbumArtist2AlbumInfo.count();
+    while(aa.hasPrevious()) {
+        aa.next();
+        Album a = aa.value();
+        out << aa.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.title << a.year;
+        qDebug() <<  cnt--;
+    }
+    out << (qint16)m_AlbumID2AlbumInfo.count();
+    qDebug() << "writing out " << m_AlbumID2AlbumInfo.count() << " albums to file";
+    QHashIterator< QString, Album > aID(m_AlbumID2AlbumInfo);
+    aID.toBack();
+    cnt = m_AlbumID2AlbumInfo.count();
+    while(aID.hasPrevious()) {
+        aID.next();
+        Album a = aID.value();
+        out << aID.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.title << a.year;
+        qDebug() <<  cnt--;
+    }
+
     DEBUGF( "Writing file of size: " << file.size() );
     file.close();
     return;
 }
 
-bool SlimServerInfo::checkRefreshDate(void)
+void SlimServerInfo::checkRefreshDate(void)
 {
-    if(GetLastRefresh()!=lastRefresh)
-        bNeedRefresh = true;
-    else
-        bNeedRefresh = false;
-    lastRefresh = GetLastRefresh();  // this way we'll feed the latest refresh date into the file for next time
-    return bNeedRefresh;
+//RequestArtwork    if(lastServerRefresh!=freshnessDate)
+        refreshImageFromServer();
 }
 
-bool SlimServerInfo::refreshImageFromServer(void)
+void SlimServerInfo::refreshImageFromServer(void)
 {
+    db = new SlimDatabaseFetch();
+    connect(db,SIGNAL(FinishedUpdatingDatabase()),
+            this,SLOT(DatabaseUpdated()));
 
+    qDebug() << "refreshing from server";
 
+    db->Init(SlimServerAddr,cliPort,httpPort,cli->GetCliUsername(),cli->GetCliPassword());
+    db->start();    // init database fetching thread
+}
+
+void SlimServerInfo::DatabaseUpdated(void)
+{
+    m_AlbumArtist2AlbumInfo = db->AlbumArtist2AlbumInfo();
+    m_AlbumID2AlbumInfo = db->AlbumID2AlbumInfo();
+    m_Artist2AlbumIds = db->Artist2AlbumIds();
+    m_Id2Art = db->Id2Art();
+    db->exit();
+    delete db;
 }

@@ -5,6 +5,9 @@
 #include <QFile>
 #include <QDataStream>
 #include <QBuffer>
+#include <QPixmap>
+#include <QString>
+#include <QByteArray>
 
 
 #include "squeezedefines.h"
@@ -26,7 +29,6 @@ public:
     SlimDevice *GetDeviceFromMac( QByteArray mac );   // use percent encoded MAC address, return pointer to associated device
     SlimDevice *GetCurrentDevice( void ) { return currentDevice; }
     void SetCurrentDevice( SlimDevice *d ) { currentDevice = d; }
-    int GetLastRefresh(void) { return lastRefresh; }
 
     QPixmap GetAlbumArt( QString album, QString artist );
     QPixmap GetAlbumArt(QString coverid) { return m_Id2Art.value(coverid,NULL); }
@@ -44,11 +46,12 @@ signals:
    void FinishedInitializingDevices(void);
 
 public slots:
+   void DatabaseUpdated(void);
 
 private:
     bool ProcessServerInfo(QByteArray resp);
-    bool checkRefreshDate(void);
-    bool refreshImageFromServer(void);
+    void checkRefreshDate(void);
+    void refreshImageFromServer(void);
 
     int totalAlbums;
     int totalArtists;
@@ -56,7 +59,8 @@ private:
     int totalSongs;
     int playerCount;
     QByteArray serverVersion;
-    int lastRefresh;
+    qint16 lastServerRefresh;
+    qint16 freshnessDate;
 
     SlimDevice *currentDevice;  // convenience pointer
 //    SlimItem deviceMACList;     // MAC address associated with SlimDevice
@@ -72,14 +76,7 @@ private:
     SlimImageItem m_Id2Art;       // coverid to artwork
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
 
-    QByteArray ba;            // bytearray for HTTP request buffer
-    QBuffer mybuffer;           // buffer for HTTP request
-    QString imageSizeStr;        // text representation of the image size we want (e.g., "/cover_200x200")
-    int imageSize;            // int version of image size (we'll always have a square)
-    int httpID;               // ID of HTTP transaction
-    SlimImageItem serverImageList;  // hash of images retrieved from server by album_image_id
-    QHash< int, QString > HttpRequestImageId;  // hash of HTTP request IDs to albumArtistID (for use in matching returned image requests to artwork IDs)
-    QHashIterator< QString, QPixmap > *coverIterator;
+    SlimDatabaseFetch *db;      // pointer in case we need to update the database
     bool bNeedRefresh;          // the SqueezeServer database was updated since the last time we connected, so refresh
 };
 

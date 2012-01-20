@@ -520,7 +520,7 @@
      <widget class="QLabel" name="label_6">
       <property name="geometry">
        <rect>
-        <x>21</x>
+        <x>19</x>
         <y>46</y>
         <width>122</width>
         <height>18</height>
@@ -567,6 +567,52 @@
       </property>
       <property name="text">
        <string>Apply</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_8">
+      <property name="geometry">
+       <rect>
+        <x>405</x>
+        <y>11</y>
+        <width>122</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>LMS Username (if used):</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_9">
+      <property name="geometry">
+       <rect>
+        <x>405</x>
+        <y>46</y>
+        <width>119</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>LMS Password (if used):</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="txtUsername">
+      <property name="geometry">
+       <rect>
+        <x>535</x>
+        <y>7</y>
+        <width>200</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="txtPassword">
+      <property name="geometry">
+       <rect>
+        <x>535</x>
+        <y>42</y>
+        <width>200</width>
+        <height>26</height>
+       </rect>
       </property>
      </widget>
     </widget>
