@@ -108,6 +108,5 @@
         <file>images/ajax-loader.gif</file>
         <file>images/squeezeplayer_large.png</file>
         <file>images/squeezeplayer.png</file>
-        <file>images/noAlbumImage.png</file>
     </qresource>
 </RCC>

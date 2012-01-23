@@ -9,27 +9,21 @@ SlimDatabaseFetch::SlimDatabaseFetch(QObject *parent) :
     SlimServerAddr = "127.0.0.1";
     cliPort = 9090;        // default, but user can reset
     MaxRequestSize = "500";    // max size of any cli request (used for limiting each request for albums, artists, songs, etc., so we don't time out or overload things)
-    imageSizeStr = "cover_200x200";
-    finishedData = false;
-    finishedImages = false;
 }
 
 SlimDatabaseFetch::~SlimDatabaseFetch(void)
 {
 }
 
-void SlimDatabaseFetch::Init(QString serveraddr,
-                             qint16 cliport, qint16 httpport,
+void SlimDatabaseFetch::Init(QString serveraddr, qint16 cliport,
                              QString cliuname, QString clipass)
 {
     SlimServerAddr = serveraddr;
     cliPort = cliport;
-    httpPort = httpport;
     cliUsername = cliuname;
     cliPassword = clipass;
 
     slimCliSocket = new QTcpSocket(this);
-    slimHttp = new QNetworkAccessManager(this);
 }
 
 void SlimDatabaseFetch::run()
@@ -42,8 +36,6 @@ void SlimDatabaseFetch::run()
             this,SLOT(cliError(QAbstractSocket::SocketError)));
     connect(slimCliSocket,SIGNAL(readyRead()),
             this,SLOT(cliMessageReady()));
-    connect(slimHttp,SIGNAL(finished(QNetworkReply*)),
-            this,SLOT(ArtworkReqply(QNetworkReply*)));
 
     slimCliSocket->connectToHost(QHostAddress(SlimServerAddr),cliPort);
 
@@ -170,20 +162,18 @@ bool SlimDatabaseFetch::ProcessResponse(void)
                     a.coverid = cover_id;
                     a.title = album_title;
                     a.year = album_year;
-                    m_AlbumArtist2AlbumInfo.insert(album_title.trimmed()+artist_name.trimmed(), a);
+                    m_AlbumArtist2AlbumID.insert(QString(album_title.trimmed()+artist_name.trimmed()), QString(album_id.trimmed()));
                     m_AlbumID2AlbumInfo.insert(album_id.trimmed(),a);
                     if(m_Artist2AlbumIds.contains(artist_name.trimmed())) {
-                        QStringList temp = m_Artist2AlbumIds.value(artist_name);
+                        QStringList temp = m_Artist2AlbumIds.value(artist_name.trimmed());
                         temp.append(album_id.trimmed());
-                        m_Artist2AlbumIds.insert(artist_name,temp);     // removes existing record for artist and substitutes new list
+                        m_Artist2AlbumIds.insert(QString(artist_name.trimmed()),temp);     // removes existing record for artist and substitutes new list
                     }
                     else {
                         QStringList album_id_list;
-                        album_id_list.append(album_id);
+                        album_id_list.append(album_id.trimmed());
                         m_Artist2AlbumIds.insert(artist_name.trimmed(),album_id_list);
                     }
-                    if(!cover_id.isEmpty())
-                      RequestArtwork(cover_id);
                 }
                 // start over
                 // clear all of the values in case the next album doesn't contain one of them
@@ -224,55 +214,53 @@ bool SlimDatabaseFetch::ProcessResponse(void)
                     return true;
                 }
                 else {
-                    finishedData = true;
-                    if(finishedImages) { // we're done with both (not likely here, but just in case)
-                        emit FinishedUpdatingDatabase();
-                    }
+                    emit FinishedUpdatingDatabase();
                 }
+
             }	// end of else/if field.section == count
         }	// end of switch statement
     }		// end for loop
     return true;
 }
 
-void SlimDatabaseFetch::RequestArtwork(QByteArray coverID)
-{
-    finishedImages = false;
-    QString urlString = QString("http://%1:%2/music/%3/%4")
-                                .arg(SlimServerAddr)
-                                .arg(httpPort)
-                                .arg(QString(coverID))
-                                .arg(imageSizeStr);
-    QNetworkRequest req;
-    req.setUrl(QUrl(urlString));
-    QNetworkReply *reply = slimHttp->get(req);
-    httpReplyList.insert(reply,coverID);
-    qDebug() << "requesting artwork with id: " << coverID;
-}
+//void SlimDatabaseFetch::RequestArtwork(QByteArray coverID)
+//{
+//    finishedImages = false;
+//    QString urlString = QString("http://%1:%2/music/%3/%4")
+//            .arg(SlimServerAddr)
+//            .arg(httpPort)
+//            .arg(QString(coverID))
+//            .arg(imageSizeStr);
+//    QNetworkRequest req;
+//    req.setUrl(QUrl(urlString));
+//    QNetworkReply *reply = slimHttp->get(req);
+//    httpReplyList.insert(reply,coverID);
+//    qDebug() << "requesting artwork with id: " << coverID;
+//}
 
-void SlimDatabaseFetch::ArtworkReqply(QNetworkReply *reply)
-{
-    QPixmap p;
-    QImageReader reader(reply);
-    QByteArray coverID = httpReplyList.value(reply);
+//void SlimDatabaseFetch::ArtworkReqply(QNetworkReply *reply)
+//{
+//    QPixmap p;
+//    QImageReader reader(reply);
+//    QByteArray coverID = httpReplyList.value(reply);
 
-    qDebug() << "retrieved image for id: " << coverID;
+//    qDebug() << "retrieved image for id: " << coverID;
 
-    p.fromImageReader(&reader);
-    if( p.isNull() )    // oops, no image returned, substitute default image
-        p.load(QString::fromUtf8(":/img/lib/images/noAlbumImage.png"));
+//    p.fromImageReader(&reader);
+//    if( p.isNull() )    // oops, no image returned, substitute default image
+//        p.load(QString::fromUtf8(":/img/lib/images/noAlbumImage.png"));
 
-    m_Id2Art.insert(coverID,p);
-    httpReplyList.remove(reply);
-    delete reply;
+//    m_Id2Art.insert(coverID,p);
+//    httpReplyList.remove(reply);
+//    delete reply;
 
-    if(httpReplyList.isEmpty()) {
-        finishedImages = true;
-        qDebug() << "FINISHED GETTING IMAGES";
-        if(finishedData)
-            emit FinishedUpdatingDatabase();
-    }
-}
+//    if(httpReplyList.isEmpty()) {
+//        finishedImages = true;
+//        qDebug() << "FINISHED GETTING IMAGES";
+//        if(finishedData)
+//            emit FinishedUpdatingDatabase();
+//    }
+//}
 
 /* vim: set expandtab tabstop=4 shiftwidth=4: */
 

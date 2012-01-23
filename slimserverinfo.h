@@ -30,17 +30,16 @@ public:
     SlimDevice *GetCurrentDevice( void ) { return currentDevice; }
     void SetCurrentDevice( SlimDevice *d ) { currentDevice = d; }
 
-    QPixmap GetAlbumArt( QString album, QString artist );
-    QPixmap GetAlbumArt(QString coverid) { return m_Id2Art.value(coverid,NULL); }
+//    QPixmap GetAlbumArt( QString album, QString artist );
+//    QPixmap GetAlbumArt(QString coverid) { return m_Id2Art.value(coverid,NULL); }
     QList<Album> GetArtistAlbumList(QString artist);
 
-    SlimAlbumItem &AlbumArtist2AlbumInfo(void) {return m_AlbumArtist2AlbumInfo;}
-    SlimItemList &Artist2AlbumIds(void) {return m_Artist2AlbumIds;}
-    SlimImageItem &Id2Art(void) {return m_Id2Art;}
-    SlimAlbumItem &AlbumID2AlbumInfo(void) {return m_AlbumID2AlbumInfo;}
+    SlimItem AlbumArtist2AlbumID(void) {return m_AlbumArtist2AlbumID;}
+    SlimItemList Artist2AlbumIds(void) {return m_Artist2AlbumIds;}
+    SlimAlbumItem AlbumID2AlbumInfo(void) {return m_AlbumID2AlbumInfo;}    // AlbumID to Album Info
 
-    bool ReadImageFile( void );   // read in existing images (if any) into serverImageList (save bandwidth)
-    void WriteImageFile( void );  // write out contents of serverImageList
+    bool ReadDataFile( void );   // read in existing images (if any) into serverImageList (save bandwidth)
+    void WriteDataFile( void );  // write out contents of serverImageList
 
 signals:
    void FinishedInitializingDevices(void);
@@ -69,11 +68,10 @@ private:
     SlimCLI *cli;               // convenience pointer
     QString SlimServerAddr;   // server IP address
     quint16 cliPort;          // port to use for cli, usually 9090, but we allow the user to change this
-    quint16 httpPort;         // port for http connection to retrieve images, usually 9000.
+//    quint16 httpPort;         // port for http connection to retrieve images, usually 9000.
 
-    SlimAlbumItem m_AlbumArtist2AlbumInfo;         // Album+Artist name to Album info (including coverid)
+    SlimItem m_AlbumArtist2AlbumID;         // Album+Artist name to Album ID
     SlimItemList m_Artist2AlbumIds;    // Artist name to list of albums
-    SlimImageItem m_Id2Art;       // coverid to artwork
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
 
     SlimDatabaseFetch *db;      // pointer in case we need to update the database
