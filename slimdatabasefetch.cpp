@@ -13,6 +13,7 @@ SlimDatabaseFetch::SlimDatabaseFetch(QObject *parent) :
 
 SlimDatabaseFetch::~SlimDatabaseFetch(void)
 {
+    qDebug() << "database destroyed";
 }
 
 void SlimDatabaseFetch::Init(QString serveraddr, qint16 cliport,

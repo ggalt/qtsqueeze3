@@ -20,26 +20,21 @@
  *
  */
 
+/* Modified by George Galt 2012 to pull images from Logitech Media Server
+*/
+
 #include "ImageLoader.h"
+#include "slimcli.h"
+#include "slimserverinfo.h"
 
 
 #include <qimage.h>
-// load and resize image
-static QImage loadAndResize(const QString& fileName, QSize size)
-{
-  QImage image;
-  bool result = image.load(fileName);
 
-  if(!result)
-    return QImage();
 
-  image = image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-  return image;
-}
-
-ImageLoader::ImageLoader(): QThread(), 
-restart(false), working(false), idx(-1)
+ImageLoader::ImageLoader(QString serveraddr, qint16 httpport, QString cliuname = NULL, QString clipass = NULL)
+    : QThread(),
+      restart(false), working(false), idx(-1),
+      SlimServerAddr(serveraddr), httpPort(httpport), cliUsername(cliuname), cliPassword(clipass)
 {
 }
 
@@ -49,6 +44,50 @@ ImageLoader::~ImageLoader()
   condition.wakeOne();
   mutex.unlock();
   wait();
+}
+
+
+
+// load and resize image
+static QImage loadAndResize(const QString& fileName, QSize size)
+{
+/*
+    QEventLoop q;
+    QTimer tT;
+
+    tT.setSingleShot(true);
+    connect(&tT, SIGNAL(timeout()), &q, SLOT(quit()),Qt::DirectConnection);
+
+    m_request.setUrl( m_url );
+    VERBOSE( VB_GENERAL, LOC + "Audio Request made to: " + m_url.toString());
+
+    m_reply = (audioReply*)get(m_request);
+    connect(m_reply, SIGNAL(readyRead()),
+            &q, SLOT(quit()),Qt::DirectConnection);
+
+    tT.start(5000); // 5s timeout
+    q.exec();
+
+    if(tT.isActive()){
+        // download complete
+        tT.stop();
+        return m_reply;
+    } else {
+        VERBOSE( VB_IMPORTANT, LOC + "Audio Stream Request timed out");
+        VERBOSE( VB_IMPORTANT, LOC + QString("reply contains %1 bytes").arg(m_reply->bytesAvailable()));
+        return NULL; // returning NULL will indicate no stream file retrieved
+    }
+
+  */
+  QImage image;
+  bool result = image.load(fileName);
+
+  if(!result)
+    return QImage();
+
+  image = image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+  return image;
 }
 
 bool ImageLoader::busy() const

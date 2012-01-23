@@ -20,6 +20,10 @@
  *
  */
 
+/* Modified by George Galt 2012 to pull images from Logitech Media Server
+*/
+
+
 
 #ifndef IMAGE_THUMBNAIL_H
 #define IMAGE_THUMBNAIL_H
@@ -33,17 +37,32 @@
 #include <qmutex.h>
 #include <qwaitcondition.h>
 
+#include <QTimer>
+#include <QTime>
+#include <QUrl>
+#include <QString>
+#include <QStringList>
+#include <QByteArray>
+#include <QList>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QImageReader>
+
+#include "squeezedefines.h"
+
+
 class ImageLoader : public QThread
 {
 public:
-  ImageLoader();
+  ImageLoader(QString serveraddr, qint16 httpport, QString cliuname = NULL, QString clipass = NULL);
 
   ~ImageLoader();
 
   // returns FALSE if worker is still busy and can't take the task
   bool busy() const;
 
-  void generate(int index, const QString& fileName, QSize size);
+  void generate(int index, const QByteArray& coverID, QSize size);
 
   int index() const { return idx; }
 
@@ -62,6 +81,11 @@ private:
   QString fileName;
   QSize size;
   QImage img;
+
+  QString SlimServerAddr;   // server IP address
+  quint16 httpPort;          // port to use for cli, usually 9090, but we allow the user to change this
+  QString cliUsername;      // username for cli if needed
+  QString cliPassword;      // password for cli if needed **NOTE: DANGER, DANGER this is done in clear text, so don't use a password you care about!!
 };
 
 

@@ -180,8 +180,10 @@ bool SlimServerInfo::ReadDataFile( void )
     QFile file;
     if( file.exists( PATH ) ) // there is a file, so read from it
         file.setFileName( PATH );
-    else
+    else {
+        qDebug() << "no file to read at " << PATH;
         return false;
+    }
 
     quint16 albumCount;
 
@@ -192,6 +194,8 @@ bool SlimServerInfo::ReadDataFile( void )
     in >> m_Artist2AlbumIds;
     in >> m_AlbumArtist2AlbumID;
     in >> albumCount;
+
+    qDebug() << "reading in info on " << albumCount << " files";
 
     m_AlbumID2AlbumInfo.clear();
     for( int c = 0; c < albumCount; c++ ) {
@@ -206,6 +210,16 @@ bool SlimServerInfo::ReadDataFile( void )
         in >> a.year;
         m_AlbumID2AlbumInfo.insert(key,a);
     }
+#ifdef SLIMCLI_DEBUG
+    QHashIterator< QString, Album > aa(m_AlbumID2AlbumInfo);
+    aa.toBack();
+    while(aa.hasPrevious()) {
+        aa.previous();
+        Album a = aa.value();
+        qDebug() << aa.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.title << a.year;
+    }
+#endif
+
     DEBUGF( "Reading file of size: " << file.size() );
     file.close();
     return true;
@@ -227,12 +241,10 @@ void SlimServerInfo::WriteDataFile( void )
     qDebug() << "writing out " << m_AlbumID2AlbumInfo.count() << " albums to file";
     QHashIterator< QString, Album > aa(m_AlbumID2AlbumInfo);
     aa.toBack();
-    qint16 cnt = m_AlbumID2AlbumInfo.count();
     while(aa.hasPrevious()) {
         aa.previous();
         Album a = aa.value();
         out << aa.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.title << a.year;
-        qDebug() <<  cnt--;
     }
 
     DEBUGF( "Writing file of size: " << file.size() );
@@ -252,18 +264,17 @@ void SlimServerInfo::refreshImageFromServer(void)
     connect(db,SIGNAL(FinishedUpdatingDatabase()),
             this,SLOT(DatabaseUpdated()));
 
-    qDebug() << "refreshing from server";
-
     db->Init(SlimServerAddr,cliPort,cli->GetCliUsername(),cli->GetCliPassword());
     db->start();    // init database fetching thread
 }
 
 void SlimServerInfo::DatabaseUpdated(void)
 {
-//    m_AlbumArtist2AlbumInfo = db->AlbumArtist2AlbumInfo();
-//    m_AlbumID2AlbumInfo = db->AlbumID2AlbumInfo();
-//    m_Artist2AlbumIds = db->Artist2AlbumIds();
+    m_AlbumArtist2AlbumID = db->AlbumArtist2AlbumID();
+    m_AlbumID2AlbumInfo = db->AlbumID2AlbumInfo();
+    m_Artist2AlbumIds = db->Artist2AlbumIds();
 //    m_Id2Art = db->Id2Art();
     db->exit();
-    delete db;
+    db->deleteLater();
+//    delete db;
 }

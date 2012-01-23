@@ -158,6 +158,7 @@ bool MainWindow::Create(void)
     slimCLI->SetServerInfo(serverInfo);                         // give pointer so CLI can get server info and put into SlimServerInfo
     slimCLI->Init();
 
+    DEBUGF("###Setup Display");
     SetUpDisplay();
 
     // establish the proper URL for the web interface
@@ -204,6 +205,7 @@ bool MainWindow::Create(void)
     connect( ui->btnMute ,SIGNAL(clicked()), this, SLOT(slotMute()) );
     connect( ui->btnUpVolume ,SIGNAL(clicked()), this, SLOT(slotVolUp()) );
     connect( ui->btnDownVolume ,SIGNAL(clicked()), this, SLOT(slotVolDown()) );
+    DEBUGF("###Create Return");
     return true;
 }
 

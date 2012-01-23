@@ -38,6 +38,9 @@
 // C++
 #include <iostream>
 
+// uncomment the following to turn on debugging
+//#define SLIMCLI_DEBUG
+
 // Define Squeezebox Player Types
 // From server/Slim/Networking/Slimproto.pm from 7.4r24879
 #define SQUEEZEBOX      2
@@ -181,8 +184,7 @@ public:
     int totalGenres;
     int totalSongs;
     SlimItem m_AlbumArtist2Art;         // Album+Artist name to coverid
-    SlimItemList m_Artist2AlbumIds;    // Artist name to list of albums
-    SlimImageItem m_Id2Art;       // coverid to artwork
+    SlimItem m_Artist2AlbumIds;    // Artist name to list of albums
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
 };
 
