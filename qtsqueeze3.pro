@@ -13,7 +13,6 @@ SOURCES += main.cpp \
     slimdevice.cpp \
     lblpictureflow.cpp \
     ImageLoader.cpp \
-    slimimageloader.cpp \
     slimserverinfo.cpp \
     slimdatabasefetch.cpp
 HEADERS += mainwindow.h \
@@ -22,9 +21,10 @@ HEADERS += mainwindow.h \
     slimcli.h \
     lblpictureflow.h \
     ImageLoader.h \
-    slimimageloader.h \
     slimserverinfo.h \
     squeezedefines.h \
     slimdatabasefetch.h
 FORMS += mainwindow.ui
 RESOURCES += qtsqueeze3.qrc
+
+

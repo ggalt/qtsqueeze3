@@ -6,21 +6,46 @@
 LblPictureFlow::LblPictureFlow(QWidget* parent )
     :PictureFlow( parent )
 {
-  titles.clear();
-  titleColor = Qt::white;
+    albumList.clear();
+    titleColor = Qt::white;
 }
 
-
-void LblPictureFlow::addSlide(const QImage& image, QString &title )
+void LblPictureFlow::addSlide(const QImage& image, Album &album )
 {
-  PictureFlow::addSlide( image );
-  titles.append( title );
+    PictureFlow::addSlide( image );
+    albumList.append( album );
 }
 
-void LblPictureFlow::addSlide(const QPixmap& pixmap, QString &title )
+void LblPictureFlow::addSlide(const QPixmap& pixmap, Album &album )
 {
-  PictureFlow::addSlide( pixmap );
-  titles.append( title );
+    PictureFlow::addSlide( pixmap );
+    albumList.append( album );
+}
+
+void LblPictureFlow::setSlide(int index, const QImage& image, Album &album)
+{
+    if(slideCount()<index+1)  // we don't have that many sides
+        for(int i = slideCount(); i < index; i++) {
+            QPixmap p(":/img/lib/images/noAlbumImage.png");
+            Album a;
+            addSlide(p, a);
+        }
+
+    PictureFlow::setSlide(index, image);
+    albumList.replace(index, album);
+}
+
+void LblPictureFlow::setSlide(int index, const QPixmap& pixmap, Album &album)
+{
+    if(slideCount()<index+1)  // we don't have that many sides
+        for(int i = slideCount(); i < index; i++) {
+            QPixmap p(";/img/lib/images/noAlbumImage.png");
+            Album a;
+            addSlide(p, a);
+        }
+
+    PictureFlow::setSlide(index, pixmap);
+    albumList.replace(index, album);
 }
 
 void LblPictureFlow::setBackgroundColor(const QColor& c)
@@ -28,10 +53,10 @@ void LblPictureFlow::setBackgroundColor(const QColor& c)
     PictureFlow::setBackgroundColor(c);
     int hue, saturation, value;
     c.getHsv(&hue,&saturation,&value);
-//    if(value < 127)
-//        titleColor.setHsv(abs(180-hue),saturation,255);
-//    else
-//        titleColor.setHsv(abs(180-hue),saturation,0);
+    //    if(value < 127)
+    //        titleColor.setHsv(abs(180-hue),saturation,255);
+    //    else
+    //        titleColor.setHsv(abs(180-hue),saturation,0);
     if(value < 128)
         value += 128;
     else
@@ -42,13 +67,13 @@ void LblPictureFlow::setBackgroundColor(const QColor& c)
         saturation -= 128;
 
     titleColor.setHsv(abs(180-hue),saturation,value);
-//    titleColor.setHsv(hue,saturation,value);
+    //    titleColor.setHsv(hue,saturation,value);
 }
 
 void LblPictureFlow::clear()
 {
-  PictureFlow::clear();
-  titles.clear();
+    PictureFlow::clear();
+    albumList.clear();
 }
 /*
 void LblPictureFlow::keyPressEvent(QKeyEvent* event)
@@ -57,36 +82,36 @@ void LblPictureFlow::keyPressEvent(QKeyEvent* event)
 */
 void LblPictureFlow::mousePressEvent(QMouseEvent* event)
 {
-  if(event->x() > width()/2)
-    emit NextSlide();
-  else
-    emit PrevSlide();
-  PictureFlow::mousePressEvent(event);
+    if(event->x() > width()/2)
+        emit NextSlide();
+    else
+        emit PrevSlide();
+    PictureFlow::mousePressEvent(event);
 }
 
 void LblPictureFlow::paintEvent (QPaintEvent *e)
 {
-  PictureFlow::paintEvent(e);
+    PictureFlow::paintEvent(e);
 
-  if (slideCount() < 1)
-    return;
+    if (slideCount() < 1)
+        return;
 
-  QPainter p(this);
+    QPainter p(this);
 
-  // White Pen for Title Info
-  p.setPen(titleColor);
+    // White Pen for Title Info
+    p.setPen(titleColor);
 
-  int cw = width() / 2;
-  int wh = height();
+    int cw = width() / 2;
+    int wh = height();
 
-  if( centerIndex() < titles.count() && centerIndex() >= 0 ) {
-    QString title = this->titles.at( centerIndex() );
+    if( centerIndex() < albumList.count() && centerIndex() >= 0 ) {
+        QString title = albumList.at( centerIndex() ).title;
 
-    // Draw Title
-    p.setFont(QFont(p.font().family(), p.font().pointSize() + 1, QFont::Bold));
-    p.drawText(cw - (QFontMetrics(p.font()).width( title ) / 2), wh - 30, title );
-  }
-  p.end();
+        // Draw Title
+        p.setFont(QFont(p.font().family(), p.font().pointSize() + 1, QFont::Bold));
+        p.drawText(cw - (QFontMetrics(p.font()).width( title ) / 2), wh - 30, title );
+    }
+    p.end();
 }
 
 /* vim: set expandtab tabstop=4 shiftwidth=4: */

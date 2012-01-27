@@ -62,8 +62,9 @@ void SlimDevice::Init( SlimCLI *cli )
 
     // finally, let's send the command to get the information this device
     // this command gets genre, artist, album, title, year, duration, artwork_id (to get cover image)
-    //  SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,J \n" ) );
-    SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,c \n" ) );
+    //  SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,e,y,d,J \n" ) );
+    // NOTE: "e" should deliver album_id
+    SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,e,y,d,c \n" ) );
 }
 
 /*
@@ -134,6 +135,8 @@ void SlimDevice::ProcessStatusSetupMessage( QByteArray msg )
             }
             else if( s.section( ':', 0, 0 ) == "title" )
                 devicePlayList.last().title = QByteArray::fromPercentEncoding( s.section( ':', 1, 1 ).toAscii() );
+            else if( s.section( ':', 0, 0 ) == "album_id")
+                devicePlayList.last().album_id = QByteArray::fromPercentEncoding(s.section( ':', 1, 1 ).toAscii() );
             else if( s.section( ':', 0, 0 ) == "genre" )
                 devicePlayList.last().genre = QByteArray::fromPercentEncoding( s.section( ':', 1, 1 ).toAscii() );
             else if( s.section( ':', 0, 0 ) == "artist" )
@@ -221,8 +224,8 @@ void SlimDevice::ProcessPlayingMsg( QByteArray Response )
         }
         if( ( devicePlaylistIndex ) >= devicePlaylistCount ) { // increment playlist index, but if it's greater than the number of songs in the playlist, update the playlist info
             DEBUGF( "Warning: playlist index is greater than the playlist size\nIndex: " << devicePlaylistIndex << "\tCount: " << devicePlaylistCount );
-            //      SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,J \n" ) );
-            SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,c \n" ) );
+            //      SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,e,y,d,c \n" ) );
+            SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,e,y,d,c \n" ) );
         }
         else {
             emit NewSong();
@@ -245,17 +248,17 @@ void SlimDevice::ProcessPlayingMsg( QByteArray Response )
   */
     else if( response.left( 19 ) == "playlist loadtracks" ) { // it's a subscribed message regarding a new playlist, so process it
         //    SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,J \n" ) );
-        SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,c \n" ) );
+        SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,e,y,d,c \n" ) );
         emit NewPlaylist();
     }
     else if( response.left( 18 ) == "playlist addtracks" ) { // it's a subscribed message regarding an updated playlist, so process it
         //    SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,J \n" ) );
-        SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,c \n" ) );
+        SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,e,y,d,c \n" ) );
         emit NewPlaylist();
     }
     else if( response.left( 15 ) == "playlist delete" ) { // it's a subscribed message regarding an updated playlist, so process it
 //        SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,J \n" ) );
-        SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,c \n" ) );
+        SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,e,y,d,c \n" ) );
         emit NewPlaylist();
     }
     else if( response.left( 12 ) == "mixer muting" ) {

@@ -43,9 +43,10 @@ bool SlimServerInfo::Init(SlimCLI *cliRef)
     if( !SetupDevices())
         return false;
 
-    ReadDataFile();
-
-    checkRefreshDate();     // see if we need to update the database
+    if( !ReadDataFile() )
+        refreshImageFromServer();
+    else
+        checkRefreshDate();     // see if we need to update the database
 }
 
 bool SlimServerInfo::SetupDevices( void )
@@ -254,7 +255,7 @@ void SlimServerInfo::WriteDataFile( void )
 
 void SlimServerInfo::checkRefreshDate(void)
 {
-//RequestArtwork    if(lastServerRefresh!=freshnessDate)
+    if(lastServerRefresh!=freshnessDate)
         refreshImageFromServer();
 }
 

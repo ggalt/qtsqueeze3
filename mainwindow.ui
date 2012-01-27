@@ -96,7 +96,7 @@
      <attribute name="title">
       <string>Web</string>
      </attribute>
-     <widget class="QWebView" name="webView">
+     <widget class="QWebView" name="webView" native="true">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -105,9 +105,9 @@
         <height>261</height>
        </rect>
       </property>
-      <property name="url">
+      <property name="url" stdset="0">
        <url>
-        <string>http://10.6.75.81:9000/</string>
+        <string>http://127.0.0.1:9000/</string>
        </url>
       </property>
      </widget>
@@ -579,7 +579,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>LMS Username (if used):</string>
+       <string>LMS Username:</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_9">
@@ -592,7 +592,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>LMS Password (if used):</string>
+       <string>LMS Password:</string>
       </property>
      </widget>
      <widget class="QLineEdit" name="txtUsername">

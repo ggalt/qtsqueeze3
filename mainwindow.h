@@ -37,34 +37,6 @@
 #include "lblpictureflow.h"
 #include "slimserverinfo.h"
 
-//#ifndef min
-//#define min(a,b) ((a > b) ? b : a )
-//#define max(a,b) ((a < b) ? b : a )
-//#endif
-
-//typedef QHash< QString, SlimDevice* > SlimDevices;
-// typedef QHash< QString, QWidget* > WidgetList;
-
-//// Define Squeezebox Player Types
-//// From server/Slim/Networking/Slimproto.pm from 7.4r24879
-//#define SQUEEZEBOX      2
-//#define SOFTSQUEEZE     3
-//#define SQUEEZEBOX2     4
-//#define TRANSPORTER     5
-//#define SOFTSQUEEZE3    6
-//#define RECEIVER        7
-//#define SQUEEZESLAVE    8
-//#define CONTROLLER      9
-//#define BOOM            10
-//#define SOFTBOOM        11
-//#define SQUEEZEPLAY     12
-
-
-//enum { NODEVICELIST = 0, YESDEVICELIST, PLUGINCONTROL, VFDCONTROL };
-//typedef enum { NOSCROLL= 0, PAUSE_SCROLL, SCROLL, FADE_IN, FADE_OUT } scrollStatus;
-//typedef enum { transNONE = 0, transLEFT=-1, transRIGHT=1, transUP=2, transDOWN=-2} transitionType;
-
-
 namespace Ui
 {
 class MainWindow;

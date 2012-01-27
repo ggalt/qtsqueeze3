@@ -30,25 +30,11 @@
 
 #include <qimage.h>
 
+/// ----------------------------------------------------------------------
+/// load and resize image
+/// static
+/// ----------------------------------------------------------------------
 
-ImageLoader::ImageLoader(QString serveraddr, qint16 httpport, QString cliuname = NULL, QString clipass = NULL)
-    : QThread(),
-      restart(false), working(false), idx(-1),
-      SlimServerAddr(serveraddr), httpPort(httpport), cliUsername(cliuname), cliPassword(clipass)
-{
-}
-
-ImageLoader::~ImageLoader()
-{
-  mutex.lock();
-  condition.wakeOne();
-  mutex.unlock();
-  wait();
-}
-
-
-
-// load and resize image
 static QImage loadAndResize(const QString& fileName, QSize size)
 {
 /*
@@ -90,17 +76,38 @@ static QImage loadAndResize(const QString& fileName, QSize size)
   return image;
 }
 
+/// ----------------------------------------------------------------------
+/// ImageLoader Class declarations
+/// ----------------------------------------------------------------------
+
+ImageLoader::ImageLoader(QString serveraddr, qint16 httpport, QString cliuname, QString clipass)
+    : QThread(),
+      restart(false), working(false), idx(-1),
+      SlimServerAddr(serveraddr), httpPort(httpport), cliUsername(cliuname), cliPassword(clipass)
+{
+    imageServer = new QNetworkAccessManager();
+}
+
+ImageLoader::~ImageLoader()
+{
+  mutex.lock();
+  delete imageServer;
+  condition.wakeOne();
+  mutex.unlock();
+  wait();
+}
+
 bool ImageLoader::busy() const
 {
   return isRunning() ? working : false;
 }  
 
-void ImageLoader::generate(int index, const QString& fileName, QSize size)
+void ImageLoader::generate(int index, const QByteArray& coverID, QSize size)
 {
   mutex.lock();
-  this->idx = index;
-  this->fileName = fileName;
-  this->size = size;
+//  this->idx = index;
+//  this->fileName = fileName;
+//  this->size = size;
   mutex.unlock();
 
   if (!isRunning())

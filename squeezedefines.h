@@ -143,6 +143,7 @@ public:
     QByteArray year;
     QByteArray duration;
     QByteArray coverid;
+    QByteArray album_id;
 };
 
 class DisplayBuffer

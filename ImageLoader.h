@@ -86,6 +86,8 @@ private:
   quint16 httpPort;          // port to use for cli, usually 9090, but we allow the user to change this
   QString cliUsername;      // username for cli if needed
   QString cliPassword;      // password for cli if needed **NOTE: DANGER, DANGER this is done in clear text, so don't use a password you care about!!
+
+  QNetworkAccessManager *imageServer;
 };
 
 

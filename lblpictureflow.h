@@ -3,10 +3,12 @@
 
 #include <QPaintEvent>
 #include <QPainter>
+#include <QList>
 #include <QStringList>
 #include <QColor>
 
 #include "pictureflow.h"
+#include "squeezedefines.h"
 
 class LblPictureFlow : public PictureFlow
 {
@@ -14,8 +16,11 @@ class LblPictureFlow : public PictureFlow
 
 public:
   LblPictureFlow(QWidget* parent = 0);
-  void addSlide(const QImage& image, QString &title );
-  void addSlide(const QPixmap& pixmap, QString &title);
+  void addSlide(const QImage& image, Album &album );
+  void addSlide(const QPixmap& pixmap, Album &album );
+  void setSlide(int index, const QImage& image, Album &album);
+  void setSlide(int index, const QPixmap& pixmap, Album &album);
+
   void setBackgroundColor(const QColor& c);
   void clear();
 
@@ -30,7 +35,7 @@ protected:
   void paintEvent (QPaintEvent *e);
 
 private:
-  QStringList titles;
+  QList<Album> albumList;
   QColor titleColor;
 };
 

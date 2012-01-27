@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->btnDisplayTextColor,SIGNAL(clicked()),this,SLOT(setDisplayTextColor()));
 
     QPixmap splash;
-    splash.load( "/images/squeezeplayer.png" );
+    splash.load( ":/img/lib/images/squeezeplayer_large.png" );
     waitWindow = new QSplashScreen( this, splash );
     waitWindow->setGeometry( ( geometry().width() - 400 )/ 2, ( geometry().height() - 200 )/2,
                              400, 200 );
@@ -538,7 +538,7 @@ void MainWindow::slotCreateCoverFlow( void )
     QListIterator< TrackData > i( activeDevice->getDevicePlayList() );
     while( i.hasNext() ) {
         TrackData j = i.next();
-        QString title = QString( j.title + " - Artist: " + j.artist + " - Album: " + j.album );
+//        QString title = QString( j.title + " - Artist: " + j.artist + " - Album: " + j.album );
 //        CoverFlow->addSlide( slimCLI->GetAlbumArt( j.coverid ).toImage(), title );
         DEBUGF( "Adding art work for track id: " << j.coverid );
     }
