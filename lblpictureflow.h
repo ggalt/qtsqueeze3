@@ -9,17 +9,16 @@
 
 #include "pictureflow.h"
 #include "squeezedefines.h"
+#include "ImageLoader.h"
 
 class LblPictureFlow : public PictureFlow
 {
     Q_OBJECT
 
 public:
-  LblPictureFlow(QWidget* parent = 0);
-  void addSlide(const QImage& image, Album &album );
-  void addSlide(const QPixmap& pixmap, Album &album );
-  void setSlide(int index, const QImage& image, Album &album);
-  void setSlide(int index, const QPixmap& pixmap, Album &album);
+  LblPictureFlow(QWidget* parent, QString lmsServerAddr, qint16 httpport, bool autoselect = true, QString cliuname = NULL, QString clipass = NULL);
+  void addSlide(Album &album );
+  void setSlide(int index, Album &album);
 
   void setBackgroundColor(const QColor& c);
   void clear();
@@ -27,6 +26,7 @@ public:
 signals:
   void NextSlide();
   void PrevSlide();
+  void SelectSlide(int);
 
 
 protected:
@@ -37,6 +37,8 @@ protected:
 private:
   QList<Album> albumList;
   QColor titleColor;
+  ImageLoader *worker;
+  bool autoSelect;
 };
 
 

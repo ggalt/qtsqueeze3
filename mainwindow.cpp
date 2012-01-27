@@ -215,7 +215,7 @@ void MainWindow::SetUpDisplay()
     flowRect = QRect( 0, 0,
                       ui->cfWidget->geometry().width(),
                       ui->cfWidget->geometry().height() );
-    CoverFlow = new LblPictureFlow( ui->cfWidget );
+    CoverFlow = new LblPictureFlow( ui->cfWidget, SlimServerAddr, SlimServerHttpPort.toInt(), true, NULL, NULL);
     CoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
     CoverFlow->setContentsMargins( 50, 0, CoverFlow->width() - 50, CoverFlow->height() );
     CoverFlow->setBackgroundColor(coverflowBackground);

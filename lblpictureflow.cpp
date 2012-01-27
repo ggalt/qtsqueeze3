@@ -3,48 +3,33 @@
 
 #include "lblpictureflow.h"
 
-LblPictureFlow::LblPictureFlow(QWidget* parent )
+LblPictureFlow::LblPictureFlow(QWidget* parent, QString lmsServerAddr,qint16 httpport, bool autoselect,
+                               QString cliuname, QString clipass)
     :PictureFlow( parent )
 {
     albumList.clear();
     titleColor = Qt::white;
+    worker = new ImageLoader(lmsServerAddr,httpport,cliuname,clipass);
+    autoSelect = autoselect;
 }
 
-void LblPictureFlow::addSlide(const QImage& image, Album &album )
+void LblPictureFlow::addSlide(Album &album )
 {
-    PictureFlow::addSlide( image );
+//    PictureFlow::addSlide( image );
     albumList.append( album );
 }
 
-void LblPictureFlow::addSlide(const QPixmap& pixmap, Album &album )
+void LblPictureFlow::setSlide(int index, Album &album)
 {
-    PictureFlow::addSlide( pixmap );
-    albumList.append( album );
-}
-
-void LblPictureFlow::setSlide(int index, const QImage& image, Album &album)
-{
-    if(slideCount()<index+1)  // we don't have that many sides
+    if(slideCount()<index+1)  // we don't have enough slides to put one where we want it
         for(int i = slideCount(); i < index; i++) {
             QPixmap p(":/img/lib/images/noAlbumImage.png");
+            PictureFlow::addSlide(p);
             Album a;
-            addSlide(p, a);
+            albumList.append(a);
         }
 
-    PictureFlow::setSlide(index, image);
-    albumList.replace(index, album);
-}
-
-void LblPictureFlow::setSlide(int index, const QPixmap& pixmap, Album &album)
-{
-    if(slideCount()<index+1)  // we don't have that many sides
-        for(int i = slideCount(); i < index; i++) {
-            QPixmap p(";/img/lib/images/noAlbumImage.png");
-            Album a;
-            addSlide(p, a);
-        }
-
-    PictureFlow::setSlide(index, pixmap);
+//    PictureFlow::setSlide(index, image);
     albumList.replace(index, album);
 }
 
@@ -75,17 +60,20 @@ void LblPictureFlow::clear()
     PictureFlow::clear();
     albumList.clear();
 }
-/*
-void LblPictureFlow::keyPressEvent(QKeyEvent* event)
-{
-}
-*/
+
 void LblPictureFlow::mousePressEvent(QMouseEvent* event)
 {
-    if(event->x() > width()/2)
-        emit NextSlide();
-    else
-        emit PrevSlide();
+    if(event->type()== QEvent::MouseButtonDblClick) {  // selected current center image
+        emit SelectSlide(centerIndex());
+        return;
+    }
+
+    if(autoSelect) { // clicking on the next image means load that item
+        if(event->x() > width()/2)
+            emit NextSlide();
+        else
+            emit PrevSlide();
+    }
     PictureFlow::mousePressEvent(event);
 }
 

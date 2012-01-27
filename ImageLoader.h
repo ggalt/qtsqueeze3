@@ -54,6 +54,7 @@
 
 class ImageLoader : public QThread
 {
+    Q_OBJECT
 public:
   ImageLoader(QString serveraddr, qint16 httpport, QString cliuname = NULL, QString clipass = NULL);
 
@@ -62,11 +63,11 @@ public:
   // returns FALSE if worker is still busy and can't take the task
   bool busy() const;
 
-  void generate(int index, const QByteArray& coverID, QSize size);
+  void generate(int index, const QByteArray& cover_id, QSize size);
+  QImage RetrieveCover(QByteArray cover_id);
 
-  int index() const { return idx; }
-
-  QImage result() const { return img; }
+signals:
+  void imageReady(QByteArray cover_id);
 
 protected:
   void run();
@@ -75,12 +76,7 @@ private:
   QMutex mutex;
   QWaitCondition condition;
 
-  bool restart;
-  bool working;
-  int idx;
-  QString fileName;
   QSize size;
-  QImage img;
 
   QString SlimServerAddr;   // server IP address
   quint16 httpPort;          // port to use for cli, usually 9090, but we allow the user to change this
