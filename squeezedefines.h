@@ -35,6 +35,8 @@
 #include <QList>
 #include <QByteArray>
 #include <QNetworkReply>
+#include <QtGlobal>
+#include <QtDebug>
 
 // C++
 #include <iostream>
@@ -83,10 +85,12 @@
 
 #define unpackFixedPoint(ptr, off) (((unpackN4(ptr, off) & 0xFFFF0000) >> 16) + ((unpackN4(ptr, off) & 0xFFFF) / (float)0xFFFF))
 
-class SlimCLI;          // forward declaration
-class SlimDevice;       // forward declaration
-class SlimServerInfo;   // forward declaration
-class ImageLoader;
+
+// forward declaration of classes
+class SlimCLI;
+class SlimDevice;
+class SlimServerInfo;
+class SlimImageCache;
 class SlimDatabaseFetch;
 
 

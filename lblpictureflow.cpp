@@ -10,11 +10,14 @@ LblPictureFlow::LblPictureFlow(QWidget* parent, QString lmsServerAddr,qint16 htt
 {
     albumList.clear();
     titleColor = Qt::white;
-    worker = new ImageLoader(lmsServerAddr,httpport,cliuname,clipass);
     autoSelect = autoselect;
+
+    worker = new SlimImageCache();
+    worker->Init(lmsServerAddr,httpport);
+
     connect(worker, SIGNAL(ImageReady(QByteArray)),
             this, SLOT(ImageReady(QByteArray)));
-//    worker->start();
+    worker->start();
 }
 
 void LblPictureFlow::addSlide(Album &album )

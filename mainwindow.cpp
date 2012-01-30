@@ -546,7 +546,7 @@ void MainWindow::slotCreateCoverFlow( void )
         a.coverid = j.coverid;
         a.year = j.year;
 //        QString title = QString( j.title + " - Artist: " + j.artist + " - Album: " + j.album );
-//        CoverFlow->addSlide(a);
+        CoverFlow->addSlide(a);
         DEBUGF( "Adding art work for track id: " << j.coverid );
     }
     ui->cfWidget->setEnabled( true );

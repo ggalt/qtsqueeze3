@@ -10,7 +10,7 @@
 
 #include "pictureflow.h"
 #include "squeezedefines.h"
-#include "ImageLoader.h"
+#include "slimimagecache.h"
 
 class LblPictureFlow : public PictureFlow
 {
@@ -42,7 +42,7 @@ private:
     QList<Album> albumList;
     QHash<QByteArray,imageIndexCheck> imageIndexer;
     QColor titleColor;
-    ImageLoader *worker;
+    SlimImageCache *worker;
     bool autoSelect;
 };
 
