@@ -34,6 +34,7 @@
 #include <QHash>
 #include <QList>
 #include <QByteArray>
+#include <QNetworkReply>
 
 // C++
 #include <iostream>
@@ -85,7 +86,7 @@
 class SlimCLI;          // forward declaration
 class SlimDevice;       // forward declaration
 class SlimServerInfo;   // forward declaration
-class SlimImageLoader;
+class ImageLoader;
 class SlimDatabaseFetch;
 
 
@@ -176,6 +177,7 @@ typedef QHash< QString, QPixmap> SlimImageItem;
 typedef QHash< QString, QString > SlimItem;
 typedef QHash< QString, QStringList > SlimItemList;
 typedef QHash< QString, Album > SlimAlbumItem;
+typedef QHash< QNetworkReply*, QByteArray > NewtorkReply2Cover;
 
 class DatabaseInfo
 {
@@ -189,10 +191,10 @@ public:
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
 };
 
-typedef struct s_ImageFile {
-    QByteArray refreshDate;
-    SlimImageItem imgList;
-} ImageFile;
+typedef struct s_imageIndexCheck{
+    int index;
+    bool loaded;
+} imageIndexCheck;
 
 
 

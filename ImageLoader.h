@@ -4,7 +4,7 @@
  * Copyright (C) 2007 Ariya Hidayat (ariya.hidayat@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 
+ * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
  *
@@ -34,8 +34,9 @@
 
 #include <qthread.h>
 
-#include <qmutex.h>
-#include <qwaitcondition.h>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QWaitCondition>
 
 #include <QTimer>
 #include <QTime>
@@ -48,42 +49,48 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QImageReader>
+#include <QPixmap>
 
 #include "squeezedefines.h"
 
 
-class ImageLoader : public QThread
+class ImageLoader : public QObject
 {
     Q_OBJECT
 public:
-  ImageLoader(QString serveraddr, qint16 httpport, QString cliuname = NULL, QString clipass = NULL);
+    ImageLoader(QString serveraddr, qint16 httpport, QString cliuname = NULL, QString clipass = NULL);
 
-  ~ImageLoader();
+    ~ImageLoader();
 
-  // returns FALSE if worker is still busy and can't take the task
-  bool busy() const;
-
-  void generate(int index, const QByteArray& cover_id, QSize size);
-  QImage RetrieveCover(QByteArray cover_id);
+    //  void generate(const QByteArray& cover_id);
+    void RequestArtwork(QByteArray coverID);
+    QPixmap RetrieveCover(QByteArray cover_id);
+    SlimImageItem ImageCache(void) { return imageCache; }
 
 signals:
-  void imageReady(QByteArray cover_id);
+    void ImageReady(QByteArray cover_id);
+
+public slots:
+    void ArtworkReply(QNetworkReply*);
 
 protected:
-  void run();
+//    void run();
 
 private:
-  QMutex mutex;
-  QWaitCondition condition;
+//    QMutex mutex;
+//    QWaitCondition condition;
 
-  QSize size;
+    QSize size;
+    SlimImageItem imageCache;
 
-  QString SlimServerAddr;   // server IP address
-  quint16 httpPort;          // port to use for cli, usually 9090, but we allow the user to change this
-  QString cliUsername;      // username for cli if needed
-  QString cliPassword;      // password for cli if needed **NOTE: DANGER, DANGER this is done in clear text, so don't use a password you care about!!
+    QString SlimServerAddr;   // server IP address
+    quint16 httpPort;          // port to use for cli, usually 9090, but we allow the user to change this
+    QString cliUsername;      // username for cli if needed
+    QString cliPassword;      // password for cli if needed **NOTE: DANGER, DANGER this is done in clear text, so don't use a password you care about!!
+    QString imageSizeStr;  // default to "200X200"
 
-  QNetworkAccessManager *imageServer;
+    QNetworkAccessManager *imageServer;
+    NewtorkReply2Cover httpReplyList;
 };
 
 

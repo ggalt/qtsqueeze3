@@ -229,7 +229,6 @@ bool SlimServerInfo::ReadDataFile( void )
 void SlimServerInfo::WriteDataFile( void )
 {
     QFile file;
-    ImageFile imgFile;
     file.setFileName( PATH );
 
     //update the images

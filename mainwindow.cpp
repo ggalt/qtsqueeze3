@@ -538,8 +538,15 @@ void MainWindow::slotCreateCoverFlow( void )
     QListIterator< TrackData > i( activeDevice->getDevicePlayList() );
     while( i.hasNext() ) {
         TrackData j = i.next();
+        Album a;
+        a.album_id = j.album_id;
+        a.title = j.album;
+        a.artist = j.artist;
+        // a.artist_id =
+        a.coverid = j.coverid;
+        a.year = j.year;
 //        QString title = QString( j.title + " - Artist: " + j.artist + " - Album: " + j.album );
-//        CoverFlow->addSlide( slimCLI->GetAlbumArt( j.coverid ).toImage(), title );
+//        CoverFlow->addSlide(a);
         DEBUGF( "Adding art work for track id: " << j.coverid );
     }
     ui->cfWidget->setEnabled( true );

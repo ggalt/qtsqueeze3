@@ -1,5 +1,6 @@
 #include <QtGlobal>
 #include <QDebug>
+#include <QSize>
 
 #include "lblpictureflow.h"
 
@@ -11,27 +12,78 @@ LblPictureFlow::LblPictureFlow(QWidget* parent, QString lmsServerAddr,qint16 htt
     titleColor = Qt::white;
     worker = new ImageLoader(lmsServerAddr,httpport,cliuname,clipass);
     autoSelect = autoselect;
+    connect(worker, SIGNAL(ImageReady(QByteArray)),
+            this, SLOT(ImageReady(QByteArray)));
+//    worker->start();
 }
 
 void LblPictureFlow::addSlide(Album &album )
 {
-//    PictureFlow::addSlide( image );
+    QPixmap pic;
+    imageIndexCheck c;
+    c.index=slideCount();
+    qDebug() << "image index at:" << c.index << " but slide count is " << slideCount();
+
+    if(worker->ImageCache().contains(album.coverid)) {
+        pic = worker->RetrieveCover(album.coverid);
+        c.loaded = true;
+    }
+    else {
+        pic.load(":/img/lib/images/noAlbumImage.png");
+        c.loaded=false;
+        worker->RequestArtwork(album.coverid);
+    }
+    PictureFlow::addSlide(pic);
     albumList.append( album );
+    imageIndexer.insert(album.coverid,c);
+//    setSlide(slideCount(),album);
 }
 
 void LblPictureFlow::setSlide(int index, Album &album)
 {
-    if(slideCount()<index+1)  // we don't have enough slides to put one where we want it
-        for(int i = slideCount(); i < index; i++) {
+    qDebug() << "setting slide " << index << " with cover id: " << album.coverid << " for album " << album.title;
+    if(slideCount()<index)  // we don't have enough slides to put one where we want it
+        for(int i = slideCount()-1; i < index; i++) {
             QPixmap p(":/img/lib/images/noAlbumImage.png");
             PictureFlow::addSlide(p);
             Album a;
             albumList.append(a);
         }
 
-//    PictureFlow::setSlide(index, image);
+    QPixmap pic;
+    imageIndexCheck c;
+    c.index=index;
+
+    if(worker->ImageCache().contains(album.coverid)) {
+        pic = worker->RetrieveCover(album.coverid);
+        c.loaded = true;
+    }
+    else {
+        pic.load(":/img/lib/images/noAlbumImage.png");
+        c.loaded=false;
+        worker->RequestArtwork(album.coverid);
+    }
+
+    PictureFlow::setSlide(index, pic);
     albumList.replace(index, album);
+    imageIndexer.insert(album.coverid,c);
 }
+
+void LblPictureFlow::ImageReady(QByteArray coverID)
+{
+    qDebug() << "Image ready for " << coverID;
+    int idx = imageIndexer.value(coverID).index;
+    qDebug() << "Image going to index:" << idx;
+    imageIndexCheck c;
+    c.index=idx;
+    c.loaded=true;
+    qDebug() << "inserting in image indexer";
+    imageIndexer.insert(coverID,c);
+    qDebug() << "adding to pictureflow";
+//    PictureFlow::setSlide(idx,worker->RetrieveCover(coverID));
+    qDebug() << "done adding to picture flow";
+}
+
 
 void LblPictureFlow::setBackgroundColor(const QColor& c)
 {

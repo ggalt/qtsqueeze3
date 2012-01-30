@@ -30,122 +30,164 @@
 
 #include <qimage.h>
 
-/// ----------------------------------------------------------------------
-/// load and resize image
-/// static
-/// ----------------------------------------------------------------------
+///// ----------------------------------------------------------------------
+///// load and resize image
+///// static
+///// ----------------------------------------------------------------------
 
-static QImage loadAndResize(const QString& fileName, QSize size)
-{
-/*
-    QEventLoop q;
-    QTimer tT;
+//static QImage loadAndResize(const QString& fileName, QSize size)
+//{
+///*
+//    QEventLoop q;
+//    QTimer tT;
 
-    tT.setSingleShot(true);
-    connect(&tT, SIGNAL(timeout()), &q, SLOT(quit()),Qt::DirectConnection);
+//    tT.setSingleShot(true);
+//    connect(&tT, SIGNAL(timeout()), &q, SLOT(quit()),Qt::DirectConnection);
 
-    m_request.setUrl( m_url );
-    VERBOSE( VB_GENERAL, LOC + "Audio Request made to: " + m_url.toString());
+//    m_request.setUrl( m_url );
+//    VERBOSE( VB_GENERAL, LOC + "Audio Request made to: " + m_url.toString());
 
-    m_reply = (audioReply*)get(m_request);
-    connect(m_reply, SIGNAL(readyRead()),
-            &q, SLOT(quit()),Qt::DirectConnection);
+//    m_reply = (audioReply*)get(m_request);
+//    connect(m_reply, SIGNAL(readyRead()),
+//            &q, SLOT(quit()),Qt::DirectConnection);
 
-    tT.start(5000); // 5s timeout
-    q.exec();
+//    tT.start(5000); // 5s timeout
+//    q.exec();
 
-    if(tT.isActive()){
-        // download complete
-        tT.stop();
-        return m_reply;
-    } else {
-        VERBOSE( VB_IMPORTANT, LOC + "Audio Stream Request timed out");
-        VERBOSE( VB_IMPORTANT, LOC + QString("reply contains %1 bytes").arg(m_reply->bytesAvailable()));
-        return NULL; // returning NULL will indicate no stream file retrieved
-    }
+//    if(tT.isActive()){
+//        // download complete
+//        tT.stop();
+//        return m_reply;
+//    } else {
+//        VERBOSE( VB_IMPORTANT, LOC + "Audio Stream Request timed out");
+//        VERBOSE( VB_IMPORTANT, LOC + QString("reply contains %1 bytes").arg(m_reply->bytesAvailable()));
+//        return NULL; // returning NULL will indicate no stream file retrieved
+//    }
 
-  */
-  QImage image;
-  bool result = image.load(fileName);
+//  */
+//  QImage image;
+//  bool result = image.load(fileName);
 
-  if(!result)
-    return QImage();
+//  if(!result)
+//    return QImage();
 
-  image = image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+//  image = image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
-  return image;
-}
+//  return image;
+//}
 
 /// ----------------------------------------------------------------------
 /// ImageLoader Class declarations
 /// ----------------------------------------------------------------------
 
 ImageLoader::ImageLoader(QString serveraddr, qint16 httpport, QString cliuname, QString clipass)
-    : QThread(),
-      restart(false), working(false), idx(-1),
+    : QObject(),
       SlimServerAddr(serveraddr), httpPort(httpport), cliUsername(cliuname), cliPassword(clipass)
 {
     imageServer = new QNetworkAccessManager();
+    imageSizeStr = "cover_200x200";
+    connect(imageServer,SIGNAL(finished(QNetworkReply*)),
+            this,SLOT(ArtworkReply(QNetworkReply*)));
 }
 
 ImageLoader::~ImageLoader()
 {
-  mutex.lock();
+//  mutex.lock();
   delete imageServer;
-  condition.wakeOne();
-  mutex.unlock();
-  wait();
+//  condition.wakeOne();
+//  mutex.unlock();
+//  wait();
 }
 
-bool ImageLoader::busy() const
+//void SlimImageLoader::generate(const QByteArray& coverID)
+//{
+//  mutex.lock();
+////  this->idx = index;
+////  this->fileName = fileName;
+////  this->size = size;
+//  mutex.unlock();
+
+//  if (!isRunning())
+//    start();
+//  else
+//  {
+//    // already running, wake up whenever ready
+//    restart = true;
+//    condition.wakeOne();
+//   }
+// }
+
+//void ImageLoader::run()
+//{
+//  for(;;)
+//  {
+//    // copy necessary data
+//    mutex.lock();
+//    this->working = true;
+//    QString fileName = this->fileName;
+//    QSize size = this->size;
+//    mutex.unlock();
+
+//    QImage image = loadAndResize(fileName, size);
+
+//      // let everyone knows it is ready
+//    mutex.lock();
+//    this->working = false;
+//    this->img = image;
+//    mutex.unlock();
+
+//    // put to sleep
+//    mutex.lock();
+//    if (!this->restart)
+//      condition.wait(&mutex);
+//    restart = false;
+//    mutex.unlock();
+//  }
+//    exec();
+//}
+
+void ImageLoader::RequestArtwork(QByteArray coverID)
 {
-  return isRunning() ? working : false;
-}  
+//    if(!this->isRunning())
+//        start();
+//    QMutexLocker m(&mutex);
+    QString urlString = QString("http://%1:%2/music/%3/%4")
+            .arg(SlimServerAddr)
+            .arg(httpPort)
+            .arg(QString(coverID))
+            .arg(imageSizeStr);
+    QNetworkRequest req;
+    req.setUrl(QUrl(urlString));
+    QNetworkReply *reply = imageServer->get(req);
+    httpReplyList.insert(reply,coverID);
+    qDebug() << "requesting artwork: " << urlString;
+    qDebug() << "Error msg if any: " << reply->errorString() << " with code " << reply->error();
+}
 
-void ImageLoader::generate(int index, const QByteArray& coverID, QSize size)
+void ImageLoader::ArtworkReply(QNetworkReply *reply)
 {
-  mutex.lock();
-//  this->idx = index;
-//  this->fileName = fileName;
-//  this->size = size;
-  mutex.unlock();
+    qDebug() << "Artwork reply";
+    QPixmap p;
+    QImageReader reader(reply);
+    QByteArray coverID = httpReplyList.value(reply);
 
-  if (!isRunning())
-    start();
-  else
-  {
-    // already running, wake up whenever ready
-    restart = true;
-    condition.wakeOne();
-   }
- }
+    qDebug() << "retrieved image for id: " << coverID;
+    qDebug() << "httpReplyList contains " << httpReplyList.count() << " elements";
 
-void ImageLoader::run()
+    p.fromImageReader(&reader);
+    if( p.isNull() )    // oops, no image returned, substitute default image
+        p.load(QString::fromUtf8(":/img/lib/images/noAlbumImage.png"));
+
+    imageCache.insert(coverID,p);
+    httpReplyList.remove(reply);
+    delete reply;
+
+    emit ImageReady(coverID);
+}
+
+QPixmap ImageLoader::RetrieveCover(QByteArray cover_id)
 {
-  for(;;)
-  {
-    // copy necessary data
-    mutex.lock();
-    this->working = true;
-    QString fileName = this->fileName;
-    QSize size = this->size;
-    mutex.unlock();
-
-    QImage image = loadAndResize(fileName, size);
-
-      // let everyone knows it is ready
-    mutex.lock();
-    this->working = false;
-    this->img = image;
-    mutex.unlock();
-
-    // put to sleep
-    mutex.lock();
-    if (!this->restart)
-      condition.wait(&mutex);
-    restart = false;
-    mutex.unlock();
-  }
+    return imageCache.value(cover_id);
 }
 
 /* vim: set expandtab tabstop=4 shiftwidth=4: */
