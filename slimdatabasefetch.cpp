@@ -161,7 +161,7 @@ bool SlimDatabaseFetch::ProcessResponse(void)
                     a.artist = artist_name;
                     a.artist_id = artist_id;
                     a.coverid = cover_id;
-                    a.title = album_title;
+                    a.albumtitle = album_title;
                     a.year = album_year;
                     m_AlbumArtist2AlbumID.insert(QString(album_title.trimmed()+artist_name.trimmed()), QString(album_id.trimmed()));
                     m_AlbumID2AlbumInfo.insert(album_id.trimmed(),a);

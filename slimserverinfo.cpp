@@ -207,7 +207,7 @@ bool SlimServerInfo::ReadDataFile( void )
         in >> a.artist;
         in >> a.artist_id;
         in >> a.coverid;
-        in >> a.title;
+        in >> a.albumtitle;
         in >> a.year;
         m_AlbumID2AlbumInfo.insert(key,a);
     }
@@ -244,7 +244,7 @@ void SlimServerInfo::WriteDataFile( void )
     while(aa.hasPrevious()) {
         aa.previous();
         Album a = aa.value();
-        out << aa.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.title << a.year;
+        out << aa.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.albumtitle << a.year;
     }
 
     DEBUGF( "Writing file of size: " << file.size() );

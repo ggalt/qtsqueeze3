@@ -166,7 +166,8 @@ public:
 class Album
 {
 public:
-    QByteArray title;
+    QByteArray songtitle;
+    QByteArray albumtitle;
     QByteArray album_id;
     QByteArray year;
     QByteArray artist;

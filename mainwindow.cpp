@@ -4,7 +4,7 @@
 #include "ui_mainwindow.h"
 
 // uncomment the following to turn on debugging
-// #define SLIMCLI_DEBUG
+#define SLIMCLI_DEBUG
 
 #ifdef SLIMCLI_DEBUG
 #define DEBUGF(...) qDebug() << __VA_ARGS__
@@ -339,7 +339,6 @@ void MainWindow::PaintTextDisplay( void )
         DEBUGF( "active device is null" );
     DisplayBuffer d = activeDevice->getDisplayBuffer();
 
-    DEBUGF( "PAINTING DISPLAY");
     int playedCount = 0;
     int totalCount = 1; // this way we never get a divide by zero error
     QString timeText = "";
@@ -539,14 +538,15 @@ void MainWindow::slotCreateCoverFlow( void )
     while( i.hasNext() ) {
         TrackData j = i.next();
         Album a;
+        a.songtitle = j.title;
         a.album_id = j.album_id;
-        a.title = j.album;
+        a.albumtitle = j.album;
         a.artist = j.artist;
         // a.artist_id =
         a.coverid = j.coverid;
         a.year = j.year;
 //        QString title = QString( j.title + " - Artist: " + j.artist + " - Album: " + j.album );
-        CoverFlow->addSlide(a);
+//        CoverFlow->addSlide(a);
         DEBUGF( "Adding art work for track id: " << j.coverid );
     }
     ui->cfWidget->setEnabled( true );

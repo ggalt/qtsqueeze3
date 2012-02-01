@@ -43,12 +43,18 @@ void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
     qDebug() << "retrieved image for id: " << coverID;
 
     p.fromImageReader(&reader);
+    qDebug() << "read image";
     if( p.isNull() ) // oops, no image returned, substitute default image
-        p.load(QString::fromUtf8(":/img/lib/images/noAlbumImage.png"));
+        p.load(":/img/lib/images/noAlbumImage.png");
 
+    qDebug() << "Inserting in cache";
     imageCache.insert(QString(coverID),p);
+    qDebug() << "Done Inserting in cache";
     httpReplyList.remove(reply);
+    qDebug() << "Removed reply ";
     delete reply;
+    qDebug() << "Deleted reply";
+    emit ImageReady(coverID);
 
     if(httpReplyList.isEmpty()) {
         qDebug() << "FINISHED GETTING IMAGES";
@@ -71,10 +77,18 @@ void SlimImageCache::RequestArtwork(QByteArray coverID)
 
 QPixmap SlimImageCache::RetrieveCover(QByteArray cover_id)
 {
+    QPixmap pic;
     if(imageCache.contains(QString(cover_id))) {
+        qDebug() << "returning real image for cover id:" << cover_id;
         return imageCache.value(QString(cover_id));
+//        pic = imageCache.value(QString(cover_id));
+//        qDebug() << "returning picture of size:" << pic.size();
+//        return pic;
     }
+    if(cover_id.isEmpty())
+        return NULL;
     RequestArtwork(cover_id);
+    qDebug() << "RetrieveCover is returning NULL";
     return NULL;
 }
 

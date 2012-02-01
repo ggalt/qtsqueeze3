@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QList>
 #include <QHash>
+#include <QMultiHash>
 #include <QStringList>
 #include <QColor>
 
@@ -40,7 +41,7 @@ protected:
 
 private:
     QList<Album> albumList;
-    QHash<QByteArray,imageIndexCheck> imageIndexer;
+    QMultiHash<QByteArray,imageIndexCheck> imageIndexer;
     QColor titleColor;
     SlimImageCache *worker;
     bool autoSelect;
