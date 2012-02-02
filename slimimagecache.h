@@ -23,7 +23,7 @@
 #include "squeezedefines.h"
 
 
-class SlimImageCache : public QThread
+class SlimImageCache : public QObject
 {
     Q_OBJECT
 public:
@@ -32,8 +32,9 @@ public:
 
     void Init(QString serveraddr, qint16 httpport);
     void Init(QString serveraddr, qint16 httpport, QString imageDim, QString cliuname, QString clipass);
-    void RequestArtwork(QByteArray coverID);
-    QPixmap RetrieveCover(QByteArray cover_id);
+    QPixmap RetrieveCover(QString artist_album, QByteArray cover_id);
+    QPixmap RetrieveCover(QByteArray coverID);
+    QPixmap RetrieveCover(QString artist_album);
     SlimImageItem ImageCache(void) { return imageCache; }
 
 signals:
@@ -42,12 +43,14 @@ signals:
 public slots:
     void ArtworkReqply(QNetworkReply *reply);
 
-protected:
-    void run();
+//protected:
+//    void run();
 
 private:
-    QMutex mutex;
-    QWaitCondition condition;
+//    QMutex mutex;
+//    QWaitCondition condition;
+
+    void RequestArtwork(QByteArray cover_id);
 
     SlimImageItem imageCache;
 
@@ -58,7 +61,8 @@ private:
     QString imageSizeStr;  // default to "200X200"
 
     QNetworkAccessManager *imageServer;
-    QHash< QNetworkReply*,QByteArray > httpReplyList; // associate image request with coverid
+    QHash< QNetworkReply*,QByteArray > httpReplyList; // associate image request with a coverid
+    QHash< QByteArray,QString > Cover2ArtistAlbum; // associate coverids to artist+album name
 };
 
 #endif // SLIMIMAGECACHE_H

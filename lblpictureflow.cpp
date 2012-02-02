@@ -17,7 +17,7 @@ LblPictureFlow::LblPictureFlow(QWidget* parent, QString lmsServerAddr,qint16 htt
 
     connect(worker, SIGNAL(ImageReady(QByteArray)),
             this, SLOT(ImageReady(QByteArray)));
-    worker->start();
+//    worker->start();
 }
 
 void LblPictureFlow::addSlide(Album &album )
@@ -26,14 +26,14 @@ void LblPictureFlow::addSlide(Album &album )
     imageIndexCheck c;
     c.index=slideCount();
 
-    if(!album.coverid.isEmpty() && worker->ImageCache().contains(album.coverid)) {
-        pic = worker->RetrieveCover(album.coverid);
+    if((!album.coverid.isEmpty()) && worker->ImageCache().contains(QString(album.artist.trimmed()+album.albumtitle.trimmed()).toUpper())) {
+        pic = worker->RetrieveCover(QString(album.artist.trimmed()+album.albumtitle.trimmed()).toUpper());
         c.loaded = true;
     }
     else {
         pic.load(":/img/lib/images/noAlbumImage.png","PNG");
         c.loaded=false;
-        worker->RequestArtwork(album.coverid);
+        worker->RequestArtwork(QString(album.artist.trimmed()+album.albumtitle.trimmed()).toUpper());
     }
 
     PictureFlow::addSlide(pic);
@@ -67,7 +67,7 @@ void LblPictureFlow::setSlide(int index, Album &album)
         pic.load(":/img/lib/images/noAlbumImage.png","PNG");
         c.loaded=false;
         if(!imageIndexer.contains(album.coverid))   // skip requesting image if we've already requested it
-            worker->RequestArtwork(album.coverid);
+            worker->RetrieveCover(QString(album.artist.trimmed()+album.albumtitle.trimmed()).toUpper());
     }
 
 //    if(pic.isNull())    // check

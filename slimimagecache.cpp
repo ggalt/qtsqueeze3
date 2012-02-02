@@ -3,7 +3,7 @@
 
 
 SlimImageCache::SlimImageCache(QObject *parent) :
-    QThread(parent)
+    QObject(parent)
 {
     SlimServerAddr = "172.0.0.1";
     httpPort=9090;
@@ -47,18 +47,12 @@ void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
     if( p.isNull() ) // oops, no image returned, substitute default image
         p.load(":/img/lib/images/noAlbumImage.png");
 
-    qDebug() << "Inserting in cache";
-    imageCache.insert(QString(coverID),p);
-    qDebug() << "Done Inserting in cache";
+    QString artist_album = Cover2ArtistAlbum.value(coverID);
+    imageCache.insert(artist_album.toUpper(),p);
     httpReplyList.remove(reply);
-    qDebug() << "Removed reply ";
     delete reply;
-    qDebug() << "Deleted reply";
-    emit ImageReady(coverID);
 
-    if(httpReplyList.isEmpty()) {
-        qDebug() << "FINISHED GETTING IMAGES";
-    }
+    emit ImageReady(coverID);
 }
 
 void SlimImageCache::RequestArtwork(QByteArray coverID)
@@ -75,27 +69,36 @@ void SlimImageCache::RequestArtwork(QByteArray coverID)
     qDebug() << "requesting artwork with id: " << coverID;
 }
 
-QPixmap SlimImageCache::RetrieveCover(QByteArray cover_id)
+QPixmap SlimImageCache::RetrieveCover(QString artist_album, QByteArray cover_id)
 {
     QPixmap pic;
-    if(imageCache.contains(QString(cover_id))) {
+    if(imageCache.contains(artist_album.toUpper())) {
         qDebug() << "returning real image for cover id:" << cover_id;
-        return imageCache.value(QString(cover_id));
-//        pic = imageCache.value(QString(cover_id));
-//        qDebug() << "returning picture of size:" << pic.size();
-//        return pic;
+        return imageCache.value(artist_album.toUpper());
     }
     if(cover_id.isEmpty())
         return NULL;
+    Cover2ArtistAlbum.insert(cover_id,artist_album);
     RequestArtwork(cover_id);
     qDebug() << "RetrieveCover is returning NULL";
     return NULL;
 }
 
-void SlimImageCache::run()
+QPixmap SlimImageCache::RetrieveCover(QByteArray coverID)
 {
-    connect(imageServer,SIGNAL(finished(QNetworkReply*)),
-            this,SLOT(ArtworkReqply(QNetworkReply*)));
-    exec();
+    QString artist_album = Cover2ArtistAlbum.value(coverID);
+    return RetrieveCover(artist_album);
 }
+
+QPixmap SlimImageCache::RetrieveCover(QString artist_album)
+{
+    return imageCache.value(artist_album.toUpper());
+}
+
+//void SlimImageCache::run()
+//{
+//    connect(imageServer,SIGNAL(finished(QNetworkReply*)),
+//            this,SLOT(ArtworkReqply(QNetworkReply*)));
+//    exec();
+//}
 

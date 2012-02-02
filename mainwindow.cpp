@@ -546,8 +546,9 @@ void MainWindow::slotCreateCoverFlow( void )
         a.coverid = j.coverid;
         a.year = j.year;
 //        QString title = QString( j.title + " - Artist: " + j.artist + " - Album: " + j.album );
-//        CoverFlow->addSlide(a);
-        DEBUGF( "Adding art work for track id: " << j.coverid );
+        CoverFlow->addSlide(a);
+        DEBUGF( "Adding art work for track id: " << j.coverid << " album: " << j.album);
+
     }
     ui->cfWidget->setEnabled( true );
     DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
