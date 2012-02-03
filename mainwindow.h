@@ -34,7 +34,7 @@
 #include "squeezedefines.h"
 #include "slimcli.h"
 #include "slimdevice.h"
-#include "lblpictureflow.h"
+#include "squeezepictureflow.h"
 #include "slimserverinfo.h"
 
 namespace Ui
@@ -197,7 +197,7 @@ private:
     QTimer scrollTimer; // timer for scrolling of text too long to fit in display
 
     QRect flowRect;
-    LblPictureFlow *CoverFlow;
+    SqueezePictureFlow *CoverFlow;
     QColor coverflowBackground;
     QColor tempcoverflowBackground;
 

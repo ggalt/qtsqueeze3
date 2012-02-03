@@ -151,7 +151,7 @@ bool MainWindow::Create(void)
     slimCLI->SetMACAddress( MacAddress );
     slimCLI->SetSlimServerAddress( SlimServerAddr );
     slimCLI->SetCliPort(SlimServerCLIPort);
-//    slimCLI->SetHttpPort(SlimServerHttpPort);
+    //    slimCLI->SetHttpPort(SlimServerHttpPort);
 
     connect( serverInfo, SIGNAL(FinishedInitializingDevices()),
              this, SLOT(slotSetActivePlayer()) );              // we want to wait to set up the display until the devices are established
@@ -215,7 +215,7 @@ void MainWindow::SetUpDisplay()
     flowRect = QRect( 0, 0,
                       ui->cfWidget->geometry().width(),
                       ui->cfWidget->geometry().height() );
-    CoverFlow = new LblPictureFlow( ui->cfWidget, SlimServerAddr, SlimServerHttpPort.toInt(), true, NULL, NULL);
+    CoverFlow = new SqueezePictureFlow( ui->cfWidget, SlimServerAddr, SlimServerHttpPort.toInt(), true, NULL, NULL);
     CoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
     CoverFlow->setContentsMargins( 50, 0, CoverFlow->width() - 50, CoverFlow->height() );
     CoverFlow->setBackgroundColor(coverflowBackground);
@@ -225,13 +225,13 @@ void MainWindow::SetUpDisplay()
                          ui->lblSlimDisplay->geometry().width(),
                          ui->lblSlimDisplay->geometry().height() );
     displayImage = new QImage( displayRect.width(), displayRect.height(), QImage::Format_ARGB32 );
-//    displayBackgroundColor = QColor( mySettings->value("UI/DisplayBackground", "black").toString());
+    //    displayBackgroundColor = QColor( mySettings->value("UI/DisplayBackground", "black").toString());
     displayImage->fill( (uint)displayBackgroundColor.rgb() );
-//    displayBackgroundColor.setRgb( 255, 255, 255 );
-//    displayImage->fill( displayBackgroundColor.black() );
+    //    displayBackgroundColor.setRgb( 255, 255, 255 );
+    //    displayImage->fill( displayBackgroundColor.black() );
 
-//    textcolorGeneral = QColor( mySettings->value("UI/DisplayTextColor","cyan").toString() );
-//    textcolorLine1 = QColor( mySettings->value("UI/DisplayTextColor","cyan").toString() );
+    //    textcolorGeneral = QColor( mySettings->value("UI/DisplayTextColor","cyan").toString() );
+    //    textcolorLine1 = QColor( mySettings->value("UI/DisplayTextColor","cyan").toString() );
 
     small.setFamily( "Helvetica" );
     small.setPixelSize( 4 );
@@ -509,6 +509,9 @@ void MainWindow::PaintTextDisplay( void )
 
 void MainWindow::slotUpdateCoverFlow( int trackIndex )
 {
+    if(!CoverFlow->IsReady())
+        return;
+
     int currSlide = CoverFlow->centerIndex();
     DEBUGF( "UPDATE COVERFLOW TO INDEX: " << trackIndex );
     if( abs( trackIndex - currSlide ) > 4 ) {
@@ -526,37 +529,21 @@ void MainWindow::slotUpdateCoverFlow( int trackIndex )
 
 void MainWindow::slotCreateCoverFlow( void )
 {
-    QTime tick;
-    tick.start();
     //  delete CoverFlow; // there seems to be some memory leakage with CoverFlow when you clear it and add new items
-    //  CoverFlow = new LblPictureFlow( ui->cfWidget );
+    //  CoverFlow = new SqueezePictureFlow( ui->cfWidget );
     //  CoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
     //  CoverFlow->setContentsMargins( 50, 0, CoverFlow->width() - 50, CoverFlow->height() );
     CoverFlow->clear();
     ui->cfWidget->setEnabled( false );
-    QListIterator< TrackData > i( activeDevice->getDevicePlayList() );
-    while( i.hasNext() ) {
-        TrackData j = i.next();
-        Album a;
-        a.songtitle = j.title;
-        a.album_id = j.album_id;
-        a.albumtitle = j.album;
-        a.artist = j.artist;
-        // a.artist_id =
-        a.coverid = j.coverid;
-        a.year = j.year;
-//        QString title = QString( j.title + " - Artist: " + j.artist + " - Album: " + j.album );
-        CoverFlow->addSlide(a);
-        DEBUGF( "Adding art work for track id: " << j.coverid << " album: " << j.album);
 
+    if( CoverFlow->LoadAlbumList(activeDevice->getDevicePlayList())) {
+        ui->cfWidget->setEnabled( true );
+        DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
+        int playListIndex = activeDevice->getDevicePlaylistIndex();
+        if( playListIndex > 4 )
+            CoverFlow->setCenterIndex( playListIndex - 4 );
+        CoverFlow->showSlide( playListIndex );
     }
-    ui->cfWidget->setEnabled( true );
-    DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
-    int playListIndex = activeDevice->getDevicePlaylistIndex();
-    if( playListIndex > 4 )
-        CoverFlow->setCenterIndex( playListIndex - 4 );
-    CoverFlow->showSlide( playListIndex );
-    DEBUGF( "Elapsed time: " << tick.elapsed() );
 }
 
 void MainWindow::slotLeftArrow( void )
@@ -750,10 +737,10 @@ void MainWindow::loadDisplayConfig(void)
     temptextcolorGeneral = textcolorGeneral;
     tempdisplayBackgroundColor = displayBackgroundColor;
     tempcoverflowBackground = coverflowBackground;
-//    textcolorGeneral= QColor(Qt::cyan);
-//    textcolorLine1 = QColor(Qt::cyan);
-//    displayBackgroundColor = QColor(Qt::black);
-//    coverflowBackground = QColor(Qt::white);
+    //    textcolorGeneral= QColor(Qt::cyan);
+    //    textcolorLine1 = QColor(Qt::cyan);
+    //    displayBackgroundColor = QColor(Qt::black);
+    //    coverflowBackground = QColor(Qt::white);
     scrollSpeed = mySettings->value("UI/ScrollInterval",5000).toInt();
     scrollInterval = mySettings->value("UI/ScrollSpeed",30).toInt();
     DEBUGF("DISPLAY CONFIG");

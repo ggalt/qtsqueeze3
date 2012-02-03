@@ -1,5 +1,7 @@
 #include "slimimagecache.h"
 #include <QtGlobal>
+#include <QDebug>
+#include <QBuffer>
 
 
 SlimImageCache::SlimImageCache(QObject *parent) :
@@ -8,6 +10,7 @@ SlimImageCache::SlimImageCache(QObject *parent) :
     SlimServerAddr = "172.0.0.1";
     httpPort=9090;
     imageSizeStr = "cover_200x200";
+    retrievingImages = false;
 }
 
 SlimImageCache::~SlimImageCache()
@@ -21,6 +24,8 @@ void SlimImageCache::Init(QString serveraddr, qint16 httpport)
     httpPort = httpport;
     imageServer = new QNetworkAccessManager();
     imageCache.clear();
+    connect(imageServer,SIGNAL(finished(QNetworkReply*)),
+            this,SLOT(ArtworkReqply(QNetworkReply*)));
 }
 
 void SlimImageCache::Init(QString serveraddr, qint16 httpport, QString imageDim, QString cliuname, QString clipass)
@@ -32,30 +37,37 @@ void SlimImageCache::Init(QString serveraddr, qint16 httpport, QString imageDim,
     cliPassword = clipass;
     imageServer = new QNetworkAccessManager();
     imageCache.clear();
+    connect(imageServer,SIGNAL(finished(QNetworkReply*)),
+            this,SLOT(ArtworkReqply(QNetworkReply*)));
 }
 
-void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
+bool SlimImageCache::HaveListImages(SqueezePictureFlow *pf, QList<Album> list)
 {
-    QPixmap p;
-    QImageReader reader(reply);
-    QByteArray coverID = httpReplyList.value(reply);
+    // test to see if we have all of the images for a list of albums
+    // if not, get the ones we don't have
 
-    qDebug() << "retrieved image for id: " << coverID;
+    picflow = pf;   // remember who we are working for
 
-    p.fromImageReader(&reader);
-    qDebug() << "read image";
-    if( p.isNull() ) // oops, no image returned, substitute default image
-        p.load(":/img/lib/images/noAlbumImage.png");
+    retrievingImages = true;
+    QListIterator<Album> i(list);
+    bool haveAllImages = true;  // assume we have them all
 
-    QString artist_album = Cover2ArtistAlbum.value(coverID);
-    imageCache.insert(artist_album.toUpper(),p);
-    httpReplyList.remove(reply);
-    delete reply;
+    while(i.hasNext()) {
+        Album a = i.next();
+        if(!imageCache.contains(a.artist.trimmed().toUpper()+a.albumtitle.trimmed().toUpper())) {
+            if(!a.coverid.isEmpty())
+                RequestArtwork(a.coverid,a.artist.trimmed().toUpper()+a.albumtitle.trimmed().toUpper());
+            haveAllImages = false;
+        }
+    }
+    qDebug() << "slimimagecache returning " << haveAllImages;
+    retrievingImages = false;
 
-    emit ImageReady(coverID);
+    return haveAllImages;
 }
 
-void SlimImageCache::RequestArtwork(QByteArray coverID)
+
+void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
 {
     QString urlString = QString("http://%1:%2/music/%3/%4")
             .arg(SlimServerAddr)
@@ -65,34 +77,55 @@ void SlimImageCache::RequestArtwork(QByteArray coverID)
     QNetworkRequest req;
     req.setUrl(QUrl(urlString));
     QNetworkReply *reply = imageServer->get(req);
-    httpReplyList.insert(reply,coverID);
-    qDebug() << "requesting artwork with id: " << coverID;
+    qDebug() << "http request: " << urlString;
+    httpReplyList.insert(reply,artist_album);
+    qDebug() << "requesting artwork with id: " << coverID << " for artist:" << artist_album;
+    char str[100];
+    sprintf(str, "reply pointer is %p",reply);
+    qDebug() << "request id is:" << str;
 }
 
-QPixmap SlimImageCache::RetrieveCover(QString artist_album, QByteArray cover_id)
+void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
 {
-    QPixmap pic;
-    if(imageCache.contains(artist_album.toUpper())) {
-        qDebug() << "returning real image for cover id:" << cover_id;
-        return imageCache.value(artist_album.toUpper());
+    QPixmap p;
+    QImageReader reader(reply);
+    QString artist_album = httpReplyList.value(reply);
+
+    qDebug() << "retrieved image for id: " << artist_album;
+    qDebug() << "reply has data of size:" << reply->bytesAvailable();
+
+    QByteArray buff;
+    buff = reply->readAll();
+    p.loadFromData(buff);
+
+//    p.fromImageReader(&reader);
+    if(p.isNull()) { // oops, no image returned, substitute default image
+        p.load(":/img/lib/images/noAlbumImage.png");
+        qDebug() << "returned null image for " << artist_album;
     }
-    if(cover_id.isEmpty())
-        return NULL;
-    Cover2ArtistAlbum.insert(cover_id,artist_album);
-    RequestArtwork(cover_id);
-    qDebug() << "RetrieveCover is returning NULL";
-    return NULL;
-}
 
-QPixmap SlimImageCache::RetrieveCover(QByteArray coverID)
-{
-    QString artist_album = Cover2ArtistAlbum.value(coverID);
-    return RetrieveCover(artist_album);
+    imageCache.insert(artist_album.toUpper(),p);
+    httpReplyList.remove(reply);
+    char str[100];
+    sprintf(str, "reply pointer is %p",reply);
+    qDebug() << "request id is:" << str;
+    delete reply;
+
+    if(httpReplyList.isEmpty() && !retrievingImages) {
+        qDebug() << "emitting imagesready";
+        emit ImagesReady(picflow);
+    }
 }
 
 QPixmap SlimImageCache::RetrieveCover(QString artist_album)
 {
-    return imageCache.value(artist_album.toUpper());
+    if(imageCache.contains(artist_album.toUpper()))
+        return imageCache.value(artist_album.toUpper());
+    else {
+        QPixmap pic;
+        pic.load(":/img/lib/images/noAlbumImage.png");
+        return pic;
+    }
 }
 
 //void SlimImageCache::run()

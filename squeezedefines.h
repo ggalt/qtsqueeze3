@@ -92,6 +92,7 @@ class SlimDevice;
 class SlimServerInfo;
 class SlimImageCache;
 class SlimDatabaseFetch;
+class SqueezePictureFlow;
 
 
 enum { NODEVICELIST = 0, YESDEVICELIST, PLUGINCONTROL, VFDCONTROL };
@@ -173,6 +174,7 @@ public:
     QByteArray artist;
     QByteArray artist_id;
     QByteArray coverid;
+    QString artist_album;
 };
 
 typedef QList< TrackData > CurrentPlayList;

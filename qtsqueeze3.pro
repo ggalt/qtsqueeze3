@@ -2,28 +2,27 @@
 # Project created by QtCreator 2010-01-15T14:49:23
 # -------------------------------------------------
 QT += network \
-    webkit \
-    xml
+    webkit
 TARGET = qtsqueeze3
 TEMPLATE = app
 SOURCES += main.cpp \
-    mainwindow.cpp \
     pictureflow.cpp \
+    mainwindow.cpp \
     slimcli.cpp \
     slimdevice.cpp \
-    lblpictureflow.cpp \
     slimserverinfo.cpp \
     slimdatabasefetch.cpp \
-    slimimagecache.cpp
-HEADERS += mainwindow.h \
-    pictureflow.h \
+    slimimagecache.cpp \
+    squeezepictureflow.cpp
+HEADERS += pictureflow.h \
+    mainwindow.h \
     slimdevice.h \
     slimcli.h \
-    lblpictureflow.h \
     slimserverinfo.h \
     squeezedefines.h \
     slimdatabasefetch.h \
-    slimimagecache.h
+    slimimagecache.h \
+    squeezepictureflow.h
 FORMS += mainwindow.ui
 RESOURCES += qtsqueeze3.qrc
 
