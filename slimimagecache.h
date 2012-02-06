@@ -62,7 +62,7 @@ private:
     QNetworkAccessManager *imageServer;
     QHash< QNetworkReply*,QString > httpReplyList; // associate image request to artist+album name
 
-    SlimImageItem imageCache;   // images associated with artist+album name
+//    SlimImageItem imageCache;   // images associated with artist+album name
 };
 
 #endif // SLIMIMAGECACHE_H

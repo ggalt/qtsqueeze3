@@ -10,7 +10,7 @@
 // #define SLIMCLI_DEBUG
 
 #ifdef SLIMCLI_DEBUG
-#define DEBUGF(...) qDebug() << __VA_ARGS__
+#define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
 #else
 #define DEBUGF(...)
 #define VERBOSE(...)
@@ -48,6 +48,7 @@ SlimCLI::~SlimCLI(){
 
 void SlimCLI::Init( void )
 {
+    DEBUGF(QTime::currentTime());
     slimCliSocket = new QTcpSocket( this );
     bool ok;
     qint64 buffsize = MaxRequestSize.toInt( &ok ) * 5000;  // initialize the read buffer to read up to MaxRequestSize * 5000 bytes
@@ -71,6 +72,7 @@ void SlimCLI::Init( void )
 }
 
 bool SlimCLI::SetupLogin( void ){
+    DEBUGF(QTime::currentTime());
     command.clear();
     QString cmd = QString ("login %1 %2\n" )
             .arg( QString( cliUsername.toLatin1() ) )
@@ -90,12 +92,14 @@ bool SlimCLI::SetupLogin( void ){
 // ------------------------------------------------------------------------------------------------
 
 void SlimCLI::Connect( void ){
+    DEBUGF(QTime::currentTime());
     QString myMsg = QString( "Connecting to %1 on port %2" ).arg( SlimServerAddr ).arg( cliPort );
     DEBUGF( myMsg );
     slimCliSocket->connectToHost( SlimServerAddr, cliPort );
 }
 
 bool SlimCLI::CLIConnectionOpen( void ){
+    DEBUGF(QTime::currentTime());
     // NOTE: these commands are sent from here rather than using the SendCommand() function because we DO NOT want to place the MAC address in front of them
     // we'll use a blocking call for authentication and grabbing the available players because it's easier and it's quick
 
@@ -129,6 +133,7 @@ bool SlimCLI::CLIConnectionOpen( void ){
 }
 
 void SlimCLI::LostConnection( void ){
+    DEBUGF(QTime::currentTime());
     // just in case we want to restart things, let's first disconnect the signals and slots that will be established at successful connection
     disconnect( slimCliSocket, SIGNAL(readyRead()), 0, 0 );
     disconnect( slimCliSocket, SIGNAL(disconnected()), 0, 0 );
@@ -142,12 +147,14 @@ void SlimCLI::LostConnection( void ){
 }
 
 void SlimCLI::ConnectionError( int err ){
+    DEBUGF(QTime::currentTime());
     emit cliError( CONNECTION_ERROR );
     QString myMsg = QString( "Connection error: %1" ).arg( err );
     // VERBOSE( VB_IMPORTANT, myMsg );
 }
 
 void SlimCLI::ConnectionError( QAbstractSocket::SocketError err ){
+    DEBUGF(QTime::currentTime());
     emit cliError( CONNECTION_ERROR );
     QString myMsg = QString( "Connection error: %1" ).arg( slimCliSocket->errorString() );
     // VERBOSE( VB_IMPORTANT, myMsg );
@@ -158,6 +165,7 @@ void SlimCLI::SentBytes( int b ){
 }
 
 bool SlimCLI::SendCommand( QByteArray c ){
+    DEBUGF(QTime::currentTime());
     // NOTE:: SendCommand assumes that the command string has been filled in and already been put in URL escape form
     // and that a MAC address is at the beginning of the command (if needed only!!)
     if( !c.isNull() )
@@ -178,6 +186,7 @@ bool SlimCLI::SendCommand( QByteArray c ){
 
 QByteArray SlimCLI::GetBlockingCommandResponse( QByteArray c )
 {
+    DEBUGF(QTime::currentTime());
     if(SendBlockingCommand(c))
         return response;
     else
@@ -185,6 +194,7 @@ QByteArray SlimCLI::GetBlockingCommandResponse( QByteArray c )
 }
 
 bool SlimCLI::SendBlockingCommand( QByteArray c ) {
+    DEBUGF(QTime::currentTime());
     // NOTE:: SendCommand assumes that the command string has been filled in and already been put in URL escape form
     // and that a MAC address is at the beginning of the command (if needed only!!)
     // REMEMBER, THIS BLOCKS UNTIL A RETURN IS RECEIVED!! USE WITH CARE
@@ -202,6 +212,7 @@ bool SlimCLI::SendBlockingCommand( QByteArray c ) {
 }
 
 bool SlimCLI::waitForResponse( void ){
+    DEBUGF(QTime::currentTime());
     slimCliSocket->write( command );
     if( !slimCliSocket->waitForReadyRead() )
         return false;
@@ -235,6 +246,7 @@ bool SlimCLI::waitForResponse( void ){
 
 bool SlimCLI::msgWaiting( void )
 {
+    DEBUGF(QTime::currentTime());
     QTime t;
     t.start();
     while( slimCliSocket->bytesAvailable() && t.elapsed() < iTimeOut ) {  // we need to loop because we often get new messages while processing old and "readyread" misses them -- better to move socket to its own thread, but this works for now
@@ -272,6 +284,7 @@ bool SlimCLI::msgWaiting( void )
 
 void SlimCLI::DeviceMsgProcessing( void )
 {
+    DEBUGF(QTime::currentTime());
     DEBUGF( "Device Message: " << this->response );
 
     if( serverInfo->GetDeviceList().contains( MacAddressOfResponse() ) ) { // check to see if the MAC address corresponds to a known player
@@ -295,17 +308,20 @@ void SlimCLI::DeviceMsgProcessing( void )
 
 void SlimCLI::SystemMsgProcessing( void )
 {
+    DEBUGF(QTime::currentTime());
     DEBUGF( "SYSTEM MESSAGE: " << this->response );
 }
 
 void SlimCLI::ProcessLoginMsg( void )
 {
+    DEBUGF(QTime::currentTime());
     if( response.left( 5 ) == "login" )
         isAuthenticated = true;
 }
 
 void SlimCLI::ProcessControlMsg( void )
 {
+    DEBUGF(QTime::currentTime());
     DEBUGF( "CONTROLLING MODE message received: " << response );
     responseList = response.split( ' ' );   // break this up into fields delimited by spaces
     if( response.left( 7 ) == "artists" ) {  // it's processing artist information
@@ -329,6 +345,7 @@ void SlimCLI::ProcessControlMsg( void )
 
 bool SlimCLI::SetMACAddress( QString addr )
 {
+    DEBUGF(QTime::currentTime());
     if( !addr.contains( "%3A" ) ) // not escape encoded
 
         macAddress = addr.toAscii().toPercentEncoding();
@@ -337,6 +354,7 @@ bool SlimCLI::SetMACAddress( QString addr )
 }
 
 void SlimCLI::SetSlimServerAddress( QString addr ){
+    DEBUGF(QTime::currentTime());
     SlimServerAddr = addr;
 }
 
@@ -358,6 +376,7 @@ void SlimCLI::SetCliPassword( QString password ){
 
 QByteArray SlimCLI::MacAddressOfResponse( void )
 {
+    DEBUGF(QTime::currentTime());
     if( response.contains( "%3A" ) )
         return response.left( 27 ).trimmed().toLower();
     else
@@ -366,6 +385,7 @@ QByteArray SlimCLI::MacAddressOfResponse( void )
 
 QByteArray SlimCLI::ResponseLessMacAddress( void )
 {
+    DEBUGF(QTime::currentTime());
     if( response.contains( "%3A" ) )
         return response.right( response.length() - 27 ).trimmed();
     else
@@ -374,6 +394,7 @@ QByteArray SlimCLI::ResponseLessMacAddress( void )
 
 void SlimCLI::RemoveNewLineFromResponse( void )
 {
+    DEBUGF(QTime::currentTime());
     while( response.contains( '\n' ) )
         response.replace( response.indexOf( '\n' ), 1, " " );
 

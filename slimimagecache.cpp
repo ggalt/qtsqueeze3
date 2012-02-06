@@ -1,12 +1,19 @@
 #include "slimimagecache.h"
 #include <QtGlobal>
 #include <QDebug>
-#include <QBuffer>
+#include <QApplication>
+
+#ifdef SLIMCLI_DEBUG
+#define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
+#else
+#define DEBUGF(...)
+#endif
 
 
 SlimImageCache::SlimImageCache(QObject *parent) :
     QObject(parent)
 {
+    DEBUGF(QTime::currentTime());
     SlimServerAddr = "172.0.0.1";
     httpPort=9090;
     imageSizeStr = "cover_200x200";
@@ -15,11 +22,13 @@ SlimImageCache::SlimImageCache(QObject *parent) :
 
 SlimImageCache::~SlimImageCache()
 {
+    DEBUGF(QTime::currentTime());
     if(imageServer)
         delete imageServer;
 }
 void SlimImageCache::Init(QString serveraddr, qint16 httpport)
 {
+    DEBUGF(QTime::currentTime());
     SlimServerAddr = serveraddr;
     httpPort = httpport;
     imageServer = new QNetworkAccessManager();
@@ -30,6 +39,7 @@ void SlimImageCache::Init(QString serveraddr, qint16 httpport)
 
 void SlimImageCache::Init(QString serveraddr, qint16 httpport, QString imageDim, QString cliuname, QString clipass)
 {
+    DEBUGF(QTime::currentTime());
     SlimServerAddr = serveraddr;
     httpPort = httpport;
     imageSizeStr = imageDim;
@@ -43,6 +53,7 @@ void SlimImageCache::Init(QString serveraddr, qint16 httpport, QString imageDim,
 
 bool SlimImageCache::HaveListImages(SqueezePictureFlow *pf, QList<Album> list)
 {
+    DEBUGF(QTime::currentTime());
     // test to see if we have all of the images for a list of albums
     // if not, get the ones we don't have
 
@@ -55,8 +66,11 @@ bool SlimImageCache::HaveListImages(SqueezePictureFlow *pf, QList<Album> list)
     while(i.hasNext()) {
         Album a = i.next();
         if(!imageCache.contains(a.artist.trimmed().toUpper()+a.albumtitle.trimmed().toUpper())) {
-            if(!a.coverid.isEmpty())
+            if(!a.coverid.isEmpty()) {
+                while(httpReplyList.size() > 3 )
+                    qApp->processEvents(QEventLoop::AllEvents,4000);
                 RequestArtwork(a.coverid,a.artist.trimmed().toUpper()+a.albumtitle.trimmed().toUpper());
+            }
             haveAllImages = false;
         }
     }
@@ -69,6 +83,7 @@ bool SlimImageCache::HaveListImages(SqueezePictureFlow *pf, QList<Album> list)
 
 void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
 {
+    DEBUGF(QTime::currentTime());
     QString urlString = QString("http://%1:%2/music/%3/%4")
             .arg(SlimServerAddr)
             .arg(httpPort)
@@ -87,8 +102,9 @@ void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
 
 void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
 {
+    DEBUGF(QTime::currentTime());
     QPixmap p;
-    QImageReader reader(reply);
+    //    QImageReader reader(reply);
     QString artist_album = httpReplyList.value(reply);
 
     qDebug() << "retrieved image for id: " << artist_album;
@@ -98,7 +114,7 @@ void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
     buff = reply->readAll();
     p.loadFromData(buff);
 
-//    p.fromImageReader(&reader);
+    //    p.fromImageReader(&reader);
     if(p.isNull()) { // oops, no image returned, substitute default image
         p.load(":/img/lib/images/noAlbumImage.png");
         qDebug() << "returned null image for " << artist_album;
@@ -111,6 +127,7 @@ void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
     qDebug() << "request id is:" << str;
     delete reply;
 
+    qDebug() << "httpRequest list size is:" << httpReplyList.size() << " and is empty? " << httpReplyList.isEmpty();
     if(httpReplyList.isEmpty() && !retrievingImages) {
         qDebug() << "emitting imagesready";
         emit ImagesReady(picflow);
@@ -119,6 +136,7 @@ void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
 
 QPixmap SlimImageCache::RetrieveCover(QString artist_album)
 {
+    DEBUGF(QTime::currentTime());
     if(imageCache.contains(artist_album.toUpper()))
         return imageCache.value(artist_album.toUpper());
     else {

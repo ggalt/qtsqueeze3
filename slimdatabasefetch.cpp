@@ -3,9 +3,16 @@
 #include "slimdatabasefetch.h"
 #include "slimserverinfo.h"
 
+#ifdef SLIMCLI_DEBUG
+#define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
+#else
+#define DEBUGF(...)
+#endif
+
 SlimDatabaseFetch::SlimDatabaseFetch(QObject *parent) :
     QThread(parent)
 {
+    DEBUGF(QTime::currentTime());
     SlimServerAddr = "127.0.0.1";
     cliPort = 9090;        // default, but user can reset
     MaxRequestSize = "500";    // max size of any cli request (used for limiting each request for albums, artists, songs, etc., so we don't time out or overload things)
@@ -13,12 +20,14 @@ SlimDatabaseFetch::SlimDatabaseFetch(QObject *parent) :
 
 SlimDatabaseFetch::~SlimDatabaseFetch(void)
 {
+    DEBUGF(QTime::currentTime());
     qDebug() << "database destroyed";
 }
 
 void SlimDatabaseFetch::Init(QString serveraddr, qint16 cliport,
                              QString cliuname, QString clipass)
 {
+    DEBUGF(QTime::currentTime());
     SlimServerAddr = serveraddr;
     cliPort = cliport;
     cliUsername = cliuname;
@@ -29,6 +38,7 @@ void SlimDatabaseFetch::Init(QString serveraddr, qint16 cliport,
 
 void SlimDatabaseFetch::run()
 {
+    DEBUGF(QTime::currentTime());
     connect(slimCliSocket,SIGNAL(connected()),
             this,SLOT(cliConnected()));
     connect(slimCliSocket,SIGNAL(disconnected()),
@@ -48,6 +58,7 @@ void SlimDatabaseFetch::run()
 
 void SlimDatabaseFetch::cliConnected(void)
 {
+    DEBUGF(QTime::currentTime());
     QByteArray cmd;
     if(!cliUsername.isNull()){ // username present, get authentication
         cmd = QString("login %1 %2\n" )
@@ -61,18 +72,22 @@ void SlimDatabaseFetch::cliConnected(void)
 
 void SlimDatabaseFetch::cliDisconnected(void)
 {
+    DEBUGF(QTime::currentTime());
     qDebug() << "CLI disconnected";
 }
 
 void SlimDatabaseFetch::cliError(QAbstractSocket::SocketError socketError)
 {
+    DEBUGF(QTime::currentTime());
     qDebug() << "CLI Error: " << socketError;
 }
 
 void SlimDatabaseFetch::cliMessageReady(void)
 {
+    DEBUGF(QTime::currentTime());
     iTimeOut = 10000;
     QTime t;
+    qDebug() << "cli message ready for database processing";
     t.start();
     while( slimCliSocket->bytesAvailable() ) {
         while( !slimCliSocket->canReadLine () ) { // wait for a full line of content  NOTE: protect against unlikely infinite loop with timer
@@ -92,6 +107,7 @@ void SlimDatabaseFetch::cliMessageReady(void)
 //------------------------------- HELPER FUNCTIONS ---------------------------------------------
 void SlimDatabaseFetch::RemoveNewLineFromResponse( void )
 {
+    DEBUGF(QTime::currentTime());
     while( response.contains( '\n' ) )
         response.replace( response.indexOf( '\n' ), 1, " " );
 
@@ -99,6 +115,7 @@ void SlimDatabaseFetch::RemoveNewLineFromResponse( void )
 
 bool SlimDatabaseFetch::ProcessResponse(void)
 {
+    DEBUGF(QTime::currentTime());
     if( !response.contains( ':' ) )  // Substitute ':' for '%3A', we'll URL::decode later
         response.replace( "%3A", ":" );
 

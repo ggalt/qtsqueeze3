@@ -7,15 +7,17 @@
 #define SLIMCLI_DEBUG
 
 #ifdef SLIMCLI_DEBUG
-#define DEBUGF(...) qDebug() << __VA_ARGS__
+#define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
 #else
 #define DEBUGF(...)
 #endif
 
+SlimImageItem imageCache;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
+    DEBUGF(QTime::currentTime());
     ui->setupUi(this);
     squeezePlayer = new QProcess( this );
     slimCLI = new SlimCLI( this );
@@ -211,6 +213,7 @@ bool MainWindow::Create(void)
 
 void MainWindow::SetUpDisplay()
 {
+    DEBUGF(QTime::currentTime());
     // set up coverflow widget
     flowRect = QRect( 0, 0,
                       ui->cfWidget->geometry().width(),
@@ -241,16 +244,21 @@ void MainWindow::SetUpDisplay()
     large.setPixelSize( 4 );
 
     int h = displayRect.height();
-    for( int i = 5; QFontInfo( small ).pixelSize() < h/4; i++ )
+    for( int i = 5; QFontInfo( small ).pixelSize() < h/4; i++ ) {
+        DEBUGF("setting small font pixel" << i);
         small.setPixelSize( i );
-    for( int i = 5; QFontInfo( medium ).pixelSize() < h/3; i++ )
+    }
+    for( int i = 5; QFontInfo( medium ).pixelSize() < h/3; i++ ) {
+        DEBUGF("setting medium font pixel" << i);
         medium.setPixelSize( i );
-    for( int i = 5; QFontInfo( large ).pixelSize() < h/2; i++ )
+    }
+    for( int i = 5; QFontInfo( large ).pixelSize() < h/2; i++ ) {
+        DEBUGF("setting large font pixel" << i);
         large.setPixelSize( i );
+    }
 
     // establish font metrics for Line1 (used in scrolling display)
     ln1FM = new QFontMetrics( large );
-
     // set starting points for drawing on Slim Display standard messages that come through the CLI
     pointLine0 = QPoint( displayRect.width()/100, ( displayRect.height() / 10 ) + small.pixelSize() );
     pointLine1 = QPoint( displayRect.width()/100, ( 9 * displayRect.height() ) / 10 );
@@ -295,6 +303,7 @@ void MainWindow::SetUpDisplay()
 
 void MainWindow::slotResetSlimDisplay( void )
 {
+    DEBUGF(QTime::currentTime());
     scrollTimer.stop();
     ScrollOffset = 0;
     line1Alpha = 0;
@@ -313,6 +322,7 @@ void MainWindow::slotResetSlimDisplay( void )
 
 void MainWindow::slotUpdateSlimDisplay( void )
 {
+    DEBUGF(QTime::currentTime());
     //    boundingRect = ln1FM->boundingRect( Line1Rect, Qt::AlignLeft | Qt::AlignHCenter, activeDevice->getDisplayBuffer().line1 );
     lineWidth = ln1FM->width( activeDevice->getDisplayBuffer().line1 );
     pointLine1_2 = QPoint( lineWidth + ( ui->lblSlimDisplay->width() - Line1Rect.width()), ( 9 * displayRect.height() ) / 10 );
@@ -335,6 +345,7 @@ void MainWindow::slotUpdateSlimDisplay( void )
 
 void MainWindow::PaintTextDisplay( void )
 {
+    DEBUGF(QTime::currentTime());
     if( activeDevice == NULL )
         DEBUGF( "active device is null" );
     DisplayBuffer d = activeDevice->getDisplayBuffer();
@@ -509,6 +520,7 @@ void MainWindow::PaintTextDisplay( void )
 
 void MainWindow::slotUpdateCoverFlow( int trackIndex )
 {
+    DEBUGF(QTime::currentTime());
     if(!CoverFlow->IsReady())
         return;
 
@@ -529,6 +541,7 @@ void MainWindow::slotUpdateCoverFlow( int trackIndex )
 
 void MainWindow::slotCreateCoverFlow( void )
 {
+    DEBUGF(QTime::currentTime());
     //  delete CoverFlow; // there seems to be some memory leakage with CoverFlow when you clear it and add new items
     //  CoverFlow = new SqueezePictureFlow( ui->cfWidget );
     //  CoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
@@ -548,6 +561,7 @@ void MainWindow::slotCreateCoverFlow( void )
 
 void MainWindow::slotLeftArrow( void )
 {
+    DEBUGF(QTime::currentTime());
     StopScroll();
     isTransition = true;
     transitionDirection = transRIGHT;
@@ -563,6 +577,7 @@ void MainWindow::slotLeftArrow( void )
 
 void MainWindow::slotRightArrow( void )
 {
+    DEBUGF(QTime::currentTime());
     StopScroll();
     isTransition = true;
     transitionDirection = transLEFT;
@@ -573,6 +588,7 @@ void MainWindow::slotRightArrow( void )
 
 void MainWindow::slotUpArrow( void )
 {
+    DEBUGF(QTime::currentTime());
     StopScroll();
     isTransition = true;
     transitionDirection = transDOWN;
@@ -583,6 +599,7 @@ void MainWindow::slotUpArrow( void )
 
 void MainWindow::slotDownArrow( void )
 {
+    DEBUGF(QTime::currentTime());
     StopScroll();
     isTransition = true;
     transitionDirection = transUP;
@@ -593,6 +610,7 @@ void MainWindow::slotDownArrow( void )
 
 void MainWindow::slotUpdateScrollOffset( void )
 {
+    DEBUGF("SLOTUPDATESCROLLOFFSET");
     if( scrollState == PAUSE_SCROLL ) {
         scrollTimer.stop();
         scrollState = SCROLL;
@@ -685,6 +703,7 @@ void MainWindow::StopScroll( void )
 
 void MainWindow::slotSetActivePlayer( void )
 {
+    DEBUGF(QTime::currentTime());
     if( this->isStartUp ) { // if this is the first time through, let's trigger a process to make sure we have all the images
     }
     slotSetActivePlayer( serverInfo->GetDeviceFromMac( MacAddress.toPercentEncoding().toLower() ) );
@@ -692,6 +711,7 @@ void MainWindow::slotSetActivePlayer( void )
 
 void MainWindow::slotSetActivePlayer( SlimDevice *d )
 {
+    DEBUGF(QTime::currentTime());
     serverInfo->SetCurrentDevice( d );
     activeDevice = d;
     slotUpdateSlimDisplay();
@@ -729,6 +749,7 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
 
 void MainWindow::loadDisplayConfig(void)
 {
+    DEBUGF(QTime::currentTime());
     DEBUGF("DISPLAY CONFIG");
     textcolorGeneral= QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt());
     textcolorLine1 = QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt());
@@ -748,6 +769,7 @@ void MainWindow::loadDisplayConfig(void)
 
 void MainWindow::loadConnectionConfig(void)
 {
+    DEBUGF(QTime::currentTime());
     DEBUGF("CONNECTION CONFIG");
     SlimServerAddr = mySettings->value("Server/Address","127.0.0.1").toString();
     SlimServerAudioPort = mySettings->value("Server/AudioPort","3483").toString();
@@ -759,6 +781,7 @@ void MainWindow::loadConnectionConfig(void)
 
 void MainWindow::updateDisplayConfig(void)
 {
+    DEBUGF(QTime::currentTime());
     mySettings->setValue("UI/CoverFlowColor",(uint)tempcoverflowBackground.rgb());
     mySettings->setValue("UI/DisplayBackground",(uint)tempdisplayBackgroundColor.rgb());
     mySettings->setValue("UI/DisplayTextColor", (uint)temptextcolorGeneral.rgb());
@@ -779,6 +802,7 @@ void MainWindow::updateDisplayConfig(void)
 
 void MainWindow::updateConnectionConfig(void)
 {
+    DEBUGF(QTime::currentTime());
     mySettings->setValue("Server/Address",ui->txtServerAddress->text());
     mySettings->setValue("Server/AudioPort",ui->txtAudioPort->text());
     mySettings->setValue("Server/CLIPort", ui->txtCLIPort->text());
@@ -791,6 +815,7 @@ void MainWindow::updateConnectionConfig(void)
 
 void MainWindow::setConfigDisplay2Defaults(void)
 {
+    DEBUGF(QTime::currentTime());
     mySettings->setValue("UI/CoverFlowColor",(uint)QColor(Qt::white).rgb());
     mySettings->setValue("UI/DisplayBackground",(uint)QColor(Qt::black).rgb());
     mySettings->setValue("UI/DisplayTextColor",(uint)QColor(Qt::cyan).rgb());
@@ -804,6 +829,7 @@ void MainWindow::setConfigDisplay2Defaults(void)
 
 void MainWindow::setConfigConnection2Defaults(void)
 {
+    DEBUGF(QTime::currentTime());
     mySettings->setValue("Server/Address","127.0.0.1");
     mySettings->setValue("Server/AudioPort","3483");
     mySettings->setValue("Server/CLIPort", "9090");
@@ -817,6 +843,7 @@ void MainWindow::setConfigConnection2Defaults(void)
 
 void MainWindow::setupConfig(void)
 {
+    DEBUGF(QTime::currentTime());
     QProcess proc;
     QStringList args;
     args.append(QString("-L"));
@@ -858,6 +885,7 @@ void MainWindow::setupConfig(void)
 
 void MainWindow::setCoverFlowColor(void)
 {
+    DEBUGF(QTime::currentTime());
     QColorDialog *dlg = new QColorDialog(coverflowBackground);
     dlg->exec();
     tempcoverflowBackground = dlg->selectedColor();
@@ -865,6 +893,7 @@ void MainWindow::setCoverFlowColor(void)
 
 void MainWindow::setDisplayBackgroundColor(void)
 {
+    DEBUGF(QTime::currentTime());
     QColorDialog *dlg = new QColorDialog(displayBackgroundColor);
     dlg->exec();
     tempdisplayBackgroundColor = dlg->selectedColor();
@@ -872,6 +901,7 @@ void MainWindow::setDisplayBackgroundColor(void)
 
 void MainWindow::setDisplayTextColor(void)
 {
+    DEBUGF(QTime::currentTime());
     QColorDialog *dlg = new QColorDialog(textcolorGeneral);
     dlg->exec();
     temptextcolorGeneral = dlg->selectedColor();
@@ -880,6 +910,7 @@ void MainWindow::setDisplayTextColor(void)
 
 void MainWindow::getplayerMACAddress( void )
 {
+    DEBUGF(QTime::currentTime());
     MacAddress = QByteArray( "00:00:00:00:00:04" );
 
     QList<QNetworkInterface> netList = QNetworkInterface::allInterfaces();
@@ -900,30 +931,35 @@ void MainWindow::getplayerMACAddress( void )
 
 void MainWindow::slotDisablePlayer( void )
 {
+    DEBUGF(QTime::currentTime());
     waitWindow->show();
     this->setEnabled( false );
 }
 
 void MainWindow::slotEnablePlayer( void )
 {
+    DEBUGF(QTime::currentTime());
     waitWindow->hide();
     this->setEnabled( true );
 }
 
 void MainWindow::SqueezePlayerError( void )
 {
+    DEBUGF(QTime::currentTime());
     QString errMsg = QString( "SQUEEZE ERROR: " ) + squeezePlayer->readAllStandardError();
     qDebug() << errMsg;
 }
 
 void MainWindow::SqueezePlayerOutput( void )
 {
+    DEBUGF(QTime::currentTime());
     QString errMsg = QString( "SQUEEZE OUTPUT: " ) + squeezePlayer->readAllStandardOutput();
     qDebug() << errMsg;
 }
 
 bool MainWindow::Slimp3Display( QString txt )
 {
+    DEBUGF(QTime::currentTime());
     QRegExp rx( "\037" );      // the CLI overlay for the Slimp3 display uses 0x1F (037 octal) to delimit the segments of the counter
     if( rx.indexIn( txt ) != -1 )
         return true;

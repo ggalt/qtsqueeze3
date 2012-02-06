@@ -5,7 +5,7 @@
 // #define SLIMCLI_DEBUG
 
 #ifdef SLIMCLI_DEBUG
-#define DEBUGF(...) qDebug() << __VA_ARGS__
+#define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
 #else
 #define DEBUGF(...)
 #endif

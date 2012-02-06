@@ -42,7 +42,7 @@
 #include <iostream>
 
 // uncomment the following to turn on debugging
-//#define SLIMCLI_DEBUG
+#define SLIMCLI_DEBUG
 
 // Define Squeezebox Player Types
 // From server/Slim/Networking/Slimproto.pm from 7.4r24879
@@ -203,8 +203,12 @@ typedef struct s_imageIndexCheck{
     bool loaded;
 } imageIndexCheck;
 
+//namespace Art{
+//   QHash<QString, QPixmap> images;
+//   QPixmap getImage(QString name);
+//}
 
-
+extern SlimImageItem imageCache;
 
 // This mapping is for the custom remote
 

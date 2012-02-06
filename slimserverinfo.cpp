@@ -7,7 +7,7 @@
 // #define SLIMCLI_DEBUG
 
 #ifdef SLIMCLI_DEBUG
-#define DEBUGF(...) qDebug() << __VA_ARGS__
+#define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
 #else
 #define DEBUGF(...)
 #endif
@@ -17,17 +17,20 @@
 SlimServerInfo::SlimServerInfo(QObject *parent) :
     QObject(parent)
 {
+    DEBUGF(QTime::currentTime());
 //    httpPort = 9000;
     freshnessDate = 0;
 }
 
 SlimServerInfo::~SlimServerInfo()
 {
+    DEBUGF(QTime::currentTime());
     WriteDataFile();
 }
 
 bool SlimServerInfo::Init(SlimCLI *cliRef)
 {
+    DEBUGF(QTime::currentTime());
     // get cli and references sorted out
     cli = cliRef;
     SlimServerAddr = cli->GetSlimServerAddress();
@@ -51,6 +54,7 @@ bool SlimServerInfo::Init(SlimCLI *cliRef)
 
 bool SlimServerInfo::SetupDevices( void )
 {
+    DEBUGF(QTime::currentTime());
     QByteArray response;
     QList<QByteArray> respList;
     QByteArray cmd;
@@ -108,6 +112,7 @@ bool SlimServerInfo::SetupDevices( void )
 
 void SlimServerInfo::InitDevices( void )
 {
+    DEBUGF(QTime::currentTime());
     cli->EmitCliInfo( QString( "Initializing attached devices" ) );
 
     QHashIterator< QString, SlimDevice* > i( deviceList );
@@ -133,11 +138,13 @@ void SlimServerInfo::InitDevices( void )
 
 SlimDevice *SlimServerInfo::GetDeviceFromMac( QByteArray mac )   // use percent encoded MAC address
 {
+    DEBUGF(QTime::currentTime());
     return deviceList.value( QString( mac ), NULL );
 }
 
 bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 {
+    DEBUGF(QTime::currentTime());
     QList<QByteArray> aList = response.split( ' ' );  // split response into various pairs
 
     QListIterator<QByteArray> fields(aList);
@@ -178,6 +185,7 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 
 bool SlimServerInfo::ReadDataFile( void )
 {
+    DEBUGF(QTime::currentTime());
     QFile file;
     if( file.exists( PATH ) ) // there is a file, so read from it
         file.setFileName( PATH );
@@ -217,7 +225,7 @@ bool SlimServerInfo::ReadDataFile( void )
     while(aa.hasPrevious()) {
         aa.previous();
         Album a = aa.value();
-        qDebug() << aa.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.title << a.year;
+        qDebug() << aa.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.albumtitle << a.year;
     }
 #endif
 
@@ -228,6 +236,7 @@ bool SlimServerInfo::ReadDataFile( void )
 
 void SlimServerInfo::WriteDataFile( void )
 {
+    DEBUGF(QTime::currentTime());
     QFile file;
     file.setFileName( PATH );
 
@@ -254,12 +263,14 @@ void SlimServerInfo::WriteDataFile( void )
 
 void SlimServerInfo::checkRefreshDate(void)
 {
+    DEBUGF(QTime::currentTime());
     if(lastServerRefresh!=freshnessDate)
         refreshImageFromServer();
 }
 
 void SlimServerInfo::refreshImageFromServer(void)
 {
+    DEBUGF(QTime::currentTime());
     db = new SlimDatabaseFetch();
     connect(db,SIGNAL(FinishedUpdatingDatabase()),
             this,SLOT(DatabaseUpdated()));
@@ -270,6 +281,7 @@ void SlimServerInfo::refreshImageFromServer(void)
 
 void SlimServerInfo::DatabaseUpdated(void)
 {
+    DEBUGF(QTime::currentTime());
     m_AlbumArtist2AlbumID = db->AlbumArtist2AlbumID();
     m_AlbumID2AlbumInfo = db->AlbumID2AlbumInfo();
     m_Artist2AlbumIds = db->Artist2AlbumIds();
