@@ -21,12 +21,18 @@ class SqueezeDisplay : public QLabel
     Q_OBJECT
 public:
     explicit SqueezeDisplay(QObject *parent = 0);
+    void Init(QColor txtcolGen, QColor txtcoline1, QColor dispBgrdColor);
+
     
 signals:
     void ErrorMsg(QString err);
 
 public slots:
     void PaintSqueezeDisplay(DisplayBuffer *buf);
+
+    void slotUpdateScrollOffset(void);
+    void slotUpdateTransition(int frame);
+    void slotTransitionFinished(void);
 
 protected:
     void resizeEvent(QResizeEvent *);

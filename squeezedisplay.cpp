@@ -21,7 +21,14 @@ SqueezeDisplay::SqueezeDisplay(QObject *parent) :
     scrollState = NOSCROLL;
     Brightness = 255;
     line1Alpha = 0;
+}
 
+void SqueezeDisplay::Init(QColor txtcolGen, QColor txtcoline1, QColor dispBgrdColor)
+{
+    textcolorGeneral = txtcolGen;
+    textcolorLine1 = txtcoline1;
+    displayBackgroundColor = dispBgrdColor;
+    resetDimensions();
     connect( &scrollTimer, SIGNAL( timeout() ), this, SLOT(slotUpdateScrollOffset()) );
     connect( vertTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
     connect( horzTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
@@ -29,6 +36,12 @@ SqueezeDisplay::SqueezeDisplay(QObject *parent) :
     connect( vertTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
     connect( horzTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
     connect( bumpTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
+}
+
+void SqueezeDisplay::resizeEvent(QResizeEvent *e)
+{
+    QLabel::resizeEvent(e);
+    resetDimensions();
 }
 
 void SqueezeDisplay::resetDimensions(void)
@@ -283,3 +296,8 @@ void SqueezeDisplay::PaintSqueezeDisplay(DisplayBuffer *buf)
     ui->lblSlimDisplay->setPixmap( QPixmap::fromImage( *displayImage) );
 
 }
+
+void slotUpdateScrollOffset(void);
+void slotUpdateTransition(int frame);
+void slotTransitionFinished(void);
+
