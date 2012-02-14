@@ -297,7 +297,34 @@ void SqueezeDisplay::PaintSqueezeDisplay(DisplayBuffer *buf)
 
 }
 
-void slotUpdateScrollOffset(void);
-void slotUpdateTransition(int frame);
-void slotTransitionFinished(void);
+void SqueezeDisplay::slotUpdateScrollOffset(void)
+{
 
+}
+
+void SqueezeDisplay::slotUpdateTransition(int frame)
+{
+
+}
+
+void SqueezeDisplay::slotTransitionFinished(void)
+{
+
+}
+
+/*
+
+
+bool MainWindow::Slimp3Display( QString txt )
+{
+    DEBUGF(QTime::currentTime());
+    QRegExp rx( "\037" );      // the CLI overlay for the Slimp3 display uses 0x1F (037 octal) to delimit the segments of the counter
+    if( rx.indexIn( txt ) != -1 )
+        return true;
+    else
+        return false;
+
+}
+
+
+*/

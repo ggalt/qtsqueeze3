@@ -19,11 +19,23 @@
 class SqueezeDisplay : public QLabel
 {
     Q_OBJECT
+
+    Q_PROPERTY(QColor textcolorGeneral READ getTextColor WRITE setTextColor)
+    Q_PROPERTY(QColor displayBackgroundColor READ getDisplayBackgroundColor WRITE setDisplayBackgroundColor)
+    Q_PROPERTY(QRect displayRect READ getDisplayRect WRITE setDisplayRect)
+
 public:
     explicit SqueezeDisplay(QObject *parent = 0);
     void Init(QColor txtcolGen, QColor txtcoline1, QColor dispBgrdColor);
 
-    
+    void setTextColor(QColor c) {m_textcolorGeneral = c;}
+    QColor getTextColor() const {return m_textcolorGeneral;}
+    void setDisplayBackgroundColor(QColor c) { m_displayBackgroundColor=c; }
+    QColor getDisplayBackgroundColor() const {return m_displayBackgroundColor; }
+    void setDisplayRect(QRect r) {m_displayRect=r;}
+    QRect getDisplayRect() {return m_displayRect;}
+
+
 signals:
     void ErrorMsg(QString err);
 
@@ -56,13 +68,13 @@ private:
     int Line1FontWidth;     // width of the letter "W" (used in scrolling text)
     int scrollStep;         // distance we travel during each scroll step == to 1/40 of the width of the letter "W" (or 1, if less than 1)
 
-    QColor textcolorGeneral;
+    QColor m_textcolorGeneral;
     QColor textcolorLine1;
-    QColor displayBackgroundColor;
+    QColor m_displayBackgroundColor;
     int Brightness;
     int line1Alpha;   // alpha blending figure for menu fade-in and fade-out
 
-    QRect displayRect;          // area in which to display squeeze display text
+    QRect m_displayRect;          // area in which to display squeeze display text
     QRect line0Bounds;          // Rectangle in which line0 gets displayed
     QRect line1Bounds;          // Rectangle in which line1 gets displayed
     QRegion line0Clipping;      // Clipping region equal to line0Bounds

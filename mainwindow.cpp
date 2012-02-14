@@ -23,31 +23,32 @@ MainWindow::MainWindow(QWidget *parent)
     slimCLI = new SlimCLI( this );
     serverInfo = new SlimServerInfo(this);
 
+    m_disp = new SqueezeDisplay(ui->lblSlimDisplay);
     mySettings = new QSettings("qtsqueeze3", "qtsqueeze3");
-    vertTransTimer = new QTimeLine( 350, this );
-    horzTransTimer = new QTimeLine( 700, this );
-    bumpTransTimer = new QTimeLine( 100, this );
-    vertTransTimer->setFrameRange( 0, 0 );
-    horzTransTimer->setFrameRange( 0, 0 );
-    bumpTransTimer->setFrameRange( 0, 0 );
-    isTransition = false;
-    transitionDirection = transNONE;
-    xOffsetOld = xOffsetNew = 0;
-    yOffsetOld = yOffsetNew = 0;
+//    vertTransTimer = new QTimeLine( 350, this );
+//    horzTransTimer = new QTimeLine( 700, this );
+//    bumpTransTimer = new QTimeLine( 100, this );
+//    vertTransTimer->setFrameRange( 0, 0 );
+//    horzTransTimer->setFrameRange( 0, 0 );
+//    bumpTransTimer->setFrameRange( 0, 0 );
+//    isTransition = false;
+//    transitionDirection = transNONE;
+//    xOffsetOld = xOffsetNew = 0;
+//    yOffsetOld = yOffsetNew = 0;
     activeDevice = NULL;
     //    PortAudioDevice = "";
-    ScrollOffset = 0;
-    scrollState = NOSCROLL;
-    Brightness = 255;
-    line1Alpha = 0;
+//    ScrollOffset = 0;
+//    scrollState = NOSCROLL;
+//    Brightness = 255;
+//    line1Alpha = 0;
     isStartUp = true;
-    connect( &scrollTimer, SIGNAL( timeout() ), this, SLOT(slotUpdateScrollOffset()) );
-    connect( vertTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
-    connect( horzTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
-    connect( bumpTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
-    connect( vertTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
-    connect( horzTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
-    connect( bumpTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
+//    connect( &scrollTimer, SIGNAL( timeout() ), this, SLOT(slotUpdateScrollOffset()) );
+//    connect( vertTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
+//    connect( horzTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
+//    connect( bumpTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
+//    connect( vertTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
+//    connect( horzTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
+//    connect( bumpTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
 
     DEBUGF( "CONNECTING OPTIONS PAGE");
     connect(ui->btnApplyConnection, SIGNAL(clicked()),this,SLOT(updateConnectionConfig()));
@@ -161,7 +162,7 @@ bool MainWindow::Create(void)
     slimCLI->Init();
 
     DEBUGF("###Setup Display");
-    SetUpDisplay();
+//    SetUpDisplay();
 
     // establish the proper URL for the web interface
     QUrl slimWeb( QString( "http://") + SlimServerAddr + QString( ":"+SlimServerHttpPort+"/" ) );
@@ -209,313 +210,6 @@ bool MainWindow::Create(void)
     connect( ui->btnDownVolume ,SIGNAL(clicked()), this, SLOT(slotVolDown()) );
     DEBUGF("###Create Return");
     return true;
-}
-
-void MainWindow::SetUpDisplay()
-{
-    DEBUGF(QTime::currentTime());
-    // set up coverflow widget
-    flowRect = QRect( 0, 0,
-                      ui->cfWidget->geometry().width(),
-                      ui->cfWidget->geometry().height() );
-    CoverFlow = new SqueezePictureFlow( ui->cfWidget, SlimServerAddr, SlimServerHttpPort.toInt(), true, NULL, NULL);
-    CoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
-    CoverFlow->setContentsMargins( 50, 0, CoverFlow->width() - 50, CoverFlow->height() );
-    CoverFlow->setBackgroundColor(coverflowBackground);
-
-    // set up slim display area
-    displayRect = QRect( 0, 0,
-                         ui->lblSlimDisplay->geometry().width(),
-                         ui->lblSlimDisplay->geometry().height() );
-    displayImage = new QImage( displayRect.width(), displayRect.height(), QImage::Format_ARGB32 );
-    //    displayBackgroundColor = QColor( mySettings->value("UI/DisplayBackground", "black").toString());
-    displayImage->fill( (uint)displayBackgroundColor.rgb() );
-    //    displayBackgroundColor.setRgb( 255, 255, 255 );
-    //    displayImage->fill( displayBackgroundColor.black() );
-
-    //    textcolorGeneral = QColor( mySettings->value("UI/DisplayTextColor","cyan").toString() );
-    //    textcolorLine1 = QColor( mySettings->value("UI/DisplayTextColor","cyan").toString() );
-
-    small.setFamily( "Helvetica" );
-    small.setPixelSize( 4 );
-    medium.setFamily( "Helvetica" );
-    medium.setPixelSize( 4 );
-    large.setFamily( "Helvetica" );
-    large.setPixelSize( 4 );
-
-    int h = displayRect.height();
-    for( int i = 5; QFontInfo( small ).pixelSize() < h/4; i++ ) {
-        DEBUGF("setting small font pixel" << i);
-        small.setPixelSize( i );
-    }
-    for( int i = 5; QFontInfo( medium ).pixelSize() < h/3; i++ ) {
-        DEBUGF("setting medium font pixel" << i);
-        medium.setPixelSize( i );
-    }
-    for( int i = 5; QFontInfo( large ).pixelSize() < h/2; i++ ) {
-        DEBUGF("setting large font pixel" << i);
-        large.setPixelSize( i );
-    }
-
-    // establish font metrics for Line1 (used in scrolling display)
-    ln1FM = new QFontMetrics( large );
-    // set starting points for drawing on Slim Display standard messages that come through the CLI
-    pointLine0 = QPoint( displayRect.width()/100, ( displayRect.height() / 10 ) + small.pixelSize() );
-    pointLine1 = QPoint( displayRect.width()/100, ( 9 * displayRect.height() ) / 10 );
-    pointLine1_2 = pointLine1; // temp just in case
-    pointLine0Right = QPoint( ( 95 * displayRect.width() ) / 100, ( displayRect.height() / 10 ) + small.pixelSize() );
-    pointLine1Right = QPoint( ( 95 * displayRect.width() ) / 100, ( 9 * displayRect.height() ) / 10 );
-    upperMiddle = QPoint( displayRect.width() / 2, ( displayRect.height() / 2  ) - (  medium.pixelSize() ) / 4 );
-    lowerMiddle = QPoint( displayRect.width() / 2, ( displayRect.height() / 2  ) + ( 5 * medium.pixelSize() ) / 4  );
-
-    Line0Rect = QRect( pointLine0.x(), pointLine0.y() - small.pixelSize(),
-                       pointLine0Right.x() - pointLine0.x(),
-                       pointLine0.y() );
-    Line1Rect = QRect( pointLine1.x(), pointLine1.y() - large.pixelSize(),
-                       pointLine1Right.x() - pointLine1.x(),
-                       displayRect.height() - ( pointLine1.y() - large.pixelSize() ));
-    line1Clipping = QRegion( Line1Rect );
-    noClipping = QRegion( displayRect );
-
-    vertTransTimer->setFrameRange( 0, Line1Rect.height() );
-    horzTransTimer->setFrameRange( 0, displayRect.width() );
-    bumpTransTimer->setFrameRange( 0, ln1FM->width( QChar( 'W')) );
-
-    Line1FontWidth = ln1FM->width( QChar( 'W' ) ) / 40;
-    if( Line1FontWidth <= 0 ) // avoid too small a figure
-        Line1FontWidth = 1;
-
-    timeRect =  QRectF ( ( qreal )0,
-                         ( qreal )( displayRect.height() / 10 ) + ( qreal )small.pixelSize()/2,
-                         ( qreal )0,
-                         ( qreal )( ( 5 * small.pixelSize() ) / 10 ) );
-    timeFillRect = QRectF( timeRect.left(), timeRect.top(), timeRect.width(), timeRect.height() );
-
-    volRect = QRectF (  ( qreal )( displayRect.width() / 20 ),
-                        ( qreal )pointLine1.y() - ( qreal )large.pixelSize()/2,
-                        ( qreal )( displayRect.width() ) * 0.90,
-                        ( qreal )( ( 5 * small.pixelSize() ) / 10 ) );
-    volFillRect = QRectF( volRect.left(), volRect.top(), volRect.width(), volRect.height() );
-
-    radius = timeRect.height() / 2;
-    slotEnablePlayer();
-}
-
-void MainWindow::slotResetSlimDisplay( void )
-{
-    DEBUGF(QTime::currentTime());
-    scrollTimer.stop();
-    ScrollOffset = 0;
-    line1Alpha = 0;
-    boundingRect = ln1FM->boundingRect( Line1Rect, Qt::AlignLeft | Qt::AlignHCenter, activeDevice->getDisplayBuffer().line1 );
-    if( boundingRect.width() > Line1Rect.width() ) {
-        scrollState = PAUSE_SCROLL;
-        scrollTextLen = boundingRect.width() - Line1Rect.width();
-        scrollTimer.setInterval( 5000 );
-        scrollTimer.start();
-    }
-    else {
-        scrollState = NOSCROLL;
-    }
-    PaintTextDisplay();
-}
-
-void MainWindow::slotUpdateSlimDisplay( void )
-{
-    DEBUGF(QTime::currentTime());
-    //    boundingRect = ln1FM->boundingRect( Line1Rect, Qt::AlignLeft | Qt::AlignHCenter, activeDevice->getDisplayBuffer().line1 );
-    lineWidth = ln1FM->width( activeDevice->getDisplayBuffer().line1 );
-    pointLine1_2 = QPoint( lineWidth + ( ui->lblSlimDisplay->width() - Line1Rect.width()), ( 9 * displayRect.height() ) / 10 );
-
-    if(  lineWidth > Line1Rect.width() ) {
-        if( scrollState == NOSCROLL ) {
-            StopScroll();
-            scrollTextLen = lineWidth - Line1Rect.width();
-            scrollTimer.setInterval( 5000 );
-            scrollTimer.start();
-        }
-    }
-    else {
-        ScrollOffset = 0;
-        scrollState = NOSCROLL;
-        scrollTimer.stop();
-    }
-    PaintTextDisplay();
-}
-
-void MainWindow::PaintTextDisplay( void )
-{
-    DEBUGF(QTime::currentTime());
-    if( activeDevice == NULL )
-        DEBUGF( "active device is null" );
-    DisplayBuffer d = activeDevice->getDisplayBuffer();
-
-    int playedCount = 0;
-    int totalCount = 1; // this way we never get a divide by zero error
-    QString timeText = "";
-    QPainter p( displayImage );
-    QBrush b( displayBackgroundColor );
-    textcolorGeneral.setAlpha( Brightness );
-    textcolorLine1.setAlpha( Brightness - line1Alpha );
-
-    QBrush c( textcolorGeneral );
-    QBrush e( c ); // non-filling brush
-    e.setStyle( Qt::NoBrush );
-    p.setBackground( b );
-    p.setBrush( c );
-    p.setPen( textcolorGeneral );
-    p.setFont( large );
-    p.eraseRect( displayImage->rect() );
-
-    // draw Line 0  NOTE: Only transitions left or right, but NOT up and down
-    if( d.line0.length() > 0 ) {
-        p.setFont( small );
-        if( isTransition ) {
-            p.drawText( pointLine0.x() + xOffsetOld, pointLine0.y(), transBuffer.line0 );
-            p.drawText( pointLine0.x() + xOffsetNew, pointLine0.y(), d.line0 );
-        }
-        else
-            p.drawText( pointLine0.x(), pointLine0.y(), d.line0 );
-    }
-
-    // draw Line 1
-    if( d.line1.length() > 0 ) {
-        if( d.line0.left( 8 ) == "Volume (" ) {   // it's the volume, so emulate a progress bar
-            qreal volume = d.line0.mid( 8, d.line0.indexOf( ')' ) - 8 ).toInt();
-            volFillRect.setWidth( (qreal)volRect.width() * ( volume / (qreal)100 ) );
-            p.setBrush( e );  // non-filling brush so we end up with an outline of a rounded rectangle
-            p.drawRoundedRect( volRect, radius, radius );
-            p.setBrush( c );
-            if( volume > 1 ) // if it's too small, we get a funny line at the start of the progress bar
-                p.drawRoundedRect( volFillRect, radius, radius );
-        }
-        else {
-            QBrush cLine1( textcolorLine1 );
-            p.setBrush( cLine1 );
-            p.setPen( textcolorLine1 );
-            p.setFont( large );
-            p.setClipRegion( line1Clipping );
-            if( isTransition ) {
-                p.drawText( pointLine1.x() + xOffsetOld, pointLine1.y() + yOffsetOld, transBuffer.line1);
-                p.drawText( pointLine1.x() + xOffsetNew, pointLine1.y() + yOffsetNew, d.line1 );
-            } else {
-                p.drawText( pointLine1.x() - ScrollOffset, pointLine1.y(), d.line1 );
-                if( scrollState != NOSCROLL )
-                    p.drawText(pointLine1_2.x() - ScrollOffset, pointLine1.y(), d.line1 );
-            }
-            p.setClipRegion( noClipping );
-            p.setBrush( c );
-            p.setPen( textcolorGeneral );
-        }
-    }
-
-    // deal with "overlay0" (the right-hand portion of the display) this can be time (e.g., "-3:08") or number of items (e.g., "(2 of 7)")
-    if( d.overlay0.length() > 0 ) {
-        if( Slimp3Display( d.overlay0 ) ) {
-            QRegExp rx( "\\W(\\w+)\\W");
-            //            QRegExp rx( "\037(\\w+)\037" );
-            QStringList el;
-            int pos = 0;
-
-            while ((pos = rx.indexIn(d.overlay0, pos)) != -1) {
-                el << rx.cap(1);
-                pos += rx.matchedLength();
-            }
-
-            rx.indexIn( d.overlay0 );
-            QStringList::iterator it = el.begin();
-            while( it != el.end() ) {
-                QString s = *it;
-                if( s.left( 12 ) == "leftprogress" ) { // first element
-                    int inc = s.at( 12 ).digitValue();
-                    playedCount += inc;
-                    totalCount += 4;
-                }
-                else if( s.left( 14 ) == "middleprogress" ) { // standard element
-                    int inc = s.at( 14 ).digitValue();
-                    playedCount += inc;
-                    totalCount += 4;
-                }
-                else if( s.left( 10 ) == "solidblock" ) { // full block
-                    playedCount += 4;
-                    totalCount += 4;
-                }
-                else if( s.left( 13 ) == "rightprogress" ) { // end element
-                    int inc = s.at( 13 ).digitValue();
-                    playedCount += inc;
-                    totalCount += 4;
-                }
-                ++it;
-            }
-            QChar *data = d.overlay0.data();
-            for( int i = ( d.overlay0.length() - 8 ); i < d.overlay0.length(); i++ ) {
-                if( *( data + i ) == ' ' ) {
-                    timeText = d.overlay0.mid( i + 1 );
-                }
-            }
-        }
-        else if( d.overlay0.contains( QChar( 8 ) ) ) {
-            QChar elapsed = QChar(8);
-            QChar remaining = QChar(5);
-            QChar *data = d.overlay0.data();
-            for( int i = 0; i < d.overlay0.length(); i++, data++ ) {
-                if( *data == elapsed ) {
-                    playedCount++;
-                    totalCount++;
-                }
-                else if( *data == remaining )
-                    totalCount++;
-                else if( *data == ' ' ) {
-                    timeText = d.overlay0.mid( i + 1 );
-                }
-            }
-        }
-        else {
-            timeText = d.overlay0;
-        }
-        p.setFont( small );
-        QFontMetrics fm = p.fontMetrics();
-        p.setClipping( false );
-        if( isTransition ) {
-            p.drawText( ( pointLine0Right.x() + xOffsetNew ) - fm.width(timeText), pointLine0Right.y(), timeText );
-        }
-        else {
-            p.drawText( pointLine0Right.x() - fm.width(timeText), pointLine0Right.y(), timeText );
-        }
-        if( totalCount > 1 ) {  // make sure we received data on a progress bar, otherwise, don't draw
-            timeRect.setLeft( ( qreal )( pointLine0.x() + fm.width( d.line0.toUpper() ) ) );
-            timeRect.setRight( ( qreal )( pointLine0Right.x() - ( qreal )( 3 * fm.width( timeText ) / 2 ) ) );
-            timeFillRect.setLeft( timeRect.left() );
-            timeFillRect.setWidth( ( playedCount * timeRect.width() ) / totalCount );
-            p.setBrush( e );  // non-filling brush so we end up with an outline of a rounded rectangle
-            p.drawRoundedRect( timeRect, radius, radius );
-            p.setBrush( c );
-            if( playedCount > 1 ) // if it's too small, we get a funny line at the start of the progress bar
-                p.drawRoundedRect( timeFillRect, radius, radius );
-        }
-    }
-
-    // deal with "overlay1" (the right-hand portion of the display)
-    /*
-    if( d.overlay1.length() > 0 ) {
-        DEBUGF( "Don't know what to do with overlay1 yet" );
-    }
-*/
-    // if we've received a "center" display, it means we're powered down, so draw them
-    if( d.center0.length() > 0 ) {
-        p.setFont( medium );
-        QFontMetrics fm = p.fontMetrics();
-        QPoint start = QPoint( upperMiddle.x() - ( fm.width( d.center0 )/2 ), upperMiddle.y() );
-        p.drawText( start, d.center0 );
-    }
-
-    if( d.center1.length() > 0 ) {
-        p.setFont( medium );
-        QFontMetrics fm = p.fontMetrics();
-        QPoint start = QPoint( lowerMiddle.x() - ( fm.width( d.center1 )/2 ), lowerMiddle.y() );
-        p.drawText( start, d.center1 );
-    }
-    ui->lblSlimDisplay->setPixmap( QPixmap::fromImage( *displayImage) );
 }
 
 void MainWindow::slotUpdateCoverFlow( int trackIndex )
@@ -751,12 +445,12 @@ void MainWindow::loadDisplayConfig(void)
 {
     DEBUGF(QTime::currentTime());
     DEBUGF("DISPLAY CONFIG");
-    textcolorGeneral= QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt());
+    m_disp->setTextColor(QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt()));
     textcolorLine1 = QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt());
-    displayBackgroundColor = QColor::fromRgb(mySettings->value("UI/DisplayBackground",QColor(Qt::black).rgb()).toUInt());
+    m_disp->setDisplayBackgroundColor(QColor::fromRgb(mySettings->value("UI/DisplayBackground",QColor(Qt::black).rgb()).toUInt()));
     coverflowBackground = QColor::fromRgb(mySettings->value("UI/CoverFlowColor",QColor(Qt::white).rgb()).toUInt());
     temptextcolorGeneral = textcolorGeneral;
-    tempdisplayBackgroundColor = displayBackgroundColor;
+    tempdisplayBackgroundColor = m_disp->getDisplayBackgroundColor();
     tempcoverflowBackground = coverflowBackground;
     //    textcolorGeneral= QColor(Qt::cyan);
     //    textcolorLine1 = QColor(Qt::cyan);
@@ -794,9 +488,9 @@ void MainWindow::updateDisplayConfig(void)
     QPixmap p = QPixmap(64,37);
     p.fill(coverflowBackground.rgb());
     ui->lblCoverFlowColor->setPixmap(p);
-    p.fill(displayBackgroundColor.rgb());
+    p.fill(m_disp->getDisplayBackgroundColor().rgb());
     ui->lblDisplayBackgroundColor->setPixmap(p);
-    p.fill(textcolorGeneral.rgb());
+    p.fill(m_disp->getTextColor().rgb());
     ui->lblDisplayTextColor->setPixmap(p);
 }
 
@@ -874,9 +568,9 @@ void MainWindow::setupConfig(void)
     QPixmap p = QPixmap(64,37);
     p.fill(coverflowBackground.rgb());
     ui->lblCoverFlowColor->setPixmap(p);
-    p.fill(displayBackgroundColor.rgb());
+    p.fill(m_disp->getDisplayBackgroundColor().rgb());
     ui->lblDisplayBackgroundColor->setPixmap(p);
-    p.fill(textcolorGeneral.rgb());
+    p.fill(m_disp->getTextColor().rgb());
     ui->lblDisplayTextColor->setPixmap(p);
 
     ui->spnInterval->setValue(mySettings->value("UI/ScrollInterval",5000).toInt());
@@ -894,17 +588,17 @@ void MainWindow::setCoverFlowColor(void)
 void MainWindow::setDisplayBackgroundColor(void)
 {
     DEBUGF(QTime::currentTime());
-    QColorDialog *dlg = new QColorDialog(displayBackgroundColor);
+    QColorDialog *dlg = new QColorDialog(m_disp->getDisplayBackgroundColor());
     dlg->exec();
-    tempdisplayBackgroundColor = dlg->selectedColor();
+    m_disp->setDisplayBackgroundColor(dlg->selectedColor());
 }
 
 void MainWindow::setDisplayTextColor(void)
 {
     DEBUGF(QTime::currentTime());
-    QColorDialog *dlg = new QColorDialog(textcolorGeneral);
+    QColorDialog *dlg = new QColorDialog(m_disp->getTextColor());
     dlg->exec();
-    temptextcolorGeneral = dlg->selectedColor();
+    m_disp->setTextColor(dlg->selectedColor());
 }
 
 
@@ -957,16 +651,6 @@ void MainWindow::SqueezePlayerOutput( void )
     qDebug() << errMsg;
 }
 
-bool MainWindow::Slimp3Display( QString txt )
-{
-    DEBUGF(QTime::currentTime());
-    QRegExp rx( "\037" );      // the CLI overlay for the Slimp3 display uses 0x1F (037 octal) to delimit the segments of the counter
-    if( rx.indexIn( txt ) != -1 )
-        return true;
-    else
-        return false;
-
-}
 
 
 /* vim: set expandtab tabstop=4 shiftwidth=4: */
