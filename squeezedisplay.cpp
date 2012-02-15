@@ -1,9 +1,12 @@
+#include <QtDebug>
+
 #include "squeezedisplay.h"
 
-#define SQUEEZEDISPLAYERR(...) emit ErrorMsg(QString() << this->objectName() << Q_FUNC_INFO << QTime::currentTime() << __VA_ARGS__)
+//#define DEBUGMSG(...) qDebug() << this->objectName() << Q_FUNC_INFO << QTime::currentTime().toString() << __VA_ARGS__;
+#define DEBUGMSG(...)
 #define PADDING 20
 
-SqueezeDisplay::SqueezeDisplay(QObject *parent) :
+SqueezeDisplay::SqueezeDisplay(QWidget *parent) :
     QLabel(parent)
 {
     setObjectName("SqueezeDisplay");
@@ -23,11 +26,15 @@ SqueezeDisplay::SqueezeDisplay(QObject *parent) :
     line1Alpha = 0;
 }
 
-void SqueezeDisplay::Init(QColor txtcolGen, QColor txtcoline1, QColor dispBgrdColor)
+void SqueezeDisplay::Init(QColor txtcolGen, QColor dispBgrdColor)
 {
-    textcolorGeneral = txtcolGen;
-    textcolorLine1 = txtcoline1;
-    displayBackgroundColor = dispBgrdColor;
+    m_textcolorGeneral = txtcolGen;
+    m_displayBackgroundColor = dispBgrdColor;
+    Init();
+}
+
+void SqueezeDisplay::Init(void)
+{
     resetDimensions();
     connect( &scrollTimer, SIGNAL( timeout() ), this, SLOT(slotUpdateScrollOffset()) );
     connect( vertTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
@@ -61,19 +68,19 @@ void SqueezeDisplay::resetDimensions(void)
 
     if(drawwidth/drawheight >= 10) {  // too wide
         int newWidth = drawheight*10;
-        displayRect = QRect(PADDING+((drawwidth-newWidth)/2),PADDING,newWidth,drawheight);
+        m_displayRect = QRect(PADDING+((drawwidth-newWidth)/2),PADDING,newWidth,drawheight);
     } else {
         int newHeight = drawwidth/10;
-        displayRect = QRect(PADDING,PADDING+((drawheight-newHeight)/2),drawwidth,newHeight);
+        m_displayRect = QRect(PADDING,PADDING+((drawheight-newHeight)/2),drawwidth,newHeight);
     }
 
-    if(displayRect.height() < 32)   // probably too small to use
-        SQUEEZEDISPLAYERR(QString("display rectangle is too small, with height of %1").arg(displayRect.height()));
+    if(m_displayRect.height() < 32)   // probably too small to use
+        DEBUGMSG(QString("display rectangle is too small, with height of %1").arg(m_displayRect.height()));
 
     // establish size of each display line
-    int line0height = displayRect.height()/5;
-    line0Bounds = QRect(displayRect.left(),displayRect.top()+line0height/4,displayRect.width(),line0height);
-    line1Bounds = QRect(displayRect.left(),displayRect.top()+((line0height*7)/4),displayRect.width(),line0height*3);
+    int line0height = m_displayRect.height()/5;
+    line0Bounds = QRect(m_displayRect.left(),m_displayRect.top()+line0height/4,m_displayRect.width(),line0height);
+    line1Bounds = QRect(m_displayRect.left(),m_displayRect.top()+((line0height*7)/4),m_displayRect.width(),line0height*3);
 
     // establish font
     small.setFamily( "Helvetica" );
@@ -110,11 +117,11 @@ void SqueezeDisplay::resetDimensions(void)
     scrollStep = (Line1FontWidth < 40 ? 1 : Line1FontWidth / 40);
 
     vertTransTimer->setFrameRange( 0, line1Bounds.height() );
-    horzTransTimer->setFrameRange( 0, displayRect.width() );
+    horzTransTimer->setFrameRange( 0, m_displayRect.width() );
     bumpTransTimer->setFrameRange( 0, Line1FontWidth );
 
     // establish volume and time progress bars
-    volFillRect = volRect = QRect( displayRect.left(), height()/2 - line0Bounds.height()/2, displayRect.width(),line0Bounds.height());
+    volFillRect = volRect = QRect( m_displayRect.left(), height()/2 - line0Bounds.height()/2, m_displayRect.width(),line0Bounds.height());
     progFillRect = progRect = QRect(0,line0Bounds.top()+ line0Bounds.height()/4,line0Bounds.width(),line0Bounds.height()/2);    // note, "left" and "width" are irrelevant here, only "top" and "height" will remain constant
     radius = volRect.height()/4;
 
@@ -122,7 +129,7 @@ void SqueezeDisplay::resetDimensions(void)
     if(!displayImage->isNull())
         delete displayImage;
     displayImage = new QImage(width(),height(),QImage::Format_ARGB32 );
-    displayImage->fill((uint)displayBackgroundColor.rgb());
+    displayImage->fill((uint)m_displayBackgroundColor.rgb());
 }
 
 void SqueezeDisplay::PaintSqueezeDisplay(DisplayBuffer *buf)
@@ -132,16 +139,16 @@ void SqueezeDisplay::PaintSqueezeDisplay(DisplayBuffer *buf)
     QString timeText = "";
 
     QPainter p( displayImage );
-    QBrush b( displayBackgroundColor );
-    textcolorGeneral.setAlpha( Brightness );
+    QBrush b( m_displayBackgroundColor );
+    m_textcolorGeneral.setAlpha( Brightness );
     textcolorLine1.setAlpha( Brightness - line1Alpha );
 
-    QBrush c( textcolorGeneral );
+    QBrush c( m_textcolorGeneral );
     QBrush e( c ); // non-filling brush
     e.setStyle( Qt::NoBrush );
     p.setBackground( b );
     p.setBrush( c );
-    p.setPen( textcolorGeneral );
+    p.setPen( m_textcolorGeneral );
     p.setFont( large );
     p.eraseRect( displayImage->rect() );
 
@@ -183,7 +190,7 @@ void SqueezeDisplay::PaintSqueezeDisplay(DisplayBuffer *buf)
             }
             p.setClipRegion( noClipping );
             p.setBrush( c );
-            p.setPen( textcolorGeneral );
+            p.setPen( m_textcolorGeneral );
         }
     }
 
@@ -261,22 +268,22 @@ void SqueezeDisplay::PaintSqueezeDisplay(DisplayBuffer *buf)
             p.drawText( pointLine0Right.x() - fm.width(timeText), pointLine0Right.y(), timeText );
         }
         if( totalCount > 1 ) {  // make sure we received data on a progress bar, otherwise, don't draw
-            timeRect.setLeft( ( qreal )( pointLine0.x() + fm.width( buf->line0.toUpper() ) ) );
-            timeRect.setRight( ( qreal )( pointLine0Right.x() - ( qreal )( 3 * fm.width( timeText ) / 2 ) ) );
-            timeFillRect.setLeft( timeRect.left() );
-            timeFillRect.setWidth( ( playedCount * timeRect.width() ) / totalCount );
+            progRect.setLeft( ( qreal )( pointLine0.x() + fm.width( buf->line0.toUpper() ) ) );
+            progRect.setRight( ( qreal )( pointLine0Right.x() - ( qreal )( 3 * fm.width( timeText ) / 2 ) ) );
+            progFillRect.setLeft( progRect.left() );
+            progFillRect.setWidth( ( playedCount * progRect.width() ) / totalCount );
             p.setBrush( e );  // non-filling brush so we end up with an outline of a rounded rectangle
-            p.drawRoundedRect( timeRect, radius, radius );
+            p.drawRoundedRect( progRect, radius, radius );
             p.setBrush( c );
             if( playedCount > 1 ) // if it's too small, we get a funny line at the start of the progress bar
-                p.drawRoundedRect( timeFillRect, radius, radius );
+                p.drawRoundedRect( progFillRect, radius, radius );
         }
     }
 
     // deal with "overlay1" (the right-hand portion of the display)
     /*
     if( buf->overlay1.length() > 0 ) {
-        DEBUGF( "Don't know what to do with overlay1 yet" );
+        DEBUGMSG( "Don't know what to do with overlay1 yet" );
     }
 */
     // if we've received a "center" display, it means we're powered down, so draw them
@@ -293,7 +300,7 @@ void SqueezeDisplay::PaintSqueezeDisplay(DisplayBuffer *buf)
         QPoint start = QPoint( lowerMiddle.x() - ( fm.width( buf->center1 )/2 ), lowerMiddle.y() );
         p.drawText( start, buf->center1 );
     }
-    ui->lblSlimDisplay->setPixmap( QPixmap::fromImage( *displayImage) );
+    setPixmap(QPixmap::fromImage( *displayImage) );
 
 }
 
@@ -312,12 +319,9 @@ void SqueezeDisplay::slotTransitionFinished(void)
 
 }
 
-/*
-
-
-bool MainWindow::Slimp3Display( QString txt )
+bool SqueezeDisplay::Slimp3Display( QString txt )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGMSG(QTime::currentTime());
     QRegExp rx( "\037" );      // the CLI overlay for the Slimp3 display uses 0x1F (037 octal) to delimit the segments of the counter
     if( rx.indexIn( txt ) != -1 )
         return true;
@@ -325,6 +329,8 @@ bool MainWindow::Slimp3Display( QString txt )
         return false;
 
 }
+
+/*
 
 
 */

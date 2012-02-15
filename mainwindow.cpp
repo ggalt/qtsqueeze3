@@ -71,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent)
     DEBUGF("LOADING CONFIGS");
     loadDisplayConfig();
     loadConnectionConfig();
+    m_disp->Init();
     DEBUGF("FINISHED LOADING CONFIGS");
 }
 
@@ -256,143 +257,143 @@ void MainWindow::slotCreateCoverFlow( void )
 void MainWindow::slotLeftArrow( void )
 {
     DEBUGF(QTime::currentTime());
-    StopScroll();
-    isTransition = true;
-    transitionDirection = transRIGHT;
-    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
-    if( activeDevice->getDisplayBuffer().line0 == "Squeezebox Home" ) {  // are we at the "left-most" menu option?
-        bumpTransTimer->start();
-    }
-    else {
-        horzTransTimer->start();
-    }
+//    StopScroll();
+//    isTransition = true;
+//    transitionDirection = transRIGHT;
+//    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
+//    if( activeDevice->getDisplayBuffer().line0 == "Squeezebox Home" ) {  // are we at the "left-most" menu option?
+//        bumpTransTimer->start();
+//    }
+//    else {
+//        horzTransTimer->start();
+//    }
     activeDevice->SendDeviceCommand( QString( "button arrow_left\n" ) );
 }
 
 void MainWindow::slotRightArrow( void )
 {
     DEBUGF(QTime::currentTime());
-    StopScroll();
-    isTransition = true;
-    transitionDirection = transLEFT;
-    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
-    horzTransTimer->start();
+//    StopScroll();
+//    isTransition = true;
+//    transitionDirection = transLEFT;
+//    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
+//    horzTransTimer->start();
     activeDevice->SendDeviceCommand( QString( "button arrow_right\n" ) );
 }
 
 void MainWindow::slotUpArrow( void )
 {
     DEBUGF(QTime::currentTime());
-    StopScroll();
-    isTransition = true;
-    transitionDirection = transDOWN;
-    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
-    vertTransTimer->start();
+//    StopScroll();
+//    isTransition = true;
+//    transitionDirection = transDOWN;
+//    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
+//    vertTransTimer->start();
     activeDevice->SendDeviceCommand( QString( "button arrow_up\n" ) );
 }
 
 void MainWindow::slotDownArrow( void )
 {
     DEBUGF(QTime::currentTime());
-    StopScroll();
-    isTransition = true;
-    transitionDirection = transUP;
-    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
-    vertTransTimer->start();
+//    StopScroll();
+//    isTransition = true;
+//    transitionDirection = transUP;
+//    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
+//    vertTransTimer->start();
     activeDevice->SendDeviceCommand( QString( "button arrow_down\n" ) );
 }
 
-void MainWindow::slotUpdateScrollOffset( void )
-{
-    DEBUGF("SLOTUPDATESCROLLOFFSET");
-    if( scrollState == PAUSE_SCROLL ) {
-        scrollTimer.stop();
-        scrollState = SCROLL;
-        scrollTimer.setInterval( 33 );
-        scrollTimer.start();
-    }
-    else if( scrollState == SCROLL ) {
-        ScrollOffset += Line1FontWidth;
-        //        if( ScrollOffset >= ( lineWidth - Line1Rect.width()) ) {
-        if( ScrollOffset >= lineWidth ) {
-            scrollState = FADE_OUT;
-            line1Alpha = 0;
-        }
-    }
-    else if( scrollState == FADE_IN ) {
-        line1Alpha -= 15;
-        if( line1Alpha <= 0 ) {
-            line1Alpha = 0;
-            ScrollOffset = 0;
-            scrollTimer.stop();
-            scrollState = PAUSE_SCROLL;
-            scrollTimer.setInterval( 5000 );
-            scrollTimer.start();
-        }
-    }
-    else if( scrollState == FADE_OUT ) {
-        line1Alpha += 7;
-        ScrollOffset += Line1FontWidth; // keep scrolling while fading
-        if( line1Alpha >= 255 ) {
-            line1Alpha = 255;
-            ScrollOffset = 0;
-            scrollState = FADE_IN;
-        }
-    }
-    PaintTextDisplay();
-}
+//void MainWindow::slotUpdateScrollOffset( void )
+//{
+//    DEBUGF("SLOTUPDATESCROLLOFFSET");
+//    if( scrollState == PAUSE_SCROLL ) {
+//        scrollTimer.stop();
+//        scrollState = SCROLL;
+//        scrollTimer.setInterval( 33 );
+//        scrollTimer.start();
+//    }
+//    else if( scrollState == SCROLL ) {
+//        ScrollOffset += Line1FontWidth;
+//        //        if( ScrollOffset >= ( lineWidth - Line1Rect.width()) ) {
+//        if( ScrollOffset >= lineWidth ) {
+//            scrollState = FADE_OUT;
+//            line1Alpha = 0;
+//        }
+//    }
+//    else if( scrollState == FADE_IN ) {
+//        line1Alpha -= 15;
+//        if( line1Alpha <= 0 ) {
+//            line1Alpha = 0;
+//            ScrollOffset = 0;
+//            scrollTimer.stop();
+//            scrollState = PAUSE_SCROLL;
+//            scrollTimer.setInterval( 5000 );
+//            scrollTimer.start();
+//        }
+//    }
+//    else if( scrollState == FADE_OUT ) {
+//        line1Alpha += 7;
+//        ScrollOffset += Line1FontWidth; // keep scrolling while fading
+//        if( line1Alpha >= 255 ) {
+//            line1Alpha = 255;
+//            ScrollOffset = 0;
+//            scrollState = FADE_IN;
+//        }
+//    }
+//    PaintTextDisplay();
+//}
 
-void MainWindow::slotUpdateTransition( int frame )
-{
-    switch( transitionDirection ) {
-    case transLEFT:
-        xOffsetOld = 0 - frame;
-        xOffsetNew = displayRect.width() - frame;
-        yOffsetOld = yOffsetNew = 0;
-        break;
-    case transRIGHT:
-        xOffsetOld = 0 + frame;
-        xOffsetNew = frame - displayRect.width();
-        yOffsetOld = yOffsetNew = 0;
-        break;
-    case transUP:
-        xOffsetOld = xOffsetNew = 0;
-        yOffsetOld = 0 - frame;
-        yOffsetNew = Line1Rect.height() - frame;
-        break;
-    case transDOWN:
-        xOffsetOld = xOffsetNew = 0;
-        yOffsetOld = 0 + frame;
-        yOffsetNew = frame - Line1Rect.height();
-        break;
-    case transNONE:
-    default:
-        xOffsetOld = xOffsetNew = 0;
-        yOffsetOld = yOffsetNew = 0;
-        break;
-    }
-    PaintTextDisplay();
-}
+//void MainWindow::slotUpdateTransition( int frame )
+//{
+//    switch( transitionDirection ) {
+//    case transLEFT:
+//        xOffsetOld = 0 - frame;
+//        xOffsetNew = displayRect.width() - frame;
+//        yOffsetOld = yOffsetNew = 0;
+//        break;
+//    case transRIGHT:
+//        xOffsetOld = 0 + frame;
+//        xOffsetNew = frame - displayRect.width();
+//        yOffsetOld = yOffsetNew = 0;
+//        break;
+//    case transUP:
+//        xOffsetOld = xOffsetNew = 0;
+//        yOffsetOld = 0 - frame;
+//        yOffsetNew = Line1Rect.height() - frame;
+//        break;
+//    case transDOWN:
+//        xOffsetOld = xOffsetNew = 0;
+//        yOffsetOld = 0 + frame;
+//        yOffsetNew = frame - Line1Rect.height();
+//        break;
+//    case transNONE:
+//    default:
+//        xOffsetOld = xOffsetNew = 0;
+//        yOffsetOld = yOffsetNew = 0;
+//        break;
+//    }
+//    PaintTextDisplay();
+//}
 
-void MainWindow::slotTransitionFinished ( void )
-{
-    vertTransTimer->stop();
-    horzTransTimer->stop();
-    bumpTransTimer->stop();
-    isTransition = false;
-    xOffsetOld = xOffsetNew = 0;
-    yOffsetOld = yOffsetNew = 0;
-    transitionDirection = transNONE;
-    slotResetSlimDisplay();
-}
+//void MainWindow::slotTransitionFinished ( void )
+//{
+//    vertTransTimer->stop();
+//    horzTransTimer->stop();
+//    bumpTransTimer->stop();
+//    isTransition = false;
+//    xOffsetOld = xOffsetNew = 0;
+//    yOffsetOld = yOffsetNew = 0;
+//    transitionDirection = transNONE;
+//    slotResetSlimDisplay();
+//}
 
-void MainWindow::StopScroll( void )
-{
-    scrollTimer.stop();
-    ScrollOffset = 0;
-    line1Alpha = 0;
-    scrollState = PAUSE_SCROLL;
-}
+//void MainWindow::StopScroll( void )
+//{
+//    scrollTimer.stop();
+//    ScrollOffset = 0;
+//    line1Alpha = 0;
+//    scrollState = PAUSE_SCROLL;
+//}
 
 
 void MainWindow::slotSetActivePlayer( void )
@@ -408,7 +409,7 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
     DEBUGF(QTime::currentTime());
     serverInfo->SetCurrentDevice( d );
     activeDevice = d;
-    slotUpdateSlimDisplay();
+//    slotUpdateSlimDisplay();
     slotCreateCoverFlow();
     connect( activeDevice, SIGNAL(NewSong()),
              this, SLOT(slotResetSlimDisplay()) );
@@ -446,18 +447,17 @@ void MainWindow::loadDisplayConfig(void)
     DEBUGF(QTime::currentTime());
     DEBUGF("DISPLAY CONFIG");
     m_disp->setTextColor(QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt()));
-    textcolorLine1 = QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt());
     m_disp->setDisplayBackgroundColor(QColor::fromRgb(mySettings->value("UI/DisplayBackground",QColor(Qt::black).rgb()).toUInt()));
     coverflowBackground = QColor::fromRgb(mySettings->value("UI/CoverFlowColor",QColor(Qt::white).rgb()).toUInt());
-    temptextcolorGeneral = textcolorGeneral;
+    temptextcolorGeneral = m_disp->getTextColor();
     tempdisplayBackgroundColor = m_disp->getDisplayBackgroundColor();
     tempcoverflowBackground = coverflowBackground;
     //    textcolorGeneral= QColor(Qt::cyan);
     //    textcolorLine1 = QColor(Qt::cyan);
     //    displayBackgroundColor = QColor(Qt::black);
     //    coverflowBackground = QColor(Qt::white);
-    scrollSpeed = mySettings->value("UI/ScrollInterval",5000).toInt();
-    scrollInterval = mySettings->value("UI/ScrollSpeed",30).toInt();
+    m_disp->setScrollSpeed(mySettings->value("UI/ScrollInterval",5000).toInt());
+    m_disp->setScrollInterval(mySettings->value("UI/ScrollSpeed",30).toInt());
     DEBUGF("DISPLAY CONFIG");
 }
 

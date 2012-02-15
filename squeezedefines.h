@@ -27,6 +27,9 @@
 #define SQUEEZEDEFINES_H
 
 // Qt
+#include <QByteArray>
+#include <QBuffer>
+#include <QDataStream>
 #include <QDateTime>
 #include <QString>
 #include <QStringList>

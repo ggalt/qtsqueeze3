@@ -156,8 +156,8 @@ private:
 //    QColor textcolorGeneral;
 //    QColor textcolorLine1;
 //    QColor displayBackgroundColor;
-//    QColor temptextcolorGeneral;
-//    QColor tempdisplayBackgroundColor;
+    QColor temptextcolorGeneral;
+    QColor tempdisplayBackgroundColor;
 //    int Brightness;
 //    int line1Alpha;   // alpha blending figure for menu fade-in and fade-out
 

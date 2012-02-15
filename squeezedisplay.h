@@ -12,6 +12,7 @@
 #include <QPainter>
 #include <QBrush>
 #include <QColor>
+#include <QTimer>
 
 
 #include "squeezedefines.h"
@@ -22,18 +23,25 @@ class SqueezeDisplay : public QLabel
 
     Q_PROPERTY(QColor textcolorGeneral READ getTextColor WRITE setTextColor)
     Q_PROPERTY(QColor displayBackgroundColor READ getDisplayBackgroundColor WRITE setDisplayBackgroundColor)
-    Q_PROPERTY(QRect displayRect READ getDisplayRect WRITE setDisplayRect)
+    Q_PROPERTY(int scrollSpeed READ getScrollSpeed WRITE setScrollSpeed)
+    Q_PROPERTY(int scrollInterval READ getScrollInterval WRITE setScrollInterval)
 
 public:
-    explicit SqueezeDisplay(QObject *parent = 0);
-    void Init(QColor txtcolGen, QColor txtcoline1, QColor dispBgrdColor);
+    explicit SqueezeDisplay(QWidget *parent = 0);
+    void Init(QColor txtcolGen, QColor dispBgrdColor);
+    void Init(void);
 
     void setTextColor(QColor c) {m_textcolorGeneral = c;}
     QColor getTextColor() const {return m_textcolorGeneral;}
     void setDisplayBackgroundColor(QColor c) { m_displayBackgroundColor=c; }
     QColor getDisplayBackgroundColor() const {return m_displayBackgroundColor; }
-    void setDisplayRect(QRect r) {m_displayRect=r;}
-    QRect getDisplayRect() {return m_displayRect;}
+    void setScrollSpeed(int s) {m_scrollSpeed=s;}
+    int getScrollSpeed() const {return m_scrollSpeed;}
+    void setScrollInterval(int s) {m_scrollInterval=s;}
+    int getScrollInterval() const {return m_scrollInterval;}
+
+    bool Slimp3Display( QString txt );
+
 
 
 signals:
@@ -57,8 +65,8 @@ private:
     DisplayBuffer *d;       // pointer to display buffer received from main program
     bool isTransition;    // are we currently transitioning?
     transitionType transitionDirection;  // -1 = left, -2 = down, +1 = right, +2 = down
-    int scrollSpeed;
-    int scrollInterval;
+    int m_scrollSpeed;
+    int m_scrollInterval;
 
     QFont small;
     QFont medium;
