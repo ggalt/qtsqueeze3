@@ -23,7 +23,6 @@ MainWindow::MainWindow(QWidget *parent)
     slimCLI = new SlimCLI( this );
     serverInfo = new SlimServerInfo(this);
 
-    m_disp = new SqueezeDisplay(ui->lblSlimDisplay);
     mySettings = new QSettings("qtsqueeze3", "qtsqueeze3");
 //    vertTransTimer = new QTimeLine( 350, this );
 //    horzTransTimer = new QTimeLine( 700, this );
@@ -65,14 +64,17 @@ MainWindow::MainWindow(QWidget *parent)
     waitWindow = new QSplashScreen( this, splash );
     waitWindow->setGeometry( ( geometry().width() - 400 )/ 2, ( geometry().height() - 200 )/2,
                              400, 200 );
-    waitWindow->hide();
-    connect( slimCLI, SIGNAL(cliInfo(QString)), waitWindow, SLOT(showMessage(QString)) );
 
-    DEBUGF("LOADING CONFIGS");
+    m_disp = new SqueezeDisplay(ui->lblSlimDisplay);
+
     loadDisplayConfig();
     loadConnectionConfig();
     m_disp->Init();
     DEBUGF("FINISHED LOADING CONFIGS");
+
+    waitWindow->hide();
+    connect( slimCLI, SIGNAL(cliInfo(QString)), waitWindow, SLOT(showMessage(QString)) );
+
 }
 
 MainWindow::~MainWindow()
@@ -195,9 +197,9 @@ bool MainWindow::Create(void)
     connect( ui->btnRewind ,SIGNAL(clicked()), this, SLOT(slotRewind()) );
     connect( ui->btnStop ,SIGNAL(clicked()), this, SLOT(slotStop()) );
 
-    // allow mouse clicks on CoverFlow to cause playlist change
-    connect( CoverFlow, SIGNAL(NextSlide()), this, SLOT(slotFForward()) );
-    connect( CoverFlow, SIGNAL(PrevSlide()), this, SLOT(slotPrev()) );
+//    // allow mouse clicks on CoverFlow to cause playlist change
+//    connect( CoverFlow, SIGNAL(NextSlide()), this, SLOT(slotFForward()) );
+//    connect( CoverFlow, SIGNAL(PrevSlide()), this, SLOT(slotPrev()) );
 
     connect( ui->btnBright ,SIGNAL(clicked()), this, SLOT(slotBright()) );
     connect( ui->btnPower ,SIGNAL(clicked()), this, SLOT(slotPower()) );
@@ -210,28 +212,29 @@ bool MainWindow::Create(void)
     connect( ui->btnUpVolume ,SIGNAL(clicked()), this, SLOT(slotVolUp()) );
     connect( ui->btnDownVolume ,SIGNAL(clicked()), this, SLOT(slotVolDown()) );
     DEBUGF("###Create Return");
+    slotEnablePlayer();
     return true;
 }
 
 void MainWindow::slotUpdateCoverFlow( int trackIndex )
 {
     DEBUGF(QTime::currentTime());
-    if(!CoverFlow->IsReady())
-        return;
+//    if(!CoverFlow->IsReady())
+//        return;
 
-    int currSlide = CoverFlow->centerIndex();
-    DEBUGF( "UPDATE COVERFLOW TO INDEX: " << trackIndex );
-    if( abs( trackIndex - currSlide ) > 4 ) {
-        if( trackIndex > currSlide ) {
-            CoverFlow->showSlide( currSlide + 2 );
-            CoverFlow->setCenterIndex( trackIndex - 2 );
-        }
-        else {
-            CoverFlow->showSlide( currSlide - 2 );
-            CoverFlow->setCenterIndex( trackIndex + 2 );
-        }
-    }
-    CoverFlow->showSlide( trackIndex );
+//    int currSlide = CoverFlow->centerIndex();
+//    DEBUGF( "UPDATE COVERFLOW TO INDEX: " << trackIndex );
+//    if( abs( trackIndex - currSlide ) > 4 ) {
+//        if( trackIndex > currSlide ) {
+//            CoverFlow->showSlide( currSlide + 2 );
+//            CoverFlow->setCenterIndex( trackIndex - 2 );
+//        }
+//        else {
+//            CoverFlow->showSlide( currSlide - 2 );
+//            CoverFlow->setCenterIndex( trackIndex + 2 );
+//        }
+//    }
+//    CoverFlow->showSlide( trackIndex );
 }
 
 void MainWindow::slotCreateCoverFlow( void )
@@ -244,14 +247,14 @@ void MainWindow::slotCreateCoverFlow( void )
     CoverFlow->clear();
     ui->cfWidget->setEnabled( false );
 
-    if( CoverFlow->LoadAlbumList(activeDevice->getDevicePlayList())) {
-        ui->cfWidget->setEnabled( true );
-        DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
-        int playListIndex = activeDevice->getDevicePlaylistIndex();
-        if( playListIndex > 4 )
-            CoverFlow->setCenterIndex( playListIndex - 4 );
-        CoverFlow->showSlide( playListIndex );
-    }
+//    if( CoverFlow->LoadAlbumList(activeDevice->getDevicePlayList())) {
+//        ui->cfWidget->setEnabled( true );
+//        DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
+//        int playListIndex = activeDevice->getDevicePlaylistIndex();
+//        if( playListIndex > 4 )
+//            CoverFlow->setCenterIndex( playListIndex - 4 );
+//        CoverFlow->showSlide( playListIndex );
+//    }
 }
 
 void MainWindow::slotLeftArrow( void )
@@ -408,13 +411,14 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
 {
     DEBUGF(QTime::currentTime());
     serverInfo->SetCurrentDevice( d );
+    m_disp->SetActiveDevice(d);
+    m_disp->slotUpdateSlimDisplay();
     activeDevice = d;
-//    slotUpdateSlimDisplay();
     slotCreateCoverFlow();
     connect( activeDevice, SIGNAL(NewSong()),
-             this, SLOT(slotResetSlimDisplay()) );
+             m_disp, SLOT(slotResetSlimDisplay()) );
     connect( activeDevice, SIGNAL(SlimDisplayUpdate()),
-             this, SLOT(slotUpdateSlimDisplay()) );
+             m_disp, SLOT(slotUpdateSlimDisplay()) );
     connect( activeDevice, SIGNAL(CoverFlowUpdate( int )),
              this, SLOT(slotUpdateCoverFlow(int)) );
     connect( activeDevice, SIGNAL(CoverFlowCreate()),
@@ -444,8 +448,9 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
 
 void MainWindow::loadDisplayConfig(void)
 {
-    DEBUGF(QTime::currentTime());
     DEBUGF("DISPLAY CONFIG");
+    if( m_disp==NULL)
+        DEBUGF("display isn't allocated");
     m_disp->setTextColor(QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt()));
     m_disp->setDisplayBackgroundColor(QColor::fromRgb(mySettings->value("UI/DisplayBackground",QColor(Qt::black).rgb()).toUInt()));
     coverflowBackground = QColor::fromRgb(mySettings->value("UI/CoverFlowColor",QColor(Qt::white).rgb()).toUInt());
@@ -463,7 +468,6 @@ void MainWindow::loadDisplayConfig(void)
 
 void MainWindow::loadConnectionConfig(void)
 {
-    DEBUGF(QTime::currentTime());
     DEBUGF("CONNECTION CONFIG");
     SlimServerAddr = mySettings->value("Server/Address","127.0.0.1").toString();
     SlimServerAudioPort = mySettings->value("Server/AudioPort","3483").toString();
@@ -484,7 +488,7 @@ void MainWindow::updateDisplayConfig(void)
     mySettings->sync();
 
     loadDisplayConfig();
-    CoverFlow->setBackgroundColor(coverflowBackground);
+//    CoverFlow->setBackgroundColor(coverflowBackground);
     QPixmap p = QPixmap(64,37);
     p.fill(coverflowBackground.rgb());
     ui->lblCoverFlowColor->setPixmap(p);
@@ -518,7 +522,7 @@ void MainWindow::setConfigDisplay2Defaults(void)
     mySettings->sync();
 
     loadDisplayConfig();
-    CoverFlow->setBackgroundColor(coverflowBackground);
+//    CoverFlow->setBackgroundColor(coverflowBackground);
 }
 
 void MainWindow::setConfigConnection2Defaults(void)

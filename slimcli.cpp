@@ -26,6 +26,7 @@
 // ------------------------------------------------------------------------------------------------
 
 SlimCLI::SlimCLI( QObject *parent, const char *name ) : QObject( parent ) {
+    setObjectName("SlimCLI");
     SlimServerAddr = "127.0.0.1";
     cliPort = 9090;        // default, but user can reset
     MaxRequestSize = "100";    // max size of any cli request (used for limiting each request for albums, artists, songs, etc., so we don't time out or overload things)

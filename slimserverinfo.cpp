@@ -17,6 +17,7 @@
 SlimServerInfo::SlimServerInfo(QObject *parent) :
     QObject(parent)
 {
+    setObjectName("SlimServerInfo");
     DEBUGF(QTime::currentTime());
 //    httpPort = 9000;
     freshnessDate = 0;
@@ -68,12 +69,14 @@ bool SlimServerInfo::SetupDevices( void )
         DEBUGF( "NO DEVICES" );
         return false;
     }
+    DEBUGF("player count is:" << playerCount);
 
     for( int i = 0; i < playerCount; i++ ) {
         cmd = QString( "player id %1 ?\n" ).arg( i ).toAscii();
         if( !cli->SendBlockingCommand( cmd ) )
             return false;
         response = cli->GetResponse();
+        DEBUGF(response);
 
         respList.clear();
         respList = response.split( ' ' );
@@ -88,8 +91,10 @@ bool SlimServerInfo::SetupDevices( void )
 
         if( !cli->SendBlockingCommand( cmd ) )
             return false;
+        response = cli->GetResponse();
         respList.clear();
         respList = response.split( ' ' );
+        DEBUGF(response);
         QString thisName = respList.at( 3 );
         //            GetDeviceNameList().insert( thisName, thisId );  // insert hash of key=Devicename value=MAC address
 
@@ -97,6 +102,8 @@ bool SlimServerInfo::SetupDevices( void )
 
         if( !cli->SendBlockingCommand( cmd ) )
             return false;
+        response = cli->GetResponse();
+        DEBUGF(response);
         respList.clear();
         respList = response.split( ' ' );
         QString deviceIP = respList.at( 3 );

@@ -73,6 +73,7 @@ void SlimDevice::Init( SlimCLI *cli )
 */
 void SlimDevice::SendDeviceCommand( QString cmd )
 {
+    DEBUGF("SENDING COMMAND:" << cmd)
     if( cmd.at( 0 ) != ' ' )  // if there is no leading space, add one
         cmd = QString( " " ) + cmd;
     cmd = getDeviceMAC() + cmd;
