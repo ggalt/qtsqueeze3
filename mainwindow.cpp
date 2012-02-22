@@ -3,10 +3,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-// uncomment the following to turn on debugging
-#define SLIMCLI_DEBUG
-
-#ifdef SLIMCLI_DEBUG
+#ifdef SQUEEZEMAINWINDOW_DEBUG
 #define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
 #else
 #define DEBUGF(...)
@@ -17,39 +14,18 @@ SlimImageItem imageCache;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     ui->setupUi(this);
+    this->setWindowTitle("QtSqueeze3");
     squeezePlayer = new QProcess( this );
     slimCLI = new SlimCLI( this );
     serverInfo = new SlimServerInfo(this);
 
     mySettings = new QSettings("qtsqueeze3", "qtsqueeze3");
-//    vertTransTimer = new QTimeLine( 350, this );
-//    horzTransTimer = new QTimeLine( 700, this );
-//    bumpTransTimer = new QTimeLine( 100, this );
-//    vertTransTimer->setFrameRange( 0, 0 );
-//    horzTransTimer->setFrameRange( 0, 0 );
-//    bumpTransTimer->setFrameRange( 0, 0 );
-//    isTransition = false;
-//    transitionDirection = transNONE;
-//    xOffsetOld = xOffsetNew = 0;
-//    yOffsetOld = yOffsetNew = 0;
     activeDevice = NULL;
     //    PortAudioDevice = "";
-//    ScrollOffset = 0;
-//    scrollState = NOSCROLL;
-//    Brightness = 255;
-//    line1Alpha = 0;
     isStartUp = true;
-//    connect( &scrollTimer, SIGNAL( timeout() ), this, SLOT(slotUpdateScrollOffset()) );
-//    connect( vertTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
-//    connect( horzTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
-//    connect( bumpTransTimer, SIGNAL(frameChanged(int)), this, SLOT(slotUpdateTransition(int)));
-//    connect( vertTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
-//    connect( horzTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
-//    connect( bumpTransTimer, SIGNAL(finished()), this, SLOT(slotTransitionFinished()));
 
-    DEBUGF( "CONNECTING OPTIONS PAGE");
     connect(ui->btnApplyConnection, SIGNAL(clicked()),this,SLOT(updateConnectionConfig()));
     connect(ui->btnDefaultsConnection, SIGNAL(clicked()), this, SLOT(setConfigConnection2Defaults()));
     connect(ui->btnApplyDisplay,SIGNAL(clicked()),this,SLOT(updateDisplayConfig()));
@@ -65,11 +41,14 @@ MainWindow::MainWindow(QWidget *parent)
     waitWindow->setGeometry( ( geometry().width() - 400 )/ 2, ( geometry().height() - 200 )/2,
                              400, 200 );
 
-    m_disp = new SqueezeDisplay(ui->lblSlimDisplay);
+    DEBUGF("lblSlimDisplay is:" << ui->lblSlimDisplay->rect());
+
+    m_disp = new SqueezeDisplay(ui->lblSlimDisplay, this);
 
     loadDisplayConfig();
     loadConnectionConfig();
     m_disp->Init();
+
     DEBUGF("FINISHED LOADING CONFIGS");
 
     waitWindow->hide();
@@ -81,17 +60,27 @@ MainWindow::~MainWindow()
 {
     mySettings->setValue("UI/CurrentTab",ui->tabWidget->currentIndex());
     mySettings->sync();
-    qDebug() << "current index: " << ui->tabWidget->currentIndex();
-    qDebug() << mySettings->fileName() << " is writable " << mySettings->isWritable();
     squeezePlayer->close();
     delete ui;
+}
+
+void MainWindow::resizeEvent(QResizeEvent *e)
+{
+    QMainWindow::resizeEvent(e);
+    ui->tabWidget->setGeometry(0, height() - ui->tabWidget->height(), width(), ui->tabWidget->height());
+    ui->controlFrame->setGeometry(0,0,width(),ui->tabWidget->y()- 5);
+    ui->lblSlimDisplay->setGeometry(ui->lblSlimDisplay->x(), ui->lblSlimDisplay->y(), ui->controlFrame->width() - 2*ui->lblSlimDisplay->x(), ui->controlFrame->height() - ui->controlFrame_2->height() - 3);
+    ui->controlFrame_2->move(ui->controlFrame_2->x(), ui->controlFrame->height() - 3 - ui->controlFrame_2->height());
+    ui->arrowKeyFrame->move(ui->arrowKeyFrame->x(), ui->controlFrame->height() - 3 - ui->arrowKeyFrame->height());
+    ui->keypadFrame->move(ui->keypadFrame->x(),ui->controlFrame->height() - 3 - ui->keypadFrame->height());
+    m_disp->resetDimensions();
 }
 
 
 bool MainWindow::Create(void)
 {
     /*
-    There is a fairly large amount of work to do on startransUP, but we don't want to keep the user guessing,
+    There is a fairly large amount of work to do on startup, but we don't want to keep the user guessing,
     so we first create the window to give a visual cue that things have started and then we send a signal
     to the program to do the rest of the processing, while displaying a progress bar to keep the user interested
 */
@@ -122,15 +111,10 @@ bool MainWindow::Create(void)
     args.append(playeropt);
     args.append(QString("-P" + SlimServerAudioPort));
     if( PortAudioDevice.length() > 0 ) {  // NOTE: list contains the number, name and a description.  We need just the number
-        qDebug() << PortAudioDevice;
         PortAudioDevice = PortAudioDevice.left(PortAudioDevice.indexOf(":")).trimmed();
-        qDebug() << PortAudioDevice;
         args.append(QString("-o"+PortAudioDevice));
     }
     args.append(SlimServerAddr);
-
-    qDebug() << program << " " << args;
-
     DEBUGF( "player command " << program << " " << args );
 
     QTime progstart;
@@ -218,7 +202,7 @@ bool MainWindow::Create(void)
 
 void MainWindow::slotUpdateCoverFlow( int trackIndex )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
 //    if(!CoverFlow->IsReady())
 //        return;
 
@@ -239,12 +223,12 @@ void MainWindow::slotUpdateCoverFlow( int trackIndex )
 
 void MainWindow::slotCreateCoverFlow( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     //  delete CoverFlow; // there seems to be some memory leakage with CoverFlow when you clear it and add new items
     //  CoverFlow = new SqueezePictureFlow( ui->cfWidget );
     //  CoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
     //  CoverFlow->setContentsMargins( 50, 0, CoverFlow->width() - 50, CoverFlow->height() );
-    CoverFlow->clear();
+//    CoverFlow->clear();
     ui->cfWidget->setEnabled( false );
 
 //    if( CoverFlow->LoadAlbumList(activeDevice->getDevicePlayList())) {
@@ -259,149 +243,35 @@ void MainWindow::slotCreateCoverFlow( void )
 
 void MainWindow::slotLeftArrow( void )
 {
-    DEBUGF(QTime::currentTime());
-//    StopScroll();
-//    isTransition = true;
-//    transitionDirection = transRIGHT;
-//    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
-//    if( activeDevice->getDisplayBuffer().line0 == "Squeezebox Home" ) {  // are we at the "left-most" menu option?
-//        bumpTransTimer->start();
-//    }
-//    else {
-//        horzTransTimer->start();
-//    }
+    DEBUGF("");
+    m_disp->LeftArrowEffect();
     activeDevice->SendDeviceCommand( QString( "button arrow_left\n" ) );
 }
 
 void MainWindow::slotRightArrow( void )
 {
-    DEBUGF(QTime::currentTime());
-//    StopScroll();
-//    isTransition = true;
-//    transitionDirection = transLEFT;
-//    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
-//    horzTransTimer->start();
+    DEBUGF("");
+    m_disp->RightArrowEffect();
     activeDevice->SendDeviceCommand( QString( "button arrow_right\n" ) );
 }
 
 void MainWindow::slotUpArrow( void )
 {
-    DEBUGF(QTime::currentTime());
-//    StopScroll();
-//    isTransition = true;
-//    transitionDirection = transDOWN;
-//    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
-//    vertTransTimer->start();
+    DEBUGF("");
+    m_disp->UpArrowEffect();
     activeDevice->SendDeviceCommand( QString( "button arrow_up\n" ) );
 }
 
 void MainWindow::slotDownArrow( void )
 {
-    DEBUGF(QTime::currentTime());
-//    StopScroll();
-//    isTransition = true;
-//    transitionDirection = transUP;
-//    transBuffer = activeDevice->getDisplayBuffer(); // preserve the current display for transition
-//    vertTransTimer->start();
+    DEBUGF("");
+    m_disp->DownArrowEffect();
     activeDevice->SendDeviceCommand( QString( "button arrow_down\n" ) );
 }
 
-//void MainWindow::slotUpdateScrollOffset( void )
-//{
-//    DEBUGF("SLOTUPDATESCROLLOFFSET");
-//    if( scrollState == PAUSE_SCROLL ) {
-//        scrollTimer.stop();
-//        scrollState = SCROLL;
-//        scrollTimer.setInterval( 33 );
-//        scrollTimer.start();
-//    }
-//    else if( scrollState == SCROLL ) {
-//        ScrollOffset += Line1FontWidth;
-//        //        if( ScrollOffset >= ( lineWidth - Line1Rect.width()) ) {
-//        if( ScrollOffset >= lineWidth ) {
-//            scrollState = FADE_OUT;
-//            line1Alpha = 0;
-//        }
-//    }
-//    else if( scrollState == FADE_IN ) {
-//        line1Alpha -= 15;
-//        if( line1Alpha <= 0 ) {
-//            line1Alpha = 0;
-//            ScrollOffset = 0;
-//            scrollTimer.stop();
-//            scrollState = PAUSE_SCROLL;
-//            scrollTimer.setInterval( 5000 );
-//            scrollTimer.start();
-//        }
-//    }
-//    else if( scrollState == FADE_OUT ) {
-//        line1Alpha += 7;
-//        ScrollOffset += Line1FontWidth; // keep scrolling while fading
-//        if( line1Alpha >= 255 ) {
-//            line1Alpha = 255;
-//            ScrollOffset = 0;
-//            scrollState = FADE_IN;
-//        }
-//    }
-//    PaintTextDisplay();
-//}
-
-//void MainWindow::slotUpdateTransition( int frame )
-//{
-//    switch( transitionDirection ) {
-//    case transLEFT:
-//        xOffsetOld = 0 - frame;
-//        xOffsetNew = displayRect.width() - frame;
-//        yOffsetOld = yOffsetNew = 0;
-//        break;
-//    case transRIGHT:
-//        xOffsetOld = 0 + frame;
-//        xOffsetNew = frame - displayRect.width();
-//        yOffsetOld = yOffsetNew = 0;
-//        break;
-//    case transUP:
-//        xOffsetOld = xOffsetNew = 0;
-//        yOffsetOld = 0 - frame;
-//        yOffsetNew = Line1Rect.height() - frame;
-//        break;
-//    case transDOWN:
-//        xOffsetOld = xOffsetNew = 0;
-//        yOffsetOld = 0 + frame;
-//        yOffsetNew = frame - Line1Rect.height();
-//        break;
-//    case transNONE:
-//    default:
-//        xOffsetOld = xOffsetNew = 0;
-//        yOffsetOld = yOffsetNew = 0;
-//        break;
-//    }
-//    PaintTextDisplay();
-//}
-
-//void MainWindow::slotTransitionFinished ( void )
-//{
-//    vertTransTimer->stop();
-//    horzTransTimer->stop();
-//    bumpTransTimer->stop();
-//    isTransition = false;
-//    xOffsetOld = xOffsetNew = 0;
-//    yOffsetOld = yOffsetNew = 0;
-//    transitionDirection = transNONE;
-//    slotResetSlimDisplay();
-//}
-
-//void MainWindow::StopScroll( void )
-//{
-//    scrollTimer.stop();
-//    ScrollOffset = 0;
-//    line1Alpha = 0;
-//    scrollState = PAUSE_SCROLL;
-//}
-
-
 void MainWindow::slotSetActivePlayer( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     if( this->isStartUp ) { // if this is the first time through, let's trigger a process to make sure we have all the images
     }
     slotSetActivePlayer( serverInfo->GetDeviceFromMac( MacAddress.toPercentEncoding().toLower() ) );
@@ -409,7 +279,7 @@ void MainWindow::slotSetActivePlayer( void )
 
 void MainWindow::slotSetActivePlayer( SlimDevice *d )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     serverInfo->SetCurrentDevice( d );
     m_disp->SetActiveDevice(d);
     m_disp->slotUpdateSlimDisplay();
@@ -461,8 +331,8 @@ void MainWindow::loadDisplayConfig(void)
     //    textcolorLine1 = QColor(Qt::cyan);
     //    displayBackgroundColor = QColor(Qt::black);
     //    coverflowBackground = QColor(Qt::white);
-    m_disp->setScrollSpeed(mySettings->value("UI/ScrollInterval",5000).toInt());
-    m_disp->setScrollInterval(mySettings->value("UI/ScrollSpeed",30).toInt());
+    m_disp->setScrollSpeed(mySettings->value("UI/ScrollSpeed",30).toInt());
+    m_disp->setScrollInterval(mySettings->value("UI/ScrollInterval",5000).toInt());
     DEBUGF("DISPLAY CONFIG");
 }
 
@@ -479,7 +349,7 @@ void MainWindow::loadConnectionConfig(void)
 
 void MainWindow::updateDisplayConfig(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     mySettings->setValue("UI/CoverFlowColor",(uint)tempcoverflowBackground.rgb());
     mySettings->setValue("UI/DisplayBackground",(uint)tempdisplayBackgroundColor.rgb());
     mySettings->setValue("UI/DisplayTextColor", (uint)temptextcolorGeneral.rgb());
@@ -500,7 +370,7 @@ void MainWindow::updateDisplayConfig(void)
 
 void MainWindow::updateConnectionConfig(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     mySettings->setValue("Server/Address",ui->txtServerAddress->text());
     mySettings->setValue("Server/AudioPort",ui->txtAudioPort->text());
     mySettings->setValue("Server/CLIPort", ui->txtCLIPort->text());
@@ -513,7 +383,7 @@ void MainWindow::updateConnectionConfig(void)
 
 void MainWindow::setConfigDisplay2Defaults(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     mySettings->setValue("UI/CoverFlowColor",(uint)QColor(Qt::white).rgb());
     mySettings->setValue("UI/DisplayBackground",(uint)QColor(Qt::black).rgb());
     mySettings->setValue("UI/DisplayTextColor",(uint)QColor(Qt::cyan).rgb());
@@ -527,7 +397,7 @@ void MainWindow::setConfigDisplay2Defaults(void)
 
 void MainWindow::setConfigConnection2Defaults(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     mySettings->setValue("Server/Address","127.0.0.1");
     mySettings->setValue("Server/AudioPort","3483");
     mySettings->setValue("Server/CLIPort", "9090");
@@ -541,7 +411,7 @@ void MainWindow::setConfigConnection2Defaults(void)
 
 void MainWindow::setupConfig(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QProcess proc;
     QStringList args;
     args.append(QString("-L"));
@@ -567,7 +437,6 @@ void MainWindow::setupConfig(void)
     ui->txtHttpPort->setText(mySettings->value("Server/HttpPort", "9000").toString());
     ui->cbAudioOutput->setCurrentIndex(ui->cbAudioOutput->findText(mySettings->value("Audio/Device","").toString()));
     ui->tabWidget->setCurrentIndex(mySettings->value("UI/CurrentTab",-1).toInt());
-    qDebug() << "current tab setting is: " << mySettings->value("UI/CurrentTab",-1).toInt();
 
     QPixmap p = QPixmap(64,37);
     p.fill(coverflowBackground.rgb());
@@ -583,7 +452,7 @@ void MainWindow::setupConfig(void)
 
 void MainWindow::setCoverFlowColor(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QColorDialog *dlg = new QColorDialog(coverflowBackground);
     dlg->exec();
     tempcoverflowBackground = dlg->selectedColor();
@@ -591,7 +460,7 @@ void MainWindow::setCoverFlowColor(void)
 
 void MainWindow::setDisplayBackgroundColor(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QColorDialog *dlg = new QColorDialog(m_disp->getDisplayBackgroundColor());
     dlg->exec();
     m_disp->setDisplayBackgroundColor(dlg->selectedColor());
@@ -599,7 +468,7 @@ void MainWindow::setDisplayBackgroundColor(void)
 
 void MainWindow::setDisplayTextColor(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QColorDialog *dlg = new QColorDialog(m_disp->getTextColor());
     dlg->exec();
     m_disp->setTextColor(dlg->selectedColor());
@@ -608,7 +477,7 @@ void MainWindow::setDisplayTextColor(void)
 
 void MainWindow::getplayerMACAddress( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     MacAddress = QByteArray( "00:00:00:00:00:04" );
 
     QList<QNetworkInterface> netList = QNetworkInterface::allInterfaces();
@@ -629,30 +498,28 @@ void MainWindow::getplayerMACAddress( void )
 
 void MainWindow::slotDisablePlayer( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     waitWindow->show();
     this->setEnabled( false );
 }
 
 void MainWindow::slotEnablePlayer( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     waitWindow->hide();
     this->setEnabled( true );
 }
 
 void MainWindow::SqueezePlayerError( void )
 {
-    DEBUGF(QTime::currentTime());
     QString errMsg = QString( "SQUEEZE ERROR: " ) + squeezePlayer->readAllStandardError();
-    qDebug() << errMsg;
+    DEBUGF(errMsg);
 }
 
 void MainWindow::SqueezePlayerOutput( void )
 {
-    DEBUGF(QTime::currentTime());
     QString errMsg = QString( "SQUEEZE OUTPUT: " ) + squeezePlayer->readAllStandardOutput();
-    qDebug() << errMsg;
+    DEBUGF(errMsg);
 }
 
 

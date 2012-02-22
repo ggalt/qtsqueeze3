@@ -18,7 +18,7 @@
 #include "slimdevice.h"
 #include "squeezedefines.h"
 
-class SqueezeDisplay : public QLabel
+class SqueezeDisplay : public QObject
 {
     Q_OBJECT
 
@@ -26,9 +26,10 @@ class SqueezeDisplay : public QLabel
     Q_PROPERTY(QColor displayBackgroundColor READ getDisplayBackgroundColor WRITE setDisplayBackgroundColor)
     Q_PROPERTY(int scrollSpeed READ getScrollSpeed WRITE setScrollSpeed)
     Q_PROPERTY(int scrollInterval READ getScrollInterval WRITE setScrollInterval)
+    Q_PROPERTY(int Brightness READ getBrightness WRITE setBrightness)
 
 public:
-    explicit SqueezeDisplay(QWidget *parent = 0);
+    explicit SqueezeDisplay(QLabel *lbl, QObject *parent = 0);
     ~SqueezeDisplay(void);
 
     void Init(QColor txtcolGen, QColor dispBgrdColor);
@@ -36,7 +37,7 @@ public:
 
     void SetActiveDevice(SlimDevice *ad) {activeDevice=ad;}
 
-    void setTextColor(QColor c) {m_textcolorGeneral = c;}
+    void setTextColor(QColor c) {textcolorLine1 = m_textcolorGeneral = c;}
     QColor getTextColor() const {return m_textcolorGeneral;}
     void setDisplayBackgroundColor(QColor c) { m_displayBackgroundColor=c; }
     QColor getDisplayBackgroundColor() const {return m_displayBackgroundColor; }
@@ -44,6 +45,14 @@ public:
     int getScrollSpeed() const {return m_scrollSpeed;}
     void setScrollInterval(int s) {m_scrollInterval=s;}
     int getScrollInterval() const {return m_scrollInterval;}
+    void setBrightness(int b) { m_Brightness=b; }
+    int getBrightness() const {return m_Brightness;}
+
+    void resetDimensions(void);
+    void LeftArrowEffect(void);
+    void RightArrowEffect(void);
+    void UpArrowEffect(void);
+    void DownArrowEffect(void);
 
     bool Slimp3Display( QString txt );
 
@@ -59,20 +68,15 @@ public slots:
     void slotUpdateTransition(int frame);
     void slotTransitionFinished(void);
 
-protected:
-    void resizeEvent(QResizeEvent *);
-
 private:
-    void resetDimensions(void);
+    void StopScroll( void );
+    void LoadTransitionBuffer(void);
 
     // for display of the slim device interface
+    QLabel *displayLabel;
     QImage *displayImage;  // use a QImage not a QPixmap so we can use alpha blends
     SlimDevice *activeDevice;   // reference to active device, must be set manually
     DisplayBuffer *d;       // pointer to display buffer received from main program
-    bool isTransition;    // are we currently transitioning?
-    transitionType transitionDirection;  // -1 = left, -2 = down, +1 = right, +2 = down
-    int m_scrollSpeed;
-    int m_scrollInterval;
 
     QFont small;
     QFont medium;
@@ -85,19 +89,18 @@ private:
     QColor m_textcolorGeneral;
     QColor textcolorLine1;
     QColor m_displayBackgroundColor;
-    int Brightness;
+    int m_Brightness;
     int line1Alpha;   // alpha blending figure for menu fade-in and fade-out
 
     QRect m_displayRect;          // area in which to display squeeze display text
     QRect line0Bounds;          // Rectangle in which line0 gets displayed
     QRect line1Bounds;          // Rectangle in which line1 gets displayed
+    QRect center0Bounds;
+    QRect center1Bounds;
     QRegion line0Clipping;      // Clipping region equal to line0Bounds
     QRegion line1Clipping;      // Clipping region equal to line1Bounds
     QRegion fullDisplayClipping;         // Clipping region equal to the full size of the display
-//    QRegion noClipping;
-//    QPoint pointLine0;          // starting display point for line0 text
-//    QPoint pointLine1;          // starting display point for line1 text
-//    QPoint pointLine1_2;        // follow-on text for scrolling display
+    QPoint pointLine1_2;        // follow-on text for scrolling display
 
     QRect progRect;         // the rounded and outlined displayed rectangle that shows progress
     QRect progFillRect;     // the rounded and filled portion of the displayed rectangle that shows progress
@@ -113,18 +116,16 @@ private:
     int scrollTextLen;  // used in scrolling
     QRect boundingRect; // the rectangle occupied by the full Line1 text (which may be larger that the display rect, requiring scrolling)
 
+    bool isTransition;    // are we currently transitioning?
+    transitionType transitionDirection;  // -1 = left, -2 = down, +1 = right, +2 = down
+    int m_scrollSpeed;
+    int m_scrollInterval;
     scrollStatus scrollState;
     QTimeLine *transitionTimer;
     QTimeLine *vertTransTimer;
     QTimeLine *horzTransTimer;
     QTimeLine *bumpTransTimer;
     DisplayBuffer transBuffer;
-
-//    QPoint pointLine0Right; // right edge for text (i.e., the right side of text)
-//    QPoint pointLine1Right; // right edge for text (i.e., the right side of text)
-//    QPoint upperMiddle;     // center point for Center0
-//    QPoint lowerMiddle;     // center point for Center1
-//    QPoint centerPoint; // center of display
 
     QTimer scrollTimer; // timer for scrolling of text too long to fit in display
     

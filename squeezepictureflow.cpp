@@ -1,6 +1,6 @@
 #include "squeezepictureflow.h"
 
-#ifdef SLIMCLI_DEBUG
+#ifdef SQUEEZEPICFLOW_DEBUG
 #define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
 #else
 #define DEBUGF(...)
@@ -10,7 +10,7 @@ SqueezePictureFlow::SqueezePictureFlow(QWidget* parent, QString lmsServerAddr,qi
                                        QString cliuname, QString clipass)
     :PictureFlow(parent)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     albumList.clear();
     titleColor = Qt::white;
     autoSelect = autoselect;
@@ -23,7 +23,7 @@ SqueezePictureFlow::SqueezePictureFlow(QWidget* parent, QString lmsServerAddr,qi
 
 bool SqueezePictureFlow::LoadAlbumList(QList<Album> list)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     albumList = list;
     if( worker->HaveListImages(this,albumList) ) {
         ImagesReady(this);
@@ -38,7 +38,7 @@ bool SqueezePictureFlow::LoadAlbumList(QList<Album> list)
 
 bool SqueezePictureFlow::LoadAlbumList(QList<TrackData> list)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QListIterator< TrackData > i(list);
     while( i.hasNext() ) {
         TrackData j = i.next();
@@ -66,7 +66,7 @@ bool SqueezePictureFlow::LoadAlbumList(QList<TrackData> list)
 
 void SqueezePictureFlow::ImagesReady(SqueezePictureFlow *pf)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     // images are ready in worker to load into coverflow
     // first, make sure that we got a signal that belongs to this coverflow
     if(!(pf==this))
@@ -85,7 +85,7 @@ void SqueezePictureFlow::ImagesReady(SqueezePictureFlow *pf)
 
 void SqueezePictureFlow::setBackgroundColor(const QColor& c)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     PictureFlow::setBackgroundColor(c);
     int hue, saturation, value;
     c.getHsv(&hue,&saturation,&value);
@@ -108,14 +108,14 @@ void SqueezePictureFlow::setBackgroundColor(const QColor& c)
 
 void SqueezePictureFlow::clear()
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     PictureFlow::clear();
     albumList.clear();
 }
 
 void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     if(event->type()== QEvent::MouseButtonDblClick) {  // selected current center image
         emit SelectSlide(centerIndex());
         return;
@@ -132,7 +132,7 @@ void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
 
 void SqueezePictureFlow::paintEvent (QPaintEvent *e)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     PictureFlow::paintEvent(e);
 
     if (slideCount() < 1)

@@ -1,10 +1,7 @@
 #include "slimdevice.h"
 #include "slimcli.h"
 
-// uncomment the following to turn on debugging
-// #define SLIMCLI_DEBUG
-
-#ifdef SLIMCLI_DEBUG
+#ifdef SLIMDEVICE_DEBUG
 #define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
 #else
 #define DEBUGF(...)

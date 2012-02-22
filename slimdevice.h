@@ -100,7 +100,7 @@ public:
     void        setDevicePlaylist( CurrentPlayList DevicePlayList ) { devicePlayList = DevicePlayList; }
 
     TrackData getCurrentTrack( void ) { return currentTrack; }
-    DisplayBuffer getDisplayBuffer( void ) { return myDisplay; }
+    DisplayBuffer *getDisplayBuffer( void ) { return &myDisplay; }
 
     SlimCLI *GetCLIInterface( void ) { return cliInterface; }
 

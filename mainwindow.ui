@@ -33,10 +33,10 @@
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>6</x>
-      <y>299</y>
+      <x>7</x>
+      <y>309</y>
       <width>761</width>
-      <height>291</height>
+      <height>287</height>
      </rect>
     </property>
     <property name="tabShape">
@@ -617,14 +617,26 @@
      </widget>
     </widget>
    </widget>
-   <widget class="QFrame" name="frame">
+   <widget class="QFrame" name="controlFrame">
     <property name="geometry">
      <rect>
-      <x>-10</x>
-      <y>-10</y>
+      <x>15</x>
+      <y>1</y>
       <width>771</width>
       <height>306</height>
      </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>771</width>
+      <height>306</height>
+     </size>
     </property>
     <property name="frameShape">
      <enum>QFrame::StyledPanel</enum>
@@ -635,11 +647,23 @@
     <widget class="QLabel" name="lblSlimDisplay">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>10</y>
+       <x>8</x>
+       <y>4</y>
+       <width>751</width>
+       <height>84</height>
+      </rect>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
        <width>751</width>
        <height>81</height>
-      </rect>
+      </size>
      </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -651,20 +675,26 @@
       <string>TextLabel</string>
      </property>
     </widget>
-    <widget class="QFrame" name="frame_2">
+    <widget class="QFrame" name="keypadFrame">
      <property name="geometry">
       <rect>
        <x>590</x>
        <y>90</y>
        <width>161</width>
-       <height>210</height>
+       <height>209</height>
       </rect>
      </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Sunken</enum>
+     </property>
+     <property name="lineWidth">
+      <number>2</number>
+     </property>
+     <property name="midLineWidth">
+      <number>0</number>
      </property>
      <widget class="QPushButton" name="btn9">
       <property name="geometry">
@@ -974,7 +1004,7 @@
       </property>
      </widget>
     </widget>
-    <widget class="QFrame" name="frame_3">
+    <widget class="QFrame" name="arrowKeyFrame">
      <property name="geometry">
       <rect>
        <x>345</x>
@@ -987,7 +1017,13 @@
       <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Sunken</enum>
+     </property>
+     <property name="lineWidth">
+      <number>2</number>
+     </property>
+     <property name="midLineWidth">
+      <number>0</number>
      </property>
      <widget class="QPushButton" name="btnNowPlaying">
       <property name="geometry">
@@ -1138,7 +1174,7 @@
       </property>
      </widget>
     </widget>
-    <widget class="QFrame" name="frame_4">
+    <widget class="QFrame" name="controlFrame_2">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -1151,7 +1187,13 @@
       <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Sunken</enum>
+     </property>
+     <property name="lineWidth">
+      <number>2</number>
+     </property>
+     <property name="midLineWidth">
+      <number>0</number>
      </property>
      <widget class="QPushButton" name="btnPower">
       <property name="geometry">

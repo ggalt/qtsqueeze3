@@ -3,10 +3,7 @@
 #include "slimdevice.h"
 #include "slimdatabasefetch.h"
 
-// uncomment the following to turn on debugging
-// #define SLIMCLI_DEBUG
-
-#ifdef SLIMCLI_DEBUG
+#ifdef SLIMSERVERINFO_DEBUG
 #define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
 #else
 #define DEBUGF(...)
@@ -18,20 +15,20 @@ SlimServerInfo::SlimServerInfo(QObject *parent) :
     QObject(parent)
 {
     setObjectName("SlimServerInfo");
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
 //    httpPort = 9000;
     freshnessDate = 0;
 }
 
 SlimServerInfo::~SlimServerInfo()
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     WriteDataFile();
 }
 
 bool SlimServerInfo::Init(SlimCLI *cliRef)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     // get cli and references sorted out
     cli = cliRef;
     SlimServerAddr = cli->GetSlimServerAddress();
@@ -51,11 +48,12 @@ bool SlimServerInfo::Init(SlimCLI *cliRef)
         refreshImageFromServer();
     else
         checkRefreshDate();     // see if we need to update the database
+    return true;
 }
 
 bool SlimServerInfo::SetupDevices( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QByteArray response;
     QList<QByteArray> respList;
     QByteArray cmd;
@@ -119,7 +117,7 @@ bool SlimServerInfo::SetupDevices( void )
 
 void SlimServerInfo::InitDevices( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     cli->EmitCliInfo( QString( "Initializing attached devices" ) );
 
     QHashIterator< QString, SlimDevice* > i( deviceList );
@@ -145,13 +143,13 @@ void SlimServerInfo::InitDevices( void )
 
 SlimDevice *SlimServerInfo::GetDeviceFromMac( QByteArray mac )   // use percent encoded MAC address
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     return deviceList.value( QString( mac ), NULL );
 }
 
 bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QList<QByteArray> aList = response.split( ' ' );  // split response into various pairs
 
     QListIterator<QByteArray> fields(aList);
@@ -192,12 +190,12 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 
 bool SlimServerInfo::ReadDataFile( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QFile file;
     if( file.exists( PATH ) ) // there is a file, so read from it
         file.setFileName( PATH );
     else {
-        qDebug() << "no file to read at " << PATH;
+        DEBUGF("no file to read at " << PATH);
         return false;
     }
 
@@ -211,7 +209,7 @@ bool SlimServerInfo::ReadDataFile( void )
     in >> m_AlbumArtist2AlbumID;
     in >> albumCount;
 
-    qDebug() << "reading in info on " << albumCount << " files";
+    DEBUGF("reading in info on " << albumCount << " files");
 
     m_AlbumID2AlbumInfo.clear();
     for( int c = 0; c < albumCount; c++ ) {
@@ -232,7 +230,6 @@ bool SlimServerInfo::ReadDataFile( void )
     while(aa.hasPrevious()) {
         aa.previous();
         Album a = aa.value();
-        qDebug() << aa.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.albumtitle << a.year;
     }
 #endif
 
@@ -243,7 +240,7 @@ bool SlimServerInfo::ReadDataFile( void )
 
 void SlimServerInfo::WriteDataFile( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QFile file;
     file.setFileName( PATH );
 
@@ -254,7 +251,6 @@ void SlimServerInfo::WriteDataFile( void )
     out << m_Artist2AlbumIds;
     out << m_AlbumArtist2AlbumID;
     out << (qint16)m_AlbumID2AlbumInfo.count();
-    qDebug() << "writing out " << m_AlbumID2AlbumInfo.count() << " albums to file";
     QHashIterator< QString, Album > aa(m_AlbumID2AlbumInfo);
     aa.toBack();
     while(aa.hasPrevious()) {
@@ -270,14 +266,14 @@ void SlimServerInfo::WriteDataFile( void )
 
 void SlimServerInfo::checkRefreshDate(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     if(lastServerRefresh!=freshnessDate)
         refreshImageFromServer();
 }
 
 void SlimServerInfo::refreshImageFromServer(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     db = new SlimDatabaseFetch();
     connect(db,SIGNAL(FinishedUpdatingDatabase()),
             this,SLOT(DatabaseUpdated()));
@@ -288,7 +284,7 @@ void SlimServerInfo::refreshImageFromServer(void)
 
 void SlimServerInfo::DatabaseUpdated(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     m_AlbumArtist2AlbumID = db->AlbumArtist2AlbumID();
     m_AlbumID2AlbumInfo = db->AlbumID2AlbumInfo();
     m_Artist2AlbumIds = db->Artist2AlbumIds();

@@ -116,6 +116,9 @@ public slots:
     void slot8PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 8\n" ) ); }
     void slot9PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 9\n" ) ); }
 
+protected:
+    void resizeEvent(QResizeEvent *e);
+
 private:
     void getplayerMACAddress( void );
 //    void SetUpDisplay( void );

@@ -3,7 +3,7 @@
 #include "slimdatabasefetch.h"
 #include "slimserverinfo.h"
 
-#ifdef SLIMCLI_DEBUG
+#ifdef SLIMDATABASE_DEBUG
 #define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
 #else
 #define DEBUGF(...)
@@ -12,7 +12,7 @@
 SlimDatabaseFetch::SlimDatabaseFetch(QObject *parent) :
     QThread(parent)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     SlimServerAddr = "127.0.0.1";
     cliPort = 9090;        // default, but user can reset
     MaxRequestSize = "500";    // max size of any cli request (used for limiting each request for albums, artists, songs, etc., so we don't time out or overload things)
@@ -20,14 +20,13 @@ SlimDatabaseFetch::SlimDatabaseFetch(QObject *parent) :
 
 SlimDatabaseFetch::~SlimDatabaseFetch(void)
 {
-    DEBUGF(QTime::currentTime());
-    qDebug() << "database destroyed";
+    DEBUGF("database destroyed");
 }
 
 void SlimDatabaseFetch::Init(QString serveraddr, qint16 cliport,
                              QString cliuname, QString clipass)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     SlimServerAddr = serveraddr;
     cliPort = cliport;
     cliUsername = cliuname;
@@ -38,7 +37,7 @@ void SlimDatabaseFetch::Init(QString serveraddr, qint16 cliport,
 
 void SlimDatabaseFetch::run()
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     connect(slimCliSocket,SIGNAL(connected()),
             this,SLOT(cliConnected()));
     connect(slimCliSocket,SIGNAL(disconnected()),
@@ -58,7 +57,7 @@ void SlimDatabaseFetch::run()
 
 void SlimDatabaseFetch::cliConnected(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     QByteArray cmd;
     if(!cliUsername.isNull()){ // username present, get authentication
         cmd = QString("login %1 %2\n" )
@@ -72,22 +71,19 @@ void SlimDatabaseFetch::cliConnected(void)
 
 void SlimDatabaseFetch::cliDisconnected(void)
 {
-    DEBUGF(QTime::currentTime());
-    qDebug() << "CLI disconnected";
+    DEBUGF("CLI disconnected");
 }
 
 void SlimDatabaseFetch::cliError(QAbstractSocket::SocketError socketError)
 {
-    DEBUGF(QTime::currentTime());
-    qDebug() << "CLI Error: " << socketError;
+    DEBUGF("CLI Error: " << socketError);
 }
 
 void SlimDatabaseFetch::cliMessageReady(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     iTimeOut = 10000;
     QTime t;
-    qDebug() << "cli message ready for database processing";
     t.start();
     while( slimCliSocket->bytesAvailable() ) {
         while( !slimCliSocket->canReadLine () ) { // wait for a full line of content  NOTE: protect against unlikely infinite loop with timer
@@ -107,7 +103,7 @@ void SlimDatabaseFetch::cliMessageReady(void)
 //------------------------------- HELPER FUNCTIONS ---------------------------------------------
 void SlimDatabaseFetch::RemoveNewLineFromResponse( void )
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     while( response.contains( '\n' ) )
         response.replace( response.indexOf( '\n' ), 1, " " );
 
@@ -115,7 +111,7 @@ void SlimDatabaseFetch::RemoveNewLineFromResponse( void )
 
 bool SlimDatabaseFetch::ProcessResponse(void)
 {
-    DEBUGF(QTime::currentTime());
+    DEBUGF("");
     if( !response.contains( ':' ) )  // Substitute ':' for '%3A', we'll URL::decode later
         response.replace( "%3A", ":" );
 
@@ -253,7 +249,6 @@ bool SlimDatabaseFetch::ProcessResponse(void)
 //    req.setUrl(QUrl(urlString));
 //    QNetworkReply *reply = slimHttp->get(req);
 //    httpReplyList.insert(reply,coverID);
-//    qDebug() << "requesting artwork with id: " << coverID;
 //}
 
 //void SlimDatabaseFetch::ArtworkReqply(QNetworkReply *reply)
@@ -262,7 +257,6 @@ bool SlimDatabaseFetch::ProcessResponse(void)
 //    QImageReader reader(reply);
 //    QByteArray coverID = httpReplyList.value(reply);
 
-//    qDebug() << "retrieved image for id: " << coverID;
 
 //    p.fromImageReader(&reader);
 //    if( p.isNull() )    // oops, no image returned, substitute default image
@@ -274,7 +268,6 @@ bool SlimDatabaseFetch::ProcessResponse(void)
 
 //    if(httpReplyList.isEmpty()) {
 //        finishedImages = true;
-//        qDebug() << "FINISHED GETTING IMAGES";
 //        if(finishedData)
 //            emit FinishedUpdatingDatabase();
 //    }
