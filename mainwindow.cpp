@@ -44,10 +44,12 @@ MainWindow::MainWindow(QWidget *parent)
     DEBUGF("lblSlimDisplay is:" << ui->lblSlimDisplay->rect());
 
     m_disp = new SqueezeDisplay(ui->lblSlimDisplay, this);
+    CoverFlow = new SqueezePictureFlow(ui->cfWidget);
 
     loadDisplayConfig();
     loadConnectionConfig();
     m_disp->Init();
+    CoverFlow->Init(SlimServerAddr,(qint16)SlimServerHttpPort.toInt());
 
     DEBUGF("FINISHED LOADING CONFIGS");
 
@@ -149,7 +151,7 @@ bool MainWindow::Create(void)
     slimCLI->Init();
 
     DEBUGF("###Setup Display");
-//    SetUpDisplay();
+    //    SetUpDisplay();
 
     // establish the proper URL for the web interface
     QUrl slimWeb( QString( "http://") + SlimServerAddr + QString( ":"+SlimServerHttpPort+"/" ) );
@@ -181,9 +183,9 @@ bool MainWindow::Create(void)
     connect( ui->btnRewind ,SIGNAL(clicked()), this, SLOT(slotRewind()) );
     connect( ui->btnStop ,SIGNAL(clicked()), this, SLOT(slotStop()) );
 
-//    // allow mouse clicks on CoverFlow to cause playlist change
-//    connect( CoverFlow, SIGNAL(NextSlide()), this, SLOT(slotFForward()) );
-//    connect( CoverFlow, SIGNAL(PrevSlide()), this, SLOT(slotPrev()) );
+    //    // allow mouse clicks on CoverFlow to cause playlist change
+    connect( CoverFlow, SIGNAL(NextSlide()), this, SLOT(slotFForward()) );
+    connect( CoverFlow, SIGNAL(PrevSlide()), this, SLOT(slotPrev()) );
 
     connect( ui->btnBright ,SIGNAL(clicked()), this, SLOT(slotBright()) );
     connect( ui->btnPower ,SIGNAL(clicked()), this, SLOT(slotPower()) );
@@ -203,22 +205,22 @@ bool MainWindow::Create(void)
 void MainWindow::slotUpdateCoverFlow( int trackIndex )
 {
     DEBUGF("");
-//    if(!CoverFlow->IsReady())
-//        return;
+    //    if(!CoverFlow->IsReady())
+    //        return;
 
-//    int currSlide = CoverFlow->centerIndex();
-//    DEBUGF( "UPDATE COVERFLOW TO INDEX: " << trackIndex );
-//    if( abs( trackIndex - currSlide ) > 4 ) {
-//        if( trackIndex > currSlide ) {
-//            CoverFlow->showSlide( currSlide + 2 );
-//            CoverFlow->setCenterIndex( trackIndex - 2 );
-//        }
-//        else {
-//            CoverFlow->showSlide( currSlide - 2 );
-//            CoverFlow->setCenterIndex( trackIndex + 2 );
-//        }
-//    }
-//    CoverFlow->showSlide( trackIndex );
+    int currSlide = CoverFlow->centerIndex();
+    DEBUGF( "UPDATE COVERFLOW TO INDEX: " << trackIndex );
+    if( abs( trackIndex - currSlide ) > 4 ) {
+        if( trackIndex > currSlide ) {
+            CoverFlow->showSlide( currSlide + 2 );
+            CoverFlow->setCenterIndex( trackIndex - 2 );
+        }
+        else {
+            CoverFlow->showSlide( currSlide - 2 );
+            CoverFlow->setCenterIndex( trackIndex + 2 );
+        }
+    }
+    CoverFlow->showSlide( trackIndex );
 }
 
 void MainWindow::slotCreateCoverFlow( void )
@@ -228,17 +230,18 @@ void MainWindow::slotCreateCoverFlow( void )
     //  CoverFlow = new SqueezePictureFlow( ui->cfWidget );
     //  CoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
     //  CoverFlow->setContentsMargins( 50, 0, CoverFlow->width() - 50, CoverFlow->height() );
-//    CoverFlow->clear();
+    CoverFlow->clear();
     ui->cfWidget->setEnabled( false );
+    ui->cfWidget->resize(ui->tab->width(),ui->tab->height());
+    DEBUGF("setting coverflow widget to " << ui->cfWidget->width() << " by "  << ui->cfWidget->height());
 
-//    if( CoverFlow->LoadAlbumList(activeDevice->getDevicePlayList())) {
-//        ui->cfWidget->setEnabled( true );
-//        DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
-//        int playListIndex = activeDevice->getDevicePlaylistIndex();
-//        if( playListIndex > 4 )
-//            CoverFlow->setCenterIndex( playListIndex - 4 );
-//        CoverFlow->showSlide( playListIndex );
-//    }
+    CoverFlow->LoadAlbumList(activeDevice->getDevicePlayList());
+    ui->cfWidget->setEnabled( true );
+    DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
+    int playListIndex = activeDevice->getDevicePlaylistIndex();
+    if( playListIndex > 4 )
+        CoverFlow->setCenterIndex( playListIndex - 4 );
+    CoverFlow->showSlide( playListIndex );
 }
 
 void MainWindow::slotLeftArrow( void )
@@ -284,7 +287,7 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
     m_disp->SetActiveDevice(d);
     m_disp->slotUpdateSlimDisplay();
     activeDevice = d;
-    slotCreateCoverFlow();
+//    slotCreateCoverFlow();
     connect( activeDevice, SIGNAL(NewSong()),
              m_disp, SLOT(slotResetSlimDisplay()) );
     connect( activeDevice, SIGNAL(SlimDisplayUpdate()),
@@ -293,7 +296,6 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
              this, SLOT(slotUpdateCoverFlow(int)) );
     connect( activeDevice, SIGNAL(CoverFlowCreate()),
              this, SLOT(slotCreateCoverFlow()) );
-
     /*
   connect( d, SIGNAL(NewSong()),
            this, SLOT(slotUpdateSlimDisplay()) );
@@ -358,7 +360,7 @@ void MainWindow::updateDisplayConfig(void)
     mySettings->sync();
 
     loadDisplayConfig();
-//    CoverFlow->setBackgroundColor(coverflowBackground);
+    //    CoverFlow->setBackgroundColor(coverflowBackground);
     QPixmap p = QPixmap(64,37);
     p.fill(coverflowBackground.rgb());
     ui->lblCoverFlowColor->setPixmap(p);
@@ -392,7 +394,7 @@ void MainWindow::setConfigDisplay2Defaults(void)
     mySettings->sync();
 
     loadDisplayConfig();
-//    CoverFlow->setBackgroundColor(coverflowBackground);
+    //    CoverFlow->setBackgroundColor(coverflowBackground);
 }
 
 void MainWindow::setConfigConnection2Defaults(void)

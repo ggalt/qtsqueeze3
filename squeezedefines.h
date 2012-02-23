@@ -45,14 +45,14 @@
 #include <iostream>
 
 // uncomment the following to turn on debugging for a particular file
-// #define SQUEEZEMAINWINDOW_DEBUG
+ #define SQUEEZEMAINWINDOW_DEBUG
 // #define SLIMCLI_DEBUG
 // #define SLIMDATABASE_DEBUG
 // #define SLIMDEVICE_DEBUG
-// #define SLIMIMAGECACHE_DEBUG
+ #define SLIMIMAGECACHE_DEBUG
 // #define SLIMSERVERINFO_DEBUG
 // #define SQUEEZEDISPLAY_DEBUG
-// #define SQUEEZEPICFLOW_DEBUG
+ #define SQUEEZEPICFLOW_DEBUG
 
 
 // Define Squeezebox Player Types

@@ -1,7 +1,7 @@
 #include "slimimagecache.h"
 #include <QtGlobal>
 #include <QDebug>
-#include <QApplication>
+#include <QImageReader>
 
 #ifdef SLIMIMAGECACHE_DEBUG
 #define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
@@ -17,7 +17,7 @@ SlimImageCache::SlimImageCache(QObject *parent) :
     SlimServerAddr = "172.0.0.1";
     httpPort=9090;
     imageSizeStr = "cover_200x200";
-    retrievingImages = false;
+    cachePath = QDir::homePath()+"/.qtsqueeze3_imagecache/";
 }
 
 SlimImageCache::~SlimImageCache()
@@ -51,35 +51,6 @@ void SlimImageCache::Init(QString serveraddr, qint16 httpport, QString imageDim,
             this,SLOT(ArtworkReqply(QNetworkReply*)));
 }
 
-bool SlimImageCache::HaveListImages(SqueezePictureFlow *pf, QList<Album> list)
-{
-    // test to see if we have all of the images for a list of albums
-    // if not, get the ones we don't have
-
-    picflow = pf;   // remember who we are working for
-
-    retrievingImages = true;
-    QListIterator<Album> i(list);
-    bool haveAllImages = true;  // assume we have them all
-
-    while(i.hasNext()) {
-        Album a = i.next();
-        if(!imageCache.contains(a.artist.trimmed().toUpper()+a.albumtitle.trimmed().toUpper())) {
-            if(!a.coverid.isEmpty()) {
-                while(httpReplyList.size() > 3 )
-                    qApp->processEvents(QEventLoop::AllEvents,4000);
-                RequestArtwork(a.coverid,a.artist.trimmed().toUpper()+a.albumtitle.trimmed().toUpper());
-            }
-            haveAllImages = false;
-        }
-    }
-    DEBUGF( "slimimagecache returning " << haveAllImages);
-    retrievingImages = false;
-
-    return haveAllImages;
-}
-
-
 void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
 {
     DEBUGF("");
@@ -91,9 +62,9 @@ void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
     QNetworkRequest req;
     req.setUrl(QUrl(urlString));
     QNetworkReply *reply = imageServer->get(req);
-    httpReplyList.insert(reply,artist_album);
     char str[100];
     sprintf(str, "reply pointer is %p",reply);
+    DEBUGF("Sending request:" << str);
 }
 
 void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
@@ -113,34 +84,51 @@ void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
         DEBUGF("returned null image for " << artist_album);
     }
 
-    imageCache.insert(artist_album.toUpper(),p);
+    QFile f;
+    f.setFileName(cachePath+artist_album.trimmed().toUpper()+".JPG");
+    DEBUGF("writing file: " << f.fileName());
+    if(f.open(QFile::WriteOnly)) {
+        DEBUGF("Success opening file" << f.fileName());
+        f.write(buff);
+        f.close();
+    }
+    DEBUGF("Removing reply");
     httpReplyList.remove(reply);
+    DEBUGF("Reply removed");
+
     char str[100];
     sprintf(str, "reply pointer is %p",reply);
     delete reply;
-
-    if(httpReplyList.isEmpty() && !retrievingImages) {
+    DEBUGF("reply deleted" << str);
+    if(httpReplyList.isEmpty()) {
         DEBUGF("emitting imagesready");
-        emit ImagesReady(picflow);
+        emit ImagesReady();
     }
+    DEBUGF("Exiting Artwork Reply");
 }
 
-QPixmap SlimImageCache::RetrieveCover(QString artist_album)
+QPixmap SlimImageCache::RetrieveCover(const Album &a)
 {
-    DEBUGF("");
-    if(imageCache.contains(artist_album.toUpper()))
-        return imageCache.value(artist_album.toUpper());
-    else {
-        QPixmap pic;
-        pic.load(":/img/lib/images/noAlbumImage.png");
-        return pic;
+    QFile f;
+    QPixmap pic;
+
+    f.setFileName(cachePath+a.artist_album.trimmed().toUpper()+".JPG");
+    DEBUGF("Looking for file: " << f.fileName());
+    if(f.exists()) {
+        if(f.open(QFile::ReadOnly)) {
+            QImageReader r(&f);
+            pic.fromImage(r.read());
+            f.close();
+            if(pic.isNull())
+                return pic; // success
+        }
     }
+
+    // if we are here, we've failed to read the file
+    // so deliver a dummy file and retrieve the real image
+    if(!a.coverid.isEmpty())
+        RequestArtwork(a.coverid,a.artist_album.trimmed().toUpper());
+
+    pic.load(":/img/lib/images/noAlbumImage.png");
+    return pic;
 }
-
-//void SlimImageCache::run()
-//{
-//    connect(imageServer,SIGNAL(finished(QNetworkReply*)),
-//            this,SLOT(ArtworkReqply(QNetworkReply*)));
-//    exec();
-//}
-

@@ -6,37 +6,48 @@
 #define DEBUGF(...)
 #endif
 
-SqueezePictureFlow::SqueezePictureFlow(QWidget* parent, QString lmsServerAddr,qint16 httpport, bool autoselect,
-                                       QString cliuname, QString clipass)
+SqueezePictureFlow::SqueezePictureFlow(QWidget* parent)
     :PictureFlow(parent)
 {
     DEBUGF("");
     albumList.clear();
     titleColor = Qt::white;
+//    worker->start();
+}
+
+SqueezePictureFlow::~SqueezePictureFlow()
+{
+    if(worker)
+        delete worker;
+}
+
+void SqueezePictureFlow::Init(QString lmsServerAddr, qint16 httpport, bool autoselect)
+{
     autoSelect = autoselect;
     isReady = false;
 
     worker = new SlimImageCache();
     worker->Init(lmsServerAddr,httpport);
-//    worker->start();
 }
 
-bool SqueezePictureFlow::LoadAlbumList(QList<Album> list)
+void SqueezePictureFlow::Init(QString lmsServerAddr, qint16 httpport,
+                              bool autoselect, QString cliuname, QString clipass)
+{
+    autoSelect = autoselect;
+    isReady = false;
+
+    worker = new SlimImageCache();
+    worker->Init(lmsServerAddr,httpport);
+}
+
+void SqueezePictureFlow::LoadAlbumList(QList<Album> list)
 {
     DEBUGF("");
     albumList = list;
-    if( worker->HaveListImages(this,albumList) ) {
-        ImagesReady(this);
-        return true;
-    }
-    else {
-        connect(worker, SIGNAL(ImagesReady(SqueezePictureFlow*)),
-                this, SLOT(ImagesReady(SqueezePictureFlow*)));
-        return false;
-    }
+    FetchCovers();
 }
 
-bool SqueezePictureFlow::LoadAlbumList(QList<TrackData> list)
+void SqueezePictureFlow::LoadAlbumList(QList<TrackData> list)
 {
     DEBUGF("");
     QListIterator< TrackData > i(list);
@@ -53,34 +64,16 @@ bool SqueezePictureFlow::LoadAlbumList(QList<TrackData> list)
         a.artist_album = j.artist.trimmed().toUpper()+j.album.trimmed().toUpper();
         albumList.append(a);
     }
-    if( worker->HaveListImages(this,albumList) ) {
-        ImagesReady(this);
-        return true;
-    }
-    else {
-        connect(worker, SIGNAL(ImagesReady(SqueezePictureFlow*)),
-                this, SLOT(ImagesReady(SqueezePictureFlow*)));
-        return false;
-    }
+    FetchCovers();
 }
 
-void SqueezePictureFlow::ImagesReady(SqueezePictureFlow *pf)
+void SqueezePictureFlow::FetchCovers(void)
 {
-    DEBUGF("");
-    // images are ready in worker to load into coverflow
-    // first, make sure that we got a signal that belongs to this coverflow
-    if(!(pf==this))
-        return;
-
-    disconnect(worker,SIGNAL(ImagesReady(SqueezePictureFlow*)),
-               this,SLOT(ImagesReady(SqueezePictureFlow*)));
-
     QListIterator<Album> i(albumList);
     while(i.hasNext()) {
-        Album a = i.next();
-        PictureFlow::addSlide(worker->RetrieveCover(a.artist_album));
+        addSlide(worker->RetrieveCover(i.next()));
     }
-    isReady = true;
+    emit CoverFlowReady();
 }
 
 void SqueezePictureFlow::setBackgroundColor(const QColor& c)
@@ -130,6 +123,23 @@ void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
     PictureFlow::mousePressEvent(event);
 }
 
+//void mouseReleaseEvent(QMouseEvent *event)
+//{
+//    PictureFlow::mouseReleaseEvent(event);
+//}
+
+void SqueezePictureFlow::resizeEvent(QResizeEvent *event)
+{
+    QSize newSize = event->size();
+    DEBUGF(event->size());
+    if(newSize.width() < 760)
+        newSize.setWidth(760);
+    if(newSize.height() < 270)
+        newSize.setHeight(270);
+    DEBUGF(newSize);
+    resize(newSize);
+}
+
 void SqueezePictureFlow::paintEvent (QPaintEvent *e)
 {
     DEBUGF("");
@@ -141,8 +151,6 @@ void SqueezePictureFlow::paintEvent (QPaintEvent *e)
     QPainter p(this);
 
     // White Pen for Title Info
-    p.setPen(titleColor);
-
     int cw = width() / 2;
     int wh = height();
 
@@ -151,7 +159,12 @@ void SqueezePictureFlow::paintEvent (QPaintEvent *e)
         QString title = QString(a->songtitle) + " - " + QString(a->albumtitle);
 
         // Draw Title
-        p.setFont(QFont(p.font().family(), p.font().pointSize() + 1, QFont::Bold));
+        QFont fnt;
+        fnt.setFamily("Helvetica");
+        fnt.setBold(true);
+        p.setPen(titleColor);
+        p.setFont(fnt);
+//        p.setFont(QFont(p.font().family(), p.font().pointSize() + 1, QFont::Bold));
         p.drawText(cw - (QFontMetrics(p.font()).width( title ) / 2), wh - 30, title );
     }
     p.end();

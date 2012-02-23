@@ -4,8 +4,9 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QList>
+#include <QListIterator>
 #include <QHash>
-#include <QMultiHash>
+#include <QHashIterator>
 #include <QStringList>
 #include <QColor>
 
@@ -17,14 +18,18 @@ class SqueezePictureFlow : public PictureFlow
 {
     Q_OBJECT
 public:
-    explicit SqueezePictureFlow(QWidget* parent,
-                                QString lmsServerAddr, qint16 httpport,
-                                bool autoselect = true, QString cliuname = NULL, QString clipass = NULL);
+    explicit SqueezePictureFlow(QWidget* parent);
+    ~SqueezePictureFlow();
 
-    bool LoadAlbumList(QList<Album> list);
-    bool LoadAlbumList(QList<TrackData> list);
+
+    void Init(QString lmsServerAddr, qint16 httpport, bool autoselect = true);
+    void Init(QString lmsServerAddr, qint16 httpport,
+              bool autoselect, QString cliuname, QString clipass);
+
+    void LoadAlbumList(QList<Album> list);
+    void LoadAlbumList(QList<TrackData> list);
     QList<Album> *GetAlbumList(void) {return &albumList; }
-    
+
     void setBackgroundColor(const QColor& c);
     void clear();
 
@@ -34,19 +39,19 @@ signals:
     void NextSlide();
     void PrevSlide();
     void SelectSlide(int);
-
-public slots:
-    void ImagesReady(SqueezePictureFlow *pf);
-
+    void CoverFlowReady(void);
 
 protected:
     //  void keyPressEvent(QKeyEvent* event);
     void mousePressEvent(QMouseEvent* event);
+//    void mouseReleaseEvent(QMouseEvent *event);
     void paintEvent (QPaintEvent *e);
+    void resizeEvent(QResizeEvent *event);
 
 private:
+    void FetchCovers(void);
+
     QList<Album> albumList;
-    QMultiHash<QByteArray,imageIndexCheck> imageIndexer;
     QColor titleColor;
     SlimImageCache *worker;
     bool autoSelect;
