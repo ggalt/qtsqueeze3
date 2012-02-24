@@ -9,6 +9,7 @@
 #include <QHashIterator>
 #include <QStringList>
 #include <QColor>
+#include <QWidget>
 
 #include "pictureflow.h"
 #include "squeezedefines.h"
@@ -32,6 +33,7 @@ public:
 
     void setBackgroundColor(const QColor& c);
     void clear();
+    void resetDimensions(QWidget *win);
 
     bool IsReady(void) { return isReady; }
 
@@ -46,7 +48,7 @@ protected:
     void mousePressEvent(QMouseEvent* event);
 //    void mouseReleaseEvent(QMouseEvent *event);
     void paintEvent (QPaintEvent *e);
-    void resizeEvent(QResizeEvent *event);
+//    void resizeEvent(QResizeEvent *event);
 
 private:
     void FetchCovers(void);

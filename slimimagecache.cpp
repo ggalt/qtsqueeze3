@@ -2,6 +2,8 @@
 #include <QtGlobal>
 #include <QDebug>
 #include <QImageReader>
+#include <QDataStream>
+
 
 #ifdef SLIMIMAGECACHE_DEBUG
 #define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
@@ -17,7 +19,11 @@ SlimImageCache::SlimImageCache(QObject *parent) :
     SlimServerAddr = "172.0.0.1";
     httpPort=9090;
     imageSizeStr = "cover_200x200";
-    cachePath = QDir::homePath()+"/.qtsqueeze3_imagecache/";
+    cachePath = DATAPATH;
+    QDir ck(cachePath);
+    if(!ck.exists()) {
+        ck.mkpath(cachePath);
+    }
 }
 
 SlimImageCache::~SlimImageCache()
@@ -62,9 +68,8 @@ void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
     QNetworkRequest req;
     req.setUrl(QUrl(urlString));
     QNetworkReply *reply = imageServer->get(req);
-    char str[100];
-    sprintf(str, "reply pointer is %p",reply);
-    DEBUGF("Sending request:" << str);
+
+    httpReplyList.insert(reply,artist_album);
 }
 
 void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
@@ -85,46 +90,50 @@ void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
     }
 
     QFile f;
-    f.setFileName(cachePath+artist_album.trimmed().toUpper()+".JPG");
-    DEBUGF("writing file: " << f.fileName());
-    if(f.open(QFile::WriteOnly)) {
-        DEBUGF("Success opening file" << f.fileName());
+    QDir d;
+    d.setCurrent(cachePath);
+    QString fileName = QString("%1.JPG").arg(artist_album.trimmed().toUpper());
+    f.setFileName(fileName);
+
+    if(f.open(QIODevice::WriteOnly)) {
+//        QDataStream d(&f);
+//        d << buff;
         f.write(buff);
         f.close();
     }
-    DEBUGF("Removing reply");
+    else
+        DEBUGF("Failed to open: "  << fileName);
     httpReplyList.remove(reply);
-    DEBUGF("Reply removed");
+    reply->deleteLater();
 
-    char str[100];
-    sprintf(str, "reply pointer is %p",reply);
-    delete reply;
-    DEBUGF("reply deleted" << str);
     if(httpReplyList.isEmpty()) {
         DEBUGF("emitting imagesready");
         emit ImagesReady();
     }
-    DEBUGF("Exiting Artwork Reply");
 }
 
 QPixmap SlimImageCache::RetrieveCover(const Album &a)
 {
     QFile f;
     QPixmap pic;
+    QString fileName = QString("%1.JPG").arg(a.artist_album.trimmed().toUpper());
 
-    f.setFileName(cachePath+a.artist_album.trimmed().toUpper()+".JPG");
-    DEBUGF("Looking for file: " << f.fileName());
+    QDir d;
+    d.setCurrent(cachePath);
+    f.setFileName(fileName);
+
     if(f.exists()) {
-        if(f.open(QFile::ReadOnly)) {
-            QImageReader r(&f);
-            pic.fromImage(r.read());
+        if(f.open(QIODevice::ReadOnly)) {
+            QByteArray buf = f.readAll();
+            DEBUGF("buf is " << buf.size() << " Bytes");
+            pic.loadFromData(buf);
             f.close();
-            if(pic.isNull())
+            if(!pic.isNull())
                 return pic; // success
         }
     }
 
-    // if we are here, we've failed to read the file
+    // if we are here, weve failed to read the file
     // so deliver a dummy file and retrieve the real image
     if(!a.coverid.isEmpty())
         RequestArtwork(a.coverid,a.artist_album.trimmed().toUpper());

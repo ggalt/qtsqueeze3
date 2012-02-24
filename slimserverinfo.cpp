@@ -1,3 +1,6 @@
+#include <QDir>
+#include <QFile>
+
 #include "slimserverinfo.h"
 #include "slimcli.h"
 #include "slimdevice.h"
@@ -8,8 +11,6 @@
 #else
 #define DEBUGF(...)
 #endif
-
-#define PATH "./.qtsqueezeimage.dat"
 
 SlimServerInfo::SlimServerInfo(QObject *parent) :
     QObject(parent)
@@ -191,11 +192,17 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 bool SlimServerInfo::ReadDataFile( void )
 {
     DEBUGF("");
+    QString dataPath = QDir::homePath()+DATAPATH;
+    QDir d(dataPath);
+    if(!d.exists())
+        d.mkpath(dataPath);
+    QDir::setCurrent(dataPath);
+
     QFile file;
-    if( file.exists( PATH ) ) // there is a file, so read from it
-        file.setFileName( PATH );
+    if( file.exists(DATAFILE) ) // there is a file, so read from it
+        file.setFileName(DATAFILE);
     else {
-        DEBUGF("no file to read at " << PATH);
+        DEBUGF("no file to read at " << dataPath+DATAFILE);
         return false;
     }
 
@@ -241,8 +248,14 @@ bool SlimServerInfo::ReadDataFile( void )
 void SlimServerInfo::WriteDataFile( void )
 {
     DEBUGF("");
+    QString dataPath = QDir::homePath()+DATAPATH;
+    QDir d(dataPath);
+    if(!d.exists())
+        d.mkpath(dataPath);
+    QDir::setCurrent(dataPath);
+
     QFile file;
-    file.setFileName( PATH );
+    file.setFileName(DATAFILE);
 
     //update the images
     file.open(QIODevice::WriteOnly);

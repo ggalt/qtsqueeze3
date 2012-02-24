@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
     DEBUGF("lblSlimDisplay is:" << ui->lblSlimDisplay->rect());
 
     m_disp = new SqueezeDisplay(ui->lblSlimDisplay, this);
-    CoverFlow = new SqueezePictureFlow(ui->cfWidget);
+    CoverFlow = new SqueezePictureFlow(ui->tab);
 
     loadDisplayConfig();
     loadConnectionConfig();
@@ -76,6 +76,7 @@ void MainWindow::resizeEvent(QResizeEvent *e)
     ui->arrowKeyFrame->move(ui->arrowKeyFrame->x(), ui->controlFrame->height() - 3 - ui->arrowKeyFrame->height());
     ui->keypadFrame->move(ui->keypadFrame->x(),ui->controlFrame->height() - 3 - ui->keypadFrame->height());
     m_disp->resetDimensions();
+    CoverFlow->resetDimensions(ui->tab);
 }
 
 
@@ -230,6 +231,7 @@ void MainWindow::slotCreateCoverFlow( void )
     //  CoverFlow = new SqueezePictureFlow( ui->cfWidget );
     //  CoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
     //  CoverFlow->setContentsMargins( 50, 0, CoverFlow->width() - 50, CoverFlow->height() );
+    CoverFlow->resetDimensions(ui->tab);
     CoverFlow->clear();
     ui->cfWidget->setEnabled( false );
     ui->cfWidget->resize(ui->tab->width(),ui->tab->height());

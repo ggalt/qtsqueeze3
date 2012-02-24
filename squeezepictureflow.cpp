@@ -128,16 +128,27 @@ void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
 //    PictureFlow::mouseReleaseEvent(event);
 //}
 
-void SqueezePictureFlow::resizeEvent(QResizeEvent *event)
+//void SqueezePictureFlow::resizeEvent(QResizeEvent *event)
+//{
+//    QSize newSize = event->size();
+//    DEBUGF(event->size());
+//    if(newSize.width() < 760)
+//        newSize.setWidth(760);
+//    if(newSize.height() < 270)
+//        newSize.setHeight(270);
+//    DEBUGF(newSize);
+//    resize(newSize);
+//}
+
+void SqueezePictureFlow::resetDimensions(QWidget *win)
 {
-    QSize newSize = event->size();
-    DEBUGF(event->size());
-    if(newSize.width() < 760)
-        newSize.setWidth(760);
-    if(newSize.height() < 270)
-        newSize.setHeight(270);
-    DEBUGF(newSize);
-    resize(newSize);
+    int width = win->width();
+    int height = win->height();
+    if(width<760)
+        width = 760;
+    if(height<270)
+        height=270;
+    resize(width,height);
 }
 
 void SqueezePictureFlow::paintEvent (QPaintEvent *e)
