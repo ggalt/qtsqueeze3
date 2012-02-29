@@ -289,7 +289,7 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
     m_disp->SetActiveDevice(d);
     m_disp->slotUpdateSlimDisplay();
     activeDevice = d;
-//    slotCreateCoverFlow();
+    //    slotCreateCoverFlow();
     connect( activeDevice, SIGNAL(NewSong()),
              m_disp, SLOT(slotResetSlimDisplay()) );
     connect( activeDevice, SIGNAL(SlimDisplayUpdate()),
@@ -298,11 +298,11 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
              this, SLOT(slotUpdateCoverFlow(int)) );
     connect( activeDevice, SIGNAL(CoverFlowCreate()),
              this, SLOT(slotCreateCoverFlow()) );
+//    connect( CoverFlow, SIGNAL(CoverFlowReady()),
+//             this, SLOT(slotCreateCoverFlow()));
+//    connect( d, SIGNAL(NewPlaylist()),
+//             this, SLOT(slotUpdateCoverFlow()) );
     /*
-  connect( d, SIGNAL(NewSong()),
-           this, SLOT(slotUpdateSlimDisplay()) );
-  connect( d, SIGNAL(NewPlaylist()),
-           this, SLOT(slotUpdateCoverFlow()) );
     void NewSong( void );
     void NewPlaylist( void );
     void VolumeChange( int newvol );

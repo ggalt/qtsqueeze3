@@ -20,6 +20,7 @@ SlimImageCache::SlimImageCache(QObject *parent) :
     httpPort=9090;
     imageSizeStr = "cover_200x200";
     cachePath = DATAPATH;
+    requestingImages = false;
     QDir ck(cachePath);
     if(!ck.exists()) {
         ck.mkpath(cachePath);
@@ -40,7 +41,7 @@ void SlimImageCache::Init(QString serveraddr, qint16 httpport)
     imageServer = new QNetworkAccessManager();
     imageCache.clear();
     connect(imageServer,SIGNAL(finished(QNetworkReply*)),
-            this,SLOT(ArtworkReqply(QNetworkReply*)));
+            this,SLOT(ArtworkReply(QNetworkReply*)));
 }
 
 void SlimImageCache::Init(QString serveraddr, qint16 httpport, QString imageDim, QString cliuname, QString clipass)
@@ -54,7 +55,7 @@ void SlimImageCache::Init(QString serveraddr, qint16 httpport, QString imageDim,
     imageServer = new QNetworkAccessManager();
     imageCache.clear();
     connect(imageServer,SIGNAL(finished(QNetworkReply*)),
-            this,SLOT(ArtworkReqply(QNetworkReply*)));
+            this,SLOT(ArtworkReply(QNetworkReply*)));
 }
 
 void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
@@ -72,7 +73,7 @@ void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
     httpReplyList.insert(reply,artist_album);
 }
 
-void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
+void SlimImageCache::ArtworkReply(QNetworkReply *reply)
 {
     DEBUGF("");
     QPixmap p;
@@ -106,7 +107,7 @@ void SlimImageCache::ArtworkReqply(QNetworkReply *reply)
     httpReplyList.remove(reply);
     reply->deleteLater();
 
-    if(httpReplyList.isEmpty()) {
+    if(httpReplyList.isEmpty() && !requestingImages) {
         DEBUGF("emitting imagesready");
         emit ImagesReady();
     }

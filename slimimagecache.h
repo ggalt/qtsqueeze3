@@ -37,11 +37,16 @@ public:
 //    bool HaveListImages(SqueezePictureFlow *picflow, QList<Album> list);
     QPixmap RetrieveCover(const Album &a);
 
+    void StartRequestingImages(void) { requestingImages = true; }
+    void DoneRequestingImages(void) { requestingImages = false; }
+    bool RequestingImages(void) { return requestingImages; }
+
+
 signals:
     void ImagesReady(void);
 
 public slots:
-    void ArtworkReqply(QNetworkReply *reply);
+    void ArtworkReply(QNetworkReply *reply);
 
 //protected:
 //    void run();
@@ -61,6 +66,7 @@ private:
     QString imageSizeStr;  // default to "200X200"
 
     QString cachePath;
+    bool requestingImages;
 
     QNetworkAccessManager *imageServer;
     QHash< QNetworkReply*,QString > httpReplyList; // associate image request to artist+album name

@@ -70,9 +70,11 @@ void SqueezePictureFlow::LoadAlbumList(QList<TrackData> list)
 void SqueezePictureFlow::FetchCovers(void)
 {
     QListIterator<Album> i(albumList);
+    worker->StartRequestingImages();    // let image cache know we've started
     while(i.hasNext()) {
         addSlide(worker->RetrieveCover(i.next()));
     }
+    worker->DoneRequestingImages();     // let image cache know we're done
     emit CoverFlowReady();
 }
 
