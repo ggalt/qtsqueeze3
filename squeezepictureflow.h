@@ -13,19 +13,14 @@
 
 #include "pictureflow.h"
 #include "squeezedefines.h"
-#include "slimimagecache.h"
+#include "slimimagecache2.h"
 
 class SqueezePictureFlow : public PictureFlow
 {
     Q_OBJECT
 public:
-    explicit SqueezePictureFlow(QWidget* parent);
+    explicit SqueezePictureFlow(QWidget* parent, bool autoselect=true);
     ~SqueezePictureFlow();
-
-
-    void Init(QString lmsServerAddr, qint16 httpport, bool autoselect = true);
-    void Init(QString lmsServerAddr, qint16 httpport,
-              bool autoselect, QString cliuname, QString clipass);
 
     void LoadAlbumList(QList<Album> list);
     void LoadAlbumList(QList<TrackData> list);
@@ -43,6 +38,9 @@ signals:
     void SelectSlide(int);
     void CoverFlowReady(void);
 
+public slots:
+    void FetchCovers(void);
+
 protected:
     //  void keyPressEvent(QKeyEvent* event);
     void mousePressEvent(QMouseEvent* event);
@@ -51,11 +49,8 @@ protected:
 //    void resizeEvent(QResizeEvent *event);
 
 private:
-    void FetchCovers(void);
-
     QList<Album> albumList;
     QColor titleColor;
-    SlimImageCache *worker;
     bool autoSelect;
     bool isReady;
 };

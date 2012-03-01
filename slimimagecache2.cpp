@@ -1,8 +1,8 @@
 #include "slimimagecache2.h"
 #include <QtGlobal>
 #include <QDebug>
-#include <QImageReader>
-#include <QDataStream>
+#include <QEventLoop>
+#include <QTimer>
 
 
 #ifdef SLIMIMAGECACHE_DEBUG
@@ -13,18 +13,19 @@
 
 
 SlimImageCache::SlimImageCache(QObject *parent) :
-    QObject(parent)
+    QThread(parent)
 {
     DEBUGF("");
     SlimServerAddr = "172.0.0.1";
     httpPort=9090;
     imageSizeStr = "cover_200x200";
-    cachePath = DATAPATH;
+    cachePath = QDir::homePath()+DATAPATH;
     requestingImages = false;
     QDir ck(cachePath);
     if(!ck.exists()) {
         ck.mkpath(cachePath);
     }
+    albumList.clear();  // make sure it's empty
 }
 
 SlimImageCache::~SlimImageCache()
@@ -38,10 +39,6 @@ void SlimImageCache::Init(QString serveraddr, qint16 httpport)
     DEBUGF("");
     SlimServerAddr = serveraddr;
     httpPort = httpport;
-    imageServer = new QNetworkAccessManager();
-    imageCache.clear();
-    connect(imageServer,SIGNAL(finished(QNetworkReply*)),
-            this,SLOT(ArtworkReply(QNetworkReply*)));
 }
 
 void SlimImageCache::Init(QString serveraddr, qint16 httpport, QString imageDim, QString cliuname, QString clipass)
@@ -52,15 +49,24 @@ void SlimImageCache::Init(QString serveraddr, qint16 httpport, QString imageDim,
     imageSizeStr = imageDim;
     cliUsername = cliuname;
     cliPassword = clipass;
-    imageServer = new QNetworkAccessManager();
-    imageCache.clear();
-    connect(imageServer,SIGNAL(finished(QNetworkReply*)),
-            this,SLOT(ArtworkReply(QNetworkReply*)));
 }
 
 void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
 {
     DEBUGF("");
+
+    // establish a single-shot timer and event loop so we can capture the
+    // http reply from the LMS with the cover image
+    QEventLoop q;
+    QTimer tT;
+
+    tT.setSingleShot(true);
+    connect(&tT, SIGNAL(timeout()), &q, SLOT(quit()),Qt::DirectConnection);
+    connect(imageServer, SIGNAL(finished(QNetworkReply*)),
+            &q, SLOT(quit()),Qt::DirectConnection);
+
+
+    // build the URL and send the request
     QString urlString = QString("http://%1:%2/music/%3/%4")
             .arg(SlimServerAddr)
             .arg(httpPort)
@@ -70,24 +76,27 @@ void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
     req.setUrl(QUrl(urlString));
     QNetworkReply *reply = imageServer->get(req);
 
-    httpReplyList.insert(reply,artist_album);
-}
+    // request sent so start the timer and event loop
+    tT.start(5000); // 5s timeout
+    q.exec();
 
-void SlimImageCache::ArtworkReply(QNetworkReply *reply)
-{
-    DEBUGF("");
-    QPixmap p;
-    //    QImageReader reader(reply);
-    QString artist_album = httpReplyList.value(reply);
+    if(tT.isActive()){
+        // download complete
+        tT.stop();
+    } else {
+        DEBUGF("Cover Request Timed Out for " << artist_album);
+        reply->deleteLater();
+        return;
+    }
 
     QByteArray buff;
     buff = reply->readAll();
-    p.loadFromData(buff);
 
     //    p.fromImageReader(&reader);
-    if(p.isNull()) { // oops, no image returned, substitute default image
-        p.load(":/img/lib/images/noAlbumImage.png");
+    if(buff.isEmpty()) { // oops, no image returned, substitute default image
         DEBUGF("returned null image for " << artist_album);
+        reply->deleteLater();
+        return;
     }
 
     QFile f;
@@ -97,26 +106,25 @@ void SlimImageCache::ArtworkReply(QNetworkReply *reply)
     f.setFileName(fileName);
 
     if(f.open(QIODevice::WriteOnly)) {
-        //        QDataStream d(&f);
-        //        d << buff;
         f.write(buff);
         f.close();
     }
     else
         DEBUGF("Failed to open: "  << fileName);
-    httpReplyList.remove(reply);
-    reply->deleteLater();
 
-    if(httpReplyList.isEmpty() && !requestingImages) {
-        DEBUGF("emitting imagesready");
-        emit ImagesReady();
-    }
+    // NOTE: IMPORTANT to delete the reply **LATER** not now
+    reply->deleteLater();
 }
 
-QPixmap SlimImageCache::RetrieveCover(const Album &a)
+QByteArray SlimImageCache::RetrieveCover(const Album &a)
 {
+    // intended to be run outside of the "run" loop to retrieve images
+    // because QPixmaps are "dangerous" outside of the GUI thread, we return
+    // a QByteArray of the QPixmap data
+    QMutexLocker m(&mutex);
     QFile f;
-    QPixmap pic;
+    QByteArray buf;
+    buf.clear();
     QString fileName = QString("%1.JPG").arg(a.artist_album.trimmed().toUpper());
 
     QDir d;
@@ -125,22 +133,12 @@ QPixmap SlimImageCache::RetrieveCover(const Album &a)
 
     if(f.exists()) {
         if(f.open(QIODevice::ReadOnly)) {
-            QByteArray buf = f.readAll();
+            buf = f.readAll();
             DEBUGF("buf is " << buf.size() << " Bytes");
-            pic.loadFromData(buf);
             f.close();
-            if(!pic.isNull())
-                return pic; // success
         }
     }
-
-    // if we are here, weve failed to read the file
-    // so deliver a dummy file and retrieve the real image
-    if(!a.coverid.isEmpty())
-        RequestArtwork(a.coverid,a.artist_album.trimmed().toUpper());
-
-    pic.load(":/img/lib/images/noAlbumImage.png");
-    return pic;
+    return buf;
 }
 
 void SlimImageCache::CheckImages(QList<Album> list)
@@ -154,8 +152,35 @@ void SlimImageCache::run(void)
 {
     mutex.lock();
     isrunning = true;
+    imageServer = new QNetworkAccessManager();
     mutex.unlock();
     while(isrunning) {
+        if(albumList.isEmpty()) {
+            condition.wait(&mutex);
+        }
+        else {
+            mutex.lock();
+            DEBUGF("Checking for images");
+
+            QDir d;
+            d.setCurrent(cachePath);
+            QFile f;
+            QString fileName;
+            QListIterator<Album> it(albumList);
+            while(it.hasNext()) {
+                Album a = it.next();
+                fileName = QString("%1.JPG").arg(a.artist_album.trimmed().toUpper());
+                f.setFileName(fileName);
+                if(!f.exists()) {
+                    if(!a.coverid.isEmpty())
+                        RequestArtwork(a.coverid,a.artist_album.trimmed().toUpper());
+                }
+            }
+            emit ImagesReady(); // signal that we're done
+            albumList.clear();  // empty album list so we return to a wait state
+
+            mutex.unlock();
+        }   // end else
 
     }
 }

@@ -225,7 +225,7 @@ typedef struct s_imageIndexCheck{
 //   QPixmap getImage(QString name);
 //}
 
-extern SlimImageItem imageCache;
+extern SlimImageCache *imageCache;
 
 // This mapping is for the custom remote
 

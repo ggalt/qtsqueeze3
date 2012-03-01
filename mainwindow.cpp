@@ -9,7 +9,8 @@
 #define DEBUGF(...)
 #endif
 
-SlimImageItem imageCache;
+// globally declared so that multiple classes access the same image cache
+SlimImageCache *imageCache;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -43,13 +44,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     DEBUGF("lblSlimDisplay is:" << ui->lblSlimDisplay->rect());
 
+    imageCache = new SlimImageCache();
     m_disp = new SqueezeDisplay(ui->lblSlimDisplay, this);
     CoverFlow = new SqueezePictureFlow(ui->tab);
 
     loadDisplayConfig();
     loadConnectionConfig();
     m_disp->Init();
-    CoverFlow->Init(SlimServerAddr,(qint16)SlimServerHttpPort.toInt());
+    imageCache->Init(SlimServerAddr,(qint16)SlimServerHttpPort.toInt());
+    imageCache->start();
 
     DEBUGF("FINISHED LOADING CONFIGS");
 
@@ -60,9 +63,11 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    imageCache->Stop();
     mySettings->setValue("UI/CurrentTab",ui->tabWidget->currentIndex());
     mySettings->sync();
     squeezePlayer->close();
+    imageCache->deleteLater();
     delete ui;
 }
 
@@ -203,11 +208,19 @@ bool MainWindow::Create(void)
     return true;
 }
 
+void MainWindow::slotCoverFlowReady(void)
+{
+    int playListIndex = activeDevice->getDevicePlaylistIndex();
+    if( playListIndex > 4 )
+        CoverFlow->setCenterIndex( playListIndex - 4 );
+    CoverFlow->showSlide( playListIndex );
+    imageCache->CheckImages(serverInfo->GetAllAlbumList());
+    qDebug() << "retrieving images for " << serverInfo->GetAllAlbumList().count() << " Ablums";
+}
+
 void MainWindow::slotUpdateCoverFlow( int trackIndex )
 {
     DEBUGF("");
-    //    if(!CoverFlow->IsReady())
-    //        return;
 
     int currSlide = CoverFlow->centerIndex();
     DEBUGF( "UPDATE COVERFLOW TO INDEX: " << trackIndex );
@@ -289,7 +302,6 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
     m_disp->SetActiveDevice(d);
     m_disp->slotUpdateSlimDisplay();
     activeDevice = d;
-    //    slotCreateCoverFlow();
     connect( activeDevice, SIGNAL(NewSong()),
              m_disp, SLOT(slotResetSlimDisplay()) );
     connect( activeDevice, SIGNAL(SlimDisplayUpdate()),
@@ -298,26 +310,8 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
              this, SLOT(slotUpdateCoverFlow(int)) );
     connect( activeDevice, SIGNAL(CoverFlowCreate()),
              this, SLOT(slotCreateCoverFlow()) );
-//    connect( CoverFlow, SIGNAL(CoverFlowReady()),
-//             this, SLOT(slotCreateCoverFlow()));
-//    connect( d, SIGNAL(NewPlaylist()),
-//             this, SLOT(slotUpdateCoverFlow()) );
-    /*
-    void NewSong( void );
-    void NewPlaylist( void );
-    void VolumeChange( int newvol );
-    void ModeChange( QString newmode );
-    void Mute( bool mute );
-    // void HeartBeat( void );
-//    void GotSongCover( QPixmap image );
-    void UpdateCoverFlow( QPixmap image );
-    void ClientChange( QByteArray mydeviceMAC, QByteArray myresponse );
-    void DisplayUpdate( void );
-    void CoversReady( void );
-
-    void Duration( float t );
-    void TimeText( QString tt );
-*/
+    connect( CoverFlow, SIGNAL(CoverFlowReady()),
+             this, SLOT(slotCoverFlowReady()));
 }
 
 void MainWindow::loadDisplayConfig(void)
@@ -331,13 +325,8 @@ void MainWindow::loadDisplayConfig(void)
     temptextcolorGeneral = m_disp->getTextColor();
     tempdisplayBackgroundColor = m_disp->getDisplayBackgroundColor();
     tempcoverflowBackground = coverflowBackground;
-    //    textcolorGeneral= QColor(Qt::cyan);
-    //    textcolorLine1 = QColor(Qt::cyan);
-    //    displayBackgroundColor = QColor(Qt::black);
-    //    coverflowBackground = QColor(Qt::white);
     m_disp->setScrollSpeed(mySettings->value("UI/ScrollSpeed",30).toInt());
     m_disp->setScrollInterval(mySettings->value("UI/ScrollInterval",5000).toInt());
-    DEBUGF("DISPLAY CONFIG");
 }
 
 void MainWindow::loadConnectionConfig(void)
@@ -348,7 +337,6 @@ void MainWindow::loadConnectionConfig(void)
     SlimServerCLIPort = mySettings->value("Server/CLIPort", "9090").toString();
     SlimServerHttpPort = mySettings->value("Server/HttpPort", "9000").toString();
     PortAudioDevice = mySettings->value("Audio/Device","").toString();
-    DEBUGF("CONNECTION CONFIG");
 }
 
 void MainWindow::updateDisplayConfig(void)

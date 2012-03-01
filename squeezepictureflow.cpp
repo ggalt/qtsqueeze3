@@ -6,50 +6,34 @@
 #define DEBUGF(...)
 #endif
 
-SqueezePictureFlow::SqueezePictureFlow(QWidget* parent)
+SqueezePictureFlow::SqueezePictureFlow(QWidget* parent, bool autoselect)
     :PictureFlow(parent)
 {
     DEBUGF("");
     albumList.clear();
     titleColor = Qt::white;
-//    worker->start();
+    autoSelect = autoselect;
+    isReady = false;
 }
 
 SqueezePictureFlow::~SqueezePictureFlow()
 {
-    if(worker)
-        delete worker;
-}
-
-void SqueezePictureFlow::Init(QString lmsServerAddr, qint16 httpport, bool autoselect)
-{
-    autoSelect = autoselect;
-    isReady = false;
-
-    worker = new SlimImageCache();
-    worker->Init(lmsServerAddr,httpport);
-}
-
-void SqueezePictureFlow::Init(QString lmsServerAddr, qint16 httpport,
-                              bool autoselect, QString cliuname, QString clipass)
-{
-    autoSelect = autoselect;
-    isReady = false;
-
-    worker = new SlimImageCache();
-    worker->Init(lmsServerAddr,httpport);
 }
 
 void SqueezePictureFlow::LoadAlbumList(QList<Album> list)
 {
     DEBUGF("");
+    albumList.clear();
     albumList = list;
-    FetchCovers();
+    connect(imageCache,SIGNAL(ImagesReady()),
+            this,SLOT(FetchCovers()));
+    imageCache->CheckImages(albumList);
 }
 
 void SqueezePictureFlow::LoadAlbumList(QList<TrackData> list)
 {
     DEBUGF("");
+    albumList.clear();
     QListIterator< TrackData > i(list);
     while( i.hasNext() ) {
         TrackData j = i.next();
@@ -64,17 +48,27 @@ void SqueezePictureFlow::LoadAlbumList(QList<TrackData> list)
         a.artist_album = j.artist.trimmed().toUpper()+j.album.trimmed().toUpper();
         albumList.append(a);
     }
-    FetchCovers();
+    connect(imageCache,SIGNAL(ImagesReady()),
+            this,SLOT(FetchCovers()));
+    imageCache->CheckImages(albumList);
 }
 
 void SqueezePictureFlow::FetchCovers(void)
 {
+    disconnect(imageCache,SIGNAL(ImagesReady()),
+               this,SLOT(FetchCovers()));
+
     QListIterator<Album> i(albumList);
-    worker->StartRequestingImages();    // let image cache know we've started
+    imageCache->StartRequestingImages();    // let image cache know we've started
+    PictureFlow::clear();   // make sure we don't have more slides than images
     while(i.hasNext()) {
-        addSlide(worker->RetrieveCover(i.next()));
+        QPixmap p;
+        p.loadFromData(imageCache->RetrieveCover(i.next()));
+        if(p.isNull())
+            p.load(":/img/lib/images/noAlbumImage.png");
+        addSlide(p);
     }
-    worker->DoneRequestingImages();     // let image cache know we're done
+    imageCache->DoneRequestingImages();     // let image cache know we're done
     emit CoverFlowReady();
 }
 

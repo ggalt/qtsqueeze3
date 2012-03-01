@@ -216,6 +216,19 @@ bool SlimServerInfo::ReadDataFile( void )
     in >> m_AlbumArtist2AlbumID;
     in >> albumCount;
 
+    m_albumList.clear();
+    for(int t=0; t<albumCount; t++) {
+        Album a;
+        in >> a.albumtitle;
+        in >> a.album_id;
+        in >> a.artist;
+        in >> a.artist_album;
+        in >> a.artist_id;
+        in >> a.coverid;
+        in >> a.year;
+        m_albumList.append(a);
+    }
+
     DEBUGF("reading in info on " << albumCount << " files");
 
     m_AlbumID2AlbumInfo.clear();
@@ -223,11 +236,12 @@ bool SlimServerInfo::ReadDataFile( void )
         QString key;
         Album a;
         in >> key;
+        in >> a.albumtitle;
         in >> a.album_id;
         in >> a.artist;
+        in >> a.artist_album;
         in >> a.artist_id;
         in >> a.coverid;
-        in >> a.albumtitle;
         in >> a.year;
         m_AlbumID2AlbumInfo.insert(key,a);
     }
@@ -264,12 +278,20 @@ void SlimServerInfo::WriteDataFile( void )
     out << m_Artist2AlbumIds;
     out << m_AlbumArtist2AlbumID;
     out << (qint16)m_AlbumID2AlbumInfo.count();
+
+    QListIterator<Album> al(m_albumList);
+    al.toBack();
+    while(al.hasPrevious()) {
+        Album a = al.previous();
+        out << a.albumtitle << a.album_id << a.artist << a.artist_album << a.artist_id << a.coverid << a.year;
+    }
+
     QHashIterator< QString, Album > aa(m_AlbumID2AlbumInfo);
     aa.toBack();
     while(aa.hasPrevious()) {
         aa.previous();
         Album a = aa.value();
-        out << aa.key() << a.album_id << a.artist << a.artist_id << a.coverid << a.albumtitle << a.year;
+        out << aa.key() << a.albumtitle << a.album_id << a.artist << a.artist_album << a.artist_id << a.coverid << a.year;
     }
 
     DEBUGF( "Writing file of size: " << file.size() );
@@ -301,8 +323,6 @@ void SlimServerInfo::DatabaseUpdated(void)
     m_AlbumArtist2AlbumID = db->AlbumArtist2AlbumID();
     m_AlbumID2AlbumInfo = db->AlbumID2AlbumInfo();
     m_Artist2AlbumIds = db->Artist2AlbumIds();
-//    m_Id2Art = db->Id2Art();
     db->exit();
     db->deleteLater();
-//    delete db;
 }

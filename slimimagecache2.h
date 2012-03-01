@@ -17,8 +17,6 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
-#include <QImageReader>
-#include <QPixmap>
 #include <QFile>
 #include <QDir>
 
@@ -36,18 +34,15 @@ public:
     void Init(QString serveraddr, qint16 httpport, QString imageSize, QString cliuname, QString clipass);
 //    bool HaveListImages(SqueezePictureFlow *picflow, QList<Album> list);
     void CheckImages(QList<Album> list);
-    QPixmap RetrieveCover(const Album &a);
+    QByteArray RetrieveCover(const Album &a);
 
     void StartRequestingImages(void) { QMutexLocker m(&mutex); requestingImages = true; }
     void DoneRequestingImages(void) { QMutexLocker m(&mutex); requestingImages = false; }
     bool RequestingImages(void) { QMutexLocker m(&mutex); return requestingImages; }
-
+    void Stop(void) {QMutexLocker m(&mutex); isrunning = false;}
 
 signals:
     void ImagesReady(void);
-
-public slots:
-    void ArtworkReply(QNetworkReply *reply);
 
 protected:
     void run();

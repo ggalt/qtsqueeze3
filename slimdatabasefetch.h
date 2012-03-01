@@ -32,7 +32,7 @@ public:
     SlimItem AlbumArtist2AlbumID(void) {return m_AlbumArtist2AlbumID;}
     SlimItemList Artist2AlbumIds(void) {return m_Artist2AlbumIds;}
     SlimAlbumItem AlbumID2AlbumInfo(void) {return m_AlbumID2AlbumInfo;}    // AlbumID to Album Info
-
+    QList<Album> GetAllAlbumList(void) {return m_albumList;}
 
 signals:
     void FinishedUpdatingDatabase(void);
@@ -70,6 +70,8 @@ private:
     SlimItem m_AlbumArtist2AlbumID;         // Album+Artist name to Album ID
     SlimItemList m_Artist2AlbumIds;    // Artist name to list of albums
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
+    QList<Album> m_albumList;
+
 };
 
 #endif // SLIMDATABASEFETCH_H

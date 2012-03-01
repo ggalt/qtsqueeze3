@@ -37,6 +37,7 @@ public:
     SlimItem AlbumArtist2AlbumID(void) {return m_AlbumArtist2AlbumID;}
     SlimItemList Artist2AlbumIds(void) {return m_Artist2AlbumIds;}
     SlimAlbumItem AlbumID2AlbumInfo(void) {return m_AlbumID2AlbumInfo;}    // AlbumID to Album Info
+    QList<Album> GetAllAlbumList(void) {return m_albumList;}
 
     bool ReadDataFile( void );   // read in existing images (if any) into serverImageList (save bandwidth)
     void WriteDataFile( void );  // write out contents of serverImageList
@@ -73,6 +74,7 @@ private:
     SlimItem m_AlbumArtist2AlbumID;         // Album+Artist name to Album ID
     SlimItemList m_Artist2AlbumIds;    // Artist name to list of albums
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
+    QList<Album> m_albumList;
 
     SlimDatabaseFetch *db;      // pointer in case we need to update the database
     bool bNeedRefresh;          // the SqueezeServer database was updated since the last time we connected, so refresh

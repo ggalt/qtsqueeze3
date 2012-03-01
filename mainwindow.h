@@ -57,14 +57,9 @@ public slots:
     void SqueezePlayerError( void );
     void SqueezePlayerOutput( void );
 
-//    void slotResetSlimDisplay( void );
-//    void slotUpdateSlimDisplay( void );
-//    void slotUpdateScrollOffset( void );
-//    void slotUpdateTransition( int frame );
-//    void slotTransitionFinished ( void );
-
     void slotUpdateCoverFlow( int trackIndex );
     void slotCreateCoverFlow( void );
+    void slotCoverFlowReady(void);
 
     void slotDisablePlayer( void );
     void slotEnablePlayer( void );
@@ -121,10 +116,6 @@ protected:
 
 private:
     void getplayerMACAddress( void );
-//    void SetUpDisplay( void );
-//    bool Slimp3Display( QString txt );
-//    void PaintTextDisplay( void );
-//    void StopScroll( void );
 
     void loadDisplayConfig(void);
     void loadConnectionConfig(void);
@@ -146,62 +137,8 @@ private:
     // for display of the slim device interface
     SqueezeDisplay *m_disp;
 
-//    // for display of the slim device interface
-//    QImage *displayImage;  // use a QImage not a QPixmap so we can use alpha blends
-//    bool isTransition;    // are we currently transitioning?
-//    transitionType transitionDirection;  // -1 = left, -2 = down, +1 = right, +2 = down
-//    int scrollSpeed;
-//    int scrollInterval;
-
-//    QFont small;
-//    QFont medium;
-//    QFont large;
-//    QColor textcolorGeneral;
-//    QColor textcolorLine1;
-//    QColor displayBackgroundColor;
     QColor temptextcolorGeneral;
     QColor tempdisplayBackgroundColor;
-//    int Brightness;
-//    int line1Alpha;   // alpha blending figure for menu fade-in and fade-out
-
-//    QRect displayRect;
-//    QRectF timeRect;
-//    QRectF timeFillRect;
-//    QRectF volRect;
-//    QRectF volFillRect;
-//    QRect line1Bounds;
-//    qreal radius;
-//    int xOffsetOld;  // horizontal offset for menu transitions
-//    int yOffsetOld;  // vertical offset for menu transitions
-//    int xOffsetNew;
-//    int yOffsetNew;
-//    QRegion line1Clipping;
-//    QRegion noClipping;
-//    QPoint pointLine0;  // starting display point for line0 text
-//    QPoint pointLine1;  // starting display point for line1 text
-//    QPoint pointLine1_2;  // follow-on text for scrolling display
-//    QRect Line0Rect;
-//    QRect Line1Rect;  // rectangle for displaying Line1 text (used in scrolling text)
-//    QRect boundingRect; // the rectangle occupied by the full Line1 text (which may be larger that the display rect, requiring scrolling)
-//    int lineWidth;
-//    QFontMetrics *ln1FM;   // font metrics of line 1 (in "Large" text)
-//    int Line1FontWidth;   // width of the letter "W" (used in scrolling text)
-//    int ScrollOffset;   // used in scrolling
-//    int scrollTextLen;  // used in scrolling
-//    scrollStatus scrollState;
-//    QTimeLine *transitionTimer;
-//    QTimeLine *vertTransTimer;
-//    QTimeLine *horzTransTimer;
-//    QTimeLine *bumpTransTimer;
-//    DisplayBuffer transBuffer;
-
-//    QPoint pointLine0Right; // right edge for text (i.e., the right side of text)
-//    QPoint pointLine1Right; // right edge for text (i.e., the right side of text)
-//    QPoint upperMiddle;     // center point for Center0
-//    QPoint lowerMiddle;     // center point for Center1
-//    QPoint centerPoint; // center of display
-
-//    QTimer scrollTimer; // timer for scrolling of text too long to fit in display
 
     QRect flowRect;
     SqueezePictureFlow *CoverFlow;
