@@ -37,7 +37,7 @@ void SlimDatabaseFetch::Init(QString serveraddr, qint16 cliport,
 void SlimDatabaseFetch::run()
 {
     DEBUGF("");
-    slimCliSocket = new QTcpSocket(this);
+    slimCliSocket = new QTcpSocket();
     connect(slimCliSocket,SIGNAL(connected()),
             this,SLOT(cliConnected()));
     connect(slimCliSocket,SIGNAL(disconnected()),
@@ -179,6 +179,7 @@ bool SlimDatabaseFetch::ProcessResponse(void)
                     m_AlbumArtist2AlbumID.insert(QString(album_title.trimmed()+artist_name.trimmed()), QString(album_id.trimmed()));
                     m_AlbumID2AlbumInfo.insert(album_id.trimmed(),a);
                     m_albumList.append(a);
+                    DEBUGF("Adding album" << a.artist << a.albumtitle);
                     if(m_Artist2AlbumIds.contains(artist_name.trimmed())) {
                         QStringList temp = m_Artist2AlbumIds.value(artist_name.trimmed());
                         temp.append(album_id.trimmed());

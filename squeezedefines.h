@@ -49,10 +49,10 @@
 // #define SLIMCLI_DEBUG
 // #define SLIMDATABASE_DEBUG
 // #define SLIMDEVICE_DEBUG
-// #define SLIMIMAGECACHE_DEBUG
 // #define SLIMSERVERINFO_DEBUG
 // #define SQUEEZEDISPLAY_DEBUG
 // #define SQUEEZEPICFLOW_DEBUG
+// #define SLIMIMAGECACHE_DEBUG
 
 // Path to directories
 #define DATAPATH "/.qtsqueeze3/info/"

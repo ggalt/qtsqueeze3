@@ -118,6 +118,7 @@ void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
 
 QByteArray SlimImageCache::RetrieveCover(const Album &a)
 {
+    DEBUGF("");
     // intended to be run outside of the "run" loop to retrieve images
     // because QPixmaps are "dangerous" outside of the GUI thread, we return
     // a QByteArray of the QPixmap data
@@ -134,7 +135,6 @@ QByteArray SlimImageCache::RetrieveCover(const Album &a)
     if(f.exists()) {
         if(f.open(QIODevice::ReadOnly)) {
             buf = f.readAll();
-            DEBUGF("buf is " << buf.size() << " Bytes");
             f.close();
         }
     }
@@ -143,24 +143,39 @@ QByteArray SlimImageCache::RetrieveCover(const Album &a)
 
 void SlimImageCache::CheckImages(QList<Album> list)
 {
-    QMutexLocker m(&mutex);
+    DEBUGF("");
+    mutex.lock();
     albumList = list;
+    mutex.unlock();
+    condition.wakeAll();
+}
+
+void SlimImageCache::Stop(void)
+{
+    DEBUGF("");
+    mutex.lock();
+    isrunning = false;
+    mutex.unlock();
     condition.wakeAll();
 }
 
 void SlimImageCache::run(void)
 {
+    DEBUGF("");
     mutex.lock();
+    albumList.clear();
     isrunning = true;
     imageServer = new QNetworkAccessManager();
     mutex.unlock();
+
     while(isrunning) {
         if(albumList.isEmpty()) {
             condition.wait(&mutex);
         }
         else {
-            mutex.lock();
             DEBUGF("Checking for images");
+            mutex.unlock(); // NOTE: NOT SURE WHY THIS IS NEEDED, WE SEEM TO HAVE AN ERRANT LOCK
+            mutex.lock();
 
             QDir d;
             d.setCurrent(cachePath);
@@ -181,6 +196,6 @@ void SlimImageCache::run(void)
 
             mutex.unlock();
         }   // end else
-
     }
+    DEBUGF("DONE WITH RUN");
 }

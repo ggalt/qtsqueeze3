@@ -215,7 +215,6 @@ void MainWindow::slotCoverFlowReady(void)
         CoverFlow->setCenterIndex( playListIndex - 4 );
     CoverFlow->showSlide( playListIndex );
     imageCache->CheckImages(serverInfo->GetAllAlbumList());
-    qDebug() << "retrieving images for " << serverInfo->GetAllAlbumList().count() << " Ablums";
 }
 
 void MainWindow::slotUpdateCoverFlow( int trackIndex )

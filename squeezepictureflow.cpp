@@ -55,6 +55,7 @@ void SqueezePictureFlow::LoadAlbumList(QList<TrackData> list)
 
 void SqueezePictureFlow::FetchCovers(void)
 {
+    DEBUGF("");
     disconnect(imageCache,SIGNAL(ImagesReady()),
                this,SLOT(FetchCovers()));
 
@@ -138,6 +139,7 @@ void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
 
 void SqueezePictureFlow::resetDimensions(QWidget *win)
 {
+    DEBUGF("");
     int width = win->width();
     int height = win->height();
     if(width<760)
@@ -149,7 +151,7 @@ void SqueezePictureFlow::resetDimensions(QWidget *win)
 
 void SqueezePictureFlow::paintEvent (QPaintEvent *e)
 {
-    DEBUGF("");
+//    DEBUGF("");
     PictureFlow::paintEvent(e);
 
     if (slideCount() < 1)

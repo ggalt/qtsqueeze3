@@ -39,7 +39,7 @@ public:
     void StartRequestingImages(void) { QMutexLocker m(&mutex); requestingImages = true; }
     void DoneRequestingImages(void) { QMutexLocker m(&mutex); requestingImages = false; }
     bool RequestingImages(void) { QMutexLocker m(&mutex); return requestingImages; }
-    void Stop(void) {QMutexLocker m(&mutex); isrunning = false;}
+    void Stop(void);
 
 signals:
     void ImagesReady(void);
