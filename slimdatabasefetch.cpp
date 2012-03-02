@@ -176,10 +176,11 @@ bool SlimDatabaseFetch::ProcessResponse(void)
                     a.coverid = cover_id;
                     a.albumtitle = album_title;
                     a.year = album_year;
+                    a.artist_album = album_title.trimmed().toUpper()+artist_name.trimmed().toUpper();
                     m_AlbumArtist2AlbumID.insert(QString(album_title.trimmed()+artist_name.trimmed()), QString(album_id.trimmed()));
                     m_AlbumID2AlbumInfo.insert(album_id.trimmed(),a);
                     m_albumList.append(a);
-                    DEBUGF("Adding album" << a.artist << a.albumtitle);
+                    DEBUGF("Adding album" << a.artist << a.albumtitle << m_albumList.count());
                     if(m_Artist2AlbumIds.contains(artist_name.trimmed())) {
                         QStringList temp = m_Artist2AlbumIds.value(artist_name.trimmed());
                         temp.append(album_id.trimmed());

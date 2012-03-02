@@ -50,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     loadDisplayConfig();
     loadConnectionConfig();
+    getImages = true;
     m_disp->Init();
     imageCache->Init(SlimServerAddr,(qint16)SlimServerHttpPort.toInt());
     imageCache->start();
@@ -214,7 +215,17 @@ void MainWindow::slotCoverFlowReady(void)
     if( playListIndex > 4 )
         CoverFlow->setCenterIndex( playListIndex - 4 );
     CoverFlow->showSlide( playListIndex );
-    imageCache->CheckImages(serverInfo->GetAllAlbumList());
+
+    // check to see if we have all images, and mark it so we
+    // don't redo it
+    if(getImages)
+        imageCache->CheckImages(serverInfo->GetAllAlbumList());
+
+    // due to threading, it's possible to end up here **before**
+    // we've established a list of albums, so if we haven't, don't
+    // mark it as though we have
+    if(serverInfo->GetAllAlbumList().count()>1)
+        getImages = false;
 }
 
 void MainWindow::slotUpdateCoverFlow( int trackIndex )

@@ -60,7 +60,6 @@ void SqueezePictureFlow::FetchCovers(void)
                this,SLOT(FetchCovers()));
 
     QListIterator<Album> i(albumList);
-    imageCache->StartRequestingImages();    // let image cache know we've started
     PictureFlow::clear();   // make sure we don't have more slides than images
     while(i.hasNext()) {
         QPixmap p;
@@ -69,7 +68,7 @@ void SqueezePictureFlow::FetchCovers(void)
             p.load(":/img/lib/images/noAlbumImage.png");
         addSlide(p);
     }
-    imageCache->DoneRequestingImages();     // let image cache know we're done
+    setCenterIndex(0);
     emit CoverFlowReady();
 }
 

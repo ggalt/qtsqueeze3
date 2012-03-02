@@ -74,6 +74,7 @@ void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
             .arg(imageSizeStr);
     QNetworkRequest req;
     req.setUrl(QUrl(urlString));
+    DEBUGF("Getting: " << urlString);
     QNetworkReply *reply = imageServer->get(req);
 
     // request sent so start the timer and event loop
@@ -104,6 +105,7 @@ void SlimImageCache::RequestArtwork(QByteArray coverID, QString artist_album)
     d.setCurrent(cachePath);
     QString fileName = QString("%1.JPG").arg(artist_album.trimmed().toUpper());
     f.setFileName(fileName);
+    DEBUGF( "WRITING " << buff.size() << " bytes to " << fileName);
 
     if(f.open(QIODevice::WriteOnly)) {
         f.write(buff);
@@ -122,7 +124,7 @@ QByteArray SlimImageCache::RetrieveCover(const Album &a)
     // intended to be run outside of the "run" loop to retrieve images
     // because QPixmaps are "dangerous" outside of the GUI thread, we return
     // a QByteArray of the QPixmap data
-    QMutexLocker m(&mutex);
+    mutex.lock();
     QFile f;
     QByteArray buf;
     buf.clear();
@@ -138,6 +140,7 @@ QByteArray SlimImageCache::RetrieveCover(const Album &a)
             f.close();
         }
     }
+    mutex.unlock();
     return buf;
 }
 
@@ -146,8 +149,8 @@ void SlimImageCache::CheckImages(QList<Album> list)
     DEBUGF("");
     mutex.lock();
     albumList = list;
-    mutex.unlock();
     condition.wakeAll();
+    mutex.unlock();
 }
 
 void SlimImageCache::Stop(void)
@@ -155,8 +158,8 @@ void SlimImageCache::Stop(void)
     DEBUGF("");
     mutex.lock();
     isrunning = false;
-    mutex.unlock();
     condition.wakeAll();
+    mutex.unlock();
 }
 
 void SlimImageCache::run(void)
@@ -174,7 +177,7 @@ void SlimImageCache::run(void)
         }
         else {
             DEBUGF("Checking for images");
-            mutex.unlock(); // NOTE: NOT SURE WHY THIS IS NEEDED, WE SEEM TO HAVE AN ERRANT LOCK
+//            mutex.unlock(); // NOTE: NOT SURE WHY THIS IS NEEDED, WE SEEM TO HAVE AN ERRANT LOCK
             mutex.lock();
 
             QDir d;
@@ -182,9 +185,11 @@ void SlimImageCache::run(void)
             QFile f;
             QString fileName;
             QListIterator<Album> it(albumList);
+            DEBUGF("Iterating over " << albumList.count() << " files");
             while(it.hasNext()) {
                 Album a = it.next();
                 fileName = QString("%1.JPG").arg(a.artist_album.trimmed().toUpper());
+                DEBUGF("RETRIEVING NEW IMAGE FOR" << fileName);
                 f.setFileName(fileName);
                 if(!f.exists()) {
                     if(!a.coverid.isEmpty())

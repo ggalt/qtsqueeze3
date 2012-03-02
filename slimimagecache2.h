@@ -3,7 +3,6 @@
 
 #include <QThread>
 #include <QMutex>
-#include <QMutexLocker>
 #include <QWaitCondition>
 
 #include <QTimer>
@@ -36,9 +35,6 @@ public:
     void CheckImages(QList<Album> list);
     QByteArray RetrieveCover(const Album &a);
 
-    void StartRequestingImages(void) { QMutexLocker m(&mutex); requestingImages = true; }
-    void DoneRequestingImages(void) { QMutexLocker m(&mutex); requestingImages = false; }
-    bool RequestingImages(void) { QMutexLocker m(&mutex); return requestingImages; }
     void Stop(void);
 
 signals:

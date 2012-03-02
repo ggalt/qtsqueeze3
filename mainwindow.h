@@ -144,6 +144,7 @@ private:
     SqueezePictureFlow *CoverFlow;
     QColor coverflowBackground;
     QColor tempcoverflowBackground;
+    bool getImages;
 
     QSplashScreen *waitWindow;
     bool isStartUp;

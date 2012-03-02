@@ -216,7 +216,6 @@ bool SlimServerInfo::ReadDataFile( void )
     in >> m_AlbumArtist2AlbumID;
     in >> albumCount;
 
-    m_albumList.clear();
     for(int t=0; t<albumCount; t++) {
         Album a;
         in >> a.albumtitle;
@@ -227,6 +226,8 @@ bool SlimServerInfo::ReadDataFile( void )
         in >> a.coverid;
         in >> a.year;
         m_albumList.append(a);
+        DEBUGF("READING:"<< a.albumtitle << a.album_id << a.artist << a.artist_album << a.artist_id << a.coverid << a.year);
+        DEBUGF("ALBUM NUMBER:" <<t);
     }
 
     DEBUGF("reading in info on " << albumCount << " files");
@@ -280,9 +281,11 @@ void SlimServerInfo::WriteDataFile( void )
     out << (qint16)m_AlbumID2AlbumInfo.count();
 
     QListIterator<Album> al(m_albumList);
+    DEBUGF("m_albumList count is" << m_albumList.count());
     al.toBack();
     while(al.hasPrevious()) {
         Album a = al.previous();
+        DEBUGF("WRITING:"<< a.albumtitle << a.album_id << a.artist << a.artist_album << a.artist_id << a.coverid << a.year);
         out << a.albumtitle << a.album_id << a.artist << a.artist_album << a.artist_id << a.coverid << a.year;
     }
 
@@ -323,6 +326,7 @@ void SlimServerInfo::DatabaseUpdated(void)
     m_AlbumArtist2AlbumID = db->AlbumArtist2AlbumID();
     m_AlbumID2AlbumInfo = db->AlbumID2AlbumInfo();
     m_Artist2AlbumIds = db->Artist2AlbumIds();
+    m_albumList = db->GetAllAlbumList();
     db->exit();
     db->deleteLater();
 }
