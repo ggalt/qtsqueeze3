@@ -51,7 +51,7 @@
       <height>20</height>
      </size>
     </property>
-    <widget class="QWidget" name="tab">
+    <widget class="QWidget" name="tabPlaylist">
      <attribute name="title">
       <string>Current</string>
      </attribute>
@@ -72,31 +72,31 @@
       </property>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_3">
+    <widget class="QWidget" name="tabArtist">
      <attribute name="title">
       <string>Artists</string>
      </attribute>
     </widget>
-    <widget class="QWidget" name="tab_2">
+    <widget class="QWidget" name="tabAlbum">
      <attribute name="title">
       <string>Albums</string>
      </attribute>
     </widget>
-    <widget class="QWidget" name="tab_4">
+    <widget class="QWidget" name="tabGenre">
      <attribute name="title">
       <string>Genres</string>
      </attribute>
     </widget>
-    <widget class="QWidget" name="tab_5">
+    <widget class="QWidget" name="tabYear">
      <attribute name="title">
       <string>Years</string>
      </attribute>
     </widget>
-    <widget class="QWidget" name="tab_6">
+    <widget class="QWidget" name="tabWeb">
      <attribute name="title">
       <string>Web</string>
      </attribute>
-     <widget class="QWebView" name="webView">
+     <widget class="QWebView" name="webView" native="true">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -105,14 +105,14 @@
         <height>261</height>
        </rect>
       </property>
-      <property name="url">
+      <property name="url" stdset="0">
        <url>
         <string>http://127.0.0.1:9000/</string>
        </url>
       </property>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_7">
+    <widget class="QWidget" name="tabInterfaceSettings">
      <attribute name="title">
       <string>Interface Settings</string>
      </attribute>
@@ -315,7 +315,7 @@
       </property>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_8">
+    <widget class="QWidget" name="tabConnectionSettings">
      <attribute name="title">
       <string>Connection Settings</string>
      </attribute>

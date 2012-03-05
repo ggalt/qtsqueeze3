@@ -17,7 +17,7 @@ SlimServerInfo::SlimServerInfo(QObject *parent) :
 {
     setObjectName("SlimServerInfo");
     DEBUGF("");
-//    httpPort = 9000;
+    //    httpPort = 9000;
     freshnessDate = 0;
 }
 
@@ -184,10 +184,15 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 //    return Id2Art().value(coverID);
 //}
 
-//QList<Album> SlimServerInfo::GetArtistAlbumList(QString artist)
-//{
-
-//}
+QList<Album> SlimServerInfo::GetArtistAlbumList(QString artist)
+{
+    QList<Album> albumListTemp;
+    QStringListIterator strIt(m_Artist2AlbumIds.value(artist));
+    while(strIt.hasNext()){
+        albumListTemp.append(m_AlbumID2AlbumInfo.value(strIt.next()));
+    }
+    return albumListTemp;
+}
 
 bool SlimServerInfo::ReadDataFile( void )
 {

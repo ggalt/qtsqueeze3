@@ -173,11 +173,12 @@ void SlimImageCache::run(void)
 
     while(isrunning) {
         if(albumList.isEmpty()) {
+            mutex.lock();
             condition.wait(&mutex);
+            mutex.unlock();
         }
         else {
             DEBUGF("Checking for images");
-//            mutex.unlock(); // NOTE: NOT SURE WHY THIS IS NEEDED, WE SEEM TO HAVE AN ERRANT LOCK
             mutex.lock();
 
             QDir d;

@@ -57,9 +57,11 @@ public slots:
     void SqueezePlayerError( void );
     void SqueezePlayerOutput( void );
 
-    void slotUpdateCoverFlow( int trackIndex );
-    void slotCreateCoverFlow( void );
-    void slotCoverFlowReady(void);
+    void slotUpdateplaylistCoverFlow( int trackIndex );
+    void slotCreateplaylistCoverFlow( void );
+    void slotplaylistCoverFlowReady(void);
+
+    void SetupSelectionCoverFlows(void);
 
     void slotDisablePlayer( void );
     void slotEnablePlayer( void );
@@ -141,7 +143,10 @@ private:
     QColor tempdisplayBackgroundColor;
 
     QRect flowRect;
-    SqueezePictureFlow *CoverFlow;
+    SqueezePictureFlow *playlistCoverFlow;
+    SqueezePictureFlow *albumselectCoverFlow;
+    SqueezePictureFlow *artistselectCoverFlow;
+
     QColor coverflowBackground;
     QColor tempcoverflowBackground;
     bool getImages;

@@ -12,6 +12,32 @@
 // globally declared so that multiple classes access the same image cache
 SlimImageCache *imageCache;
 
+QDataStream & operator<< (QDataStream& stream, const Album& al)
+{
+    stream << al.songtitle;
+    stream << al.albumtitle;
+    stream << al.album_id;
+    stream << al.year;
+    stream << al.artist;
+    stream << al.artist_id;
+    stream << al.coverid;
+    stream << al.artist_album;
+    return stream;
+}
+
+QDataStream & operator>> (QDataStream& stream, Album& al)
+{
+    stream >> al.songtitle;
+    stream >> al.albumtitle;
+    stream >> al.album_id;
+    stream >> al.year;
+    stream >> al.artist;
+    stream >> al.artist_id;
+    stream >> al.coverid;
+    stream >> al.artist_album;
+    return stream;
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -46,7 +72,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     imageCache = new SlimImageCache();
     m_disp = new SqueezeDisplay(ui->lblSlimDisplay, this);
-    CoverFlow = new SqueezePictureFlow(ui->tab);
+    playlistCoverFlow = new SqueezePictureFlow(ui->tabPlaylist);
+    artistselectCoverFlow = new SqueezePictureFlow(ui->tabArtist,false);
+    albumselectCoverFlow = new SqueezePictureFlow(ui->tabAlbum,false);
 
     loadDisplayConfig();
     loadConnectionConfig();
@@ -82,7 +110,9 @@ void MainWindow::resizeEvent(QResizeEvent *e)
     ui->arrowKeyFrame->move(ui->arrowKeyFrame->x(), ui->controlFrame->height() - 3 - ui->arrowKeyFrame->height());
     ui->keypadFrame->move(ui->keypadFrame->x(),ui->controlFrame->height() - 3 - ui->keypadFrame->height());
     m_disp->resetDimensions();
-    CoverFlow->resetDimensions(ui->tab);
+    playlistCoverFlow->resetDimensions(ui->tabPlaylist);
+    artistselectCoverFlow->resetDimensions(ui->tabArtist);
+    albumselectCoverFlow->resetDimensions(ui->tabAlbum);
 }
 
 
@@ -191,8 +221,8 @@ bool MainWindow::Create(void)
     connect( ui->btnStop ,SIGNAL(clicked()), this, SLOT(slotStop()) );
 
     //    // allow mouse clicks on CoverFlow to cause playlist change
-    connect( CoverFlow, SIGNAL(NextSlide()), this, SLOT(slotFForward()) );
-    connect( CoverFlow, SIGNAL(PrevSlide()), this, SLOT(slotPrev()) );
+    connect( playlistCoverFlow, SIGNAL(NextSlide()), this, SLOT(slotFForward()) );
+    connect( playlistCoverFlow, SIGNAL(PrevSlide()), this, SLOT(slotPrev()) );
 
     connect( ui->btnBright ,SIGNAL(clicked()), this, SLOT(slotBright()) );
     connect( ui->btnPower ,SIGNAL(clicked()), this, SLOT(slotPower()) );
@@ -204,17 +234,18 @@ bool MainWindow::Create(void)
     connect( ui->btnMute ,SIGNAL(clicked()), this, SLOT(slotMute()) );
     connect( ui->btnUpVolume ,SIGNAL(clicked()), this, SLOT(slotVolUp()) );
     connect( ui->btnDownVolume ,SIGNAL(clicked()), this, SLOT(slotVolDown()) );
+
     DEBUGF("###Create Return");
-    slotEnablePlayer();
+//    slotEnablePlayer();
     return true;
 }
 
-void MainWindow::slotCoverFlowReady(void)
+void MainWindow::slotplaylistCoverFlowReady(void)
 {
     int playListIndex = activeDevice->getDevicePlaylistIndex();
     if( playListIndex > 4 )
-        CoverFlow->setCenterIndex( playListIndex - 4 );
-    CoverFlow->showSlide( playListIndex );
+        playlistCoverFlow->setCenterIndex( playListIndex - 4 );
+    playlistCoverFlow->showSlide( playListIndex );
 
     // check to see if we have all images, and mark it so we
     // don't redo it
@@ -228,45 +259,64 @@ void MainWindow::slotCoverFlowReady(void)
         getImages = false;
 }
 
-void MainWindow::slotUpdateCoverFlow( int trackIndex )
+void MainWindow::slotUpdateplaylistCoverFlow( int trackIndex )
 {
     DEBUGF("");
 
-    int currSlide = CoverFlow->centerIndex();
-    DEBUGF( "UPDATE COVERFLOW TO INDEX: " << trackIndex );
+    int currSlide = playlistCoverFlow->centerIndex();
+    DEBUGF( "UPDATE playlistCoverFlow TO INDEX: " << trackIndex );
     if( abs( trackIndex - currSlide ) > 4 ) {
         if( trackIndex > currSlide ) {
-            CoverFlow->showSlide( currSlide + 2 );
-            CoverFlow->setCenterIndex( trackIndex - 2 );
+            playlistCoverFlow->showSlide( currSlide + 2 );
+            playlistCoverFlow->setCenterIndex( trackIndex - 2 );
         }
         else {
-            CoverFlow->showSlide( currSlide - 2 );
-            CoverFlow->setCenterIndex( trackIndex + 2 );
+            playlistCoverFlow->showSlide( currSlide - 2 );
+            playlistCoverFlow->setCenterIndex( trackIndex + 2 );
         }
     }
-    CoverFlow->showSlide( trackIndex );
+    playlistCoverFlow->showSlide( trackIndex );
 }
 
-void MainWindow::slotCreateCoverFlow( void )
+void MainWindow::slotCreateplaylistCoverFlow( void )
 {
     DEBUGF("");
-    //  delete CoverFlow; // there seems to be some memory leakage with CoverFlow when you clear it and add new items
-    //  CoverFlow = new SqueezePictureFlow( ui->cfWidget );
-    //  CoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
-    //  CoverFlow->setContentsMargins( 50, 0, CoverFlow->width() - 50, CoverFlow->height() );
-    CoverFlow->resetDimensions(ui->tab);
-    CoverFlow->clear();
+    //  delete playlistCoverFlow; // there seems to be some memory leakage with playlistCoverFlow when you clear it and add new items
+    //  playlistCoverFlow = new SqueezePictureFlow( ui->cfWidget );
+    //  playlistCoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
+    //  playlistCoverFlow->setContentsMargins( 50, 0, playlistCoverFlow->width() - 50, playlistCoverFlow->height() );
+    playlistCoverFlow->resetDimensions(ui->tabPlaylist);
+    playlistCoverFlow->clear();
     ui->cfWidget->setEnabled( false );
-    ui->cfWidget->resize(ui->tab->width(),ui->tab->height());
-    DEBUGF("setting coverflow widget to " << ui->cfWidget->width() << " by "  << ui->cfWidget->height());
+    ui->cfWidget->resize(ui->tabPlaylist->width(),ui->tabPlaylist->height());
+    DEBUGF("setting playlistCoverFlow widget to " << ui->cfWidget->width() << " by "  << ui->cfWidget->height());
 
-    CoverFlow->LoadAlbumList(activeDevice->getDevicePlayList());
+    playlistCoverFlow->LoadAlbumList(activeDevice->getDevicePlayList());
     ui->cfWidget->setEnabled( true );
     DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
     int playListIndex = activeDevice->getDevicePlaylistIndex();
     if( playListIndex > 4 )
-        CoverFlow->setCenterIndex( playListIndex - 4 );
-    CoverFlow->showSlide( playListIndex );
+        playlistCoverFlow->setCenterIndex( playListIndex - 4 );
+    playlistCoverFlow->showSlide( playListIndex );
+}
+
+void MainWindow::SetupSelectionCoverFlows(void)
+{
+    if(isStartUp) {
+        isStartUp = false;
+        artistselectCoverFlow->resetDimensions(ui->tabArtist);
+        albumselectCoverFlow->resetDimensions(ui->tabAlbum);
+
+        artistselectCoverFlow->clear();
+        albumselectCoverFlow->clear();
+
+        QList<Album> artists;
+        QHashIterator< QString, QStringList > artistIt(serverInfo->Artist2AlbumIds());
+        while(artistIt.hasNext()){
+            artists.append(serverInfo->GetArtistAlbumList(artistIt.next().key()));
+        }
+        artistselectCoverFlow->LoadAlbumList(artists);
+    }
 }
 
 void MainWindow::slotLeftArrow( void )
@@ -300,9 +350,10 @@ void MainWindow::slotDownArrow( void )
 void MainWindow::slotSetActivePlayer( void )
 {
     DEBUGF("");
-    if( this->isStartUp ) { // if this is the first time through, let's trigger a process to make sure we have all the images
+    if( isStartUp ) { // if this is the first time through, let's trigger a process to make sure we have all the images
     }
     slotSetActivePlayer( serverInfo->GetDeviceFromMac( MacAddress.toPercentEncoding().toLower() ) );
+    slotEnablePlayer();
 }
 
 void MainWindow::slotSetActivePlayer( SlimDevice *d )
@@ -316,12 +367,12 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
              m_disp, SLOT(slotResetSlimDisplay()) );
     connect( activeDevice, SIGNAL(SlimDisplayUpdate()),
              m_disp, SLOT(slotUpdateSlimDisplay()) );
-    connect( activeDevice, SIGNAL(CoverFlowUpdate( int )),
-             this, SLOT(slotUpdateCoverFlow(int)) );
-    connect( activeDevice, SIGNAL(CoverFlowCreate()),
-             this, SLOT(slotCreateCoverFlow()) );
-    connect( CoverFlow, SIGNAL(CoverFlowReady()),
-             this, SLOT(slotCoverFlowReady()));
+    connect( activeDevice, SIGNAL(playlistCoverFlowUpdate( int )),
+             this, SLOT(slotUpdateplaylistCoverFlow(int)) );
+    connect( activeDevice, SIGNAL(playlistCoverFlowCreate()),
+             this, SLOT(slotCreateplaylistCoverFlow()) );
+    connect( playlistCoverFlow, SIGNAL(CoverFlowReady()),
+             this, SLOT(slotplaylistCoverFlowReady()));
 }
 
 void MainWindow::loadDisplayConfig(void)
@@ -360,7 +411,7 @@ void MainWindow::updateDisplayConfig(void)
     mySettings->sync();
 
     loadDisplayConfig();
-    //    CoverFlow->setBackgroundColor(coverflowBackground);
+    //    playlistCoverFlow->setBackgroundColor(coverflowBackground);
     QPixmap p = QPixmap(64,37);
     p.fill(coverflowBackground.rgb());
     ui->lblCoverFlowColor->setPixmap(p);
@@ -457,7 +508,8 @@ void MainWindow::setCoverFlowColor(void)
     DEBUGF("");
     QColorDialog *dlg = new QColorDialog(coverflowBackground);
     dlg->exec();
-    tempcoverflowBackground = dlg->selectedColor();
+    coverflowBackground = tempcoverflowBackground = dlg->selectedColor();
+    playlistCoverFlow->setBackgroundColor(coverflowBackground);
 }
 
 void MainWindow::setDisplayBackgroundColor(void)
@@ -509,7 +561,9 @@ void MainWindow::slotEnablePlayer( void )
 {
     DEBUGF("");
     waitWindow->hide();
-    this->setEnabled( true );
+    slotNowPlaying();   // trigger display update
+    setEnabled( true );
+    SetupSelectionCoverFlows();
 }
 
 void MainWindow::SqueezePlayerError( void )

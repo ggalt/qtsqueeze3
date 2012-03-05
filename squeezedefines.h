@@ -194,6 +194,9 @@ public:
     QString artist_album;
 };
 
+QDataStream & operator<< (QDataStream& stream, const Album& al);
+QDataStream & operator>> (QDataStream& stream, Album& al);
+
 typedef QList< TrackData > CurrentPlayList;
 
 typedef QHash< QString, SlimDevice* > SlimDevices;

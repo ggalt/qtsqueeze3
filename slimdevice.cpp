@@ -153,7 +153,8 @@ void SlimDevice::ProcessStatusSetupMessage( QByteArray msg )
     }
     doneGettingDeviceSettings = true;   // set this so that when the CLI checks, we can say we are done
     SendDeviceCommand( QString( "mode ? \n" ) );
-    emit CoverFlowCreate();
+    emit playlistCoverFlowCreate();
+    emit DeviceReady();
     // note: we still need to get mute and sync
 }
 
@@ -227,7 +228,7 @@ void SlimDevice::ProcessPlayingMsg( QByteArray Response )
         }
         else {
             emit NewSong();
-            emit CoverFlowUpdate( devicePlaylistIndex );
+            emit playlistCoverFlowUpdate( devicePlaylistIndex );
         }
     }
     /*
@@ -239,7 +240,7 @@ void SlimDevice::ProcessPlayingMsg( QByteArray Response )
       SendDeviceCommand( QString( "status 0 1000 tags:g,a,l,t,y,d,J \n" ) );
     }
     else {
-      slotUpdateCoverFlow();  // update coverflow to new song index
+      slotUpdateplaylistCoverFlow();  // update playlistCoverFlow to new song index
       emit NewSong();
       }
   }

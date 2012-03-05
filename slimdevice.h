@@ -24,7 +24,7 @@ public:
     void ProcessStatusSetupMessage( QByteArray msg );
 
     void SendDeviceCommand( QString cmd );
-    void SetCoverFlowRect( QRect r );
+    void SetplaylistCoverFlowRect( QRect r );
     QByteArray  getDeviceNumber( void ) { return deviceNumber; }
     void        setDeviceNumber( QByteArray devicenumber ) { deviceNumber = devicenumber; }
     // -----------------------------------------------
@@ -133,8 +133,9 @@ signals:
     void ModeChange( QString newmode );
     void Mute( bool mute );
     void SlimDisplayUpdate( void );
-    void CoverFlowUpdate( int );
-    void CoverFlowCreate( void );
+    void playlistCoverFlowUpdate( int );
+    void playlistCoverFlowCreate( void );
+    void DeviceReady(void);
 
 private:
 
