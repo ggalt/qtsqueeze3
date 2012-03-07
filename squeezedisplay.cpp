@@ -155,6 +155,7 @@ void SqueezeDisplay::resetDimensions(void)
     }
     displayImage = new QImage(displayLabel->width(),displayLabel->height(),QImage::Format_ARGB32 );
     displayImage->fill((uint)m_displayBackgroundColor.rgb());
+    DEBUGF("Display Image Dimensions" << displayImage->rect());
 }
 
 void SqueezeDisplay::slotResetSlimDisplay(void)

@@ -19,7 +19,7 @@ class SqueezePictureFlow : public PictureFlow
 {
     Q_OBJECT
 public:
-    explicit SqueezePictureFlow(QWidget* parent, bool autoselect=true);
+    explicit SqueezePictureFlow(QWidget* parent, picflowType flags = (picflowType)(AUTOSELECTON | TRACKSELECT));
     ~SqueezePictureFlow();
 
     void LoadAlbumList(QList<Album> list);
@@ -51,7 +51,7 @@ protected:
 private:
     QList<Album> albumList;
     QColor titleColor;
-    bool autoSelect;
+    picflowType m_Flags;
     bool isReady;
 };
 

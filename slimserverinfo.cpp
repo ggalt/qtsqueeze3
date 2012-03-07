@@ -42,13 +42,17 @@ bool SlimServerInfo::Init(SlimCLI *cliRef)
     if( !ProcessServerInfo(cli->GetResponse()) )
         return false;
 
-    if( !SetupDevices())
+    if( !SetupDevices()) {
+        DEBUGF("NO DEVICE FOUND FROM THIS MAC");
         return false;
+    }
 
+    DEBUGF("READ DATAFILE");
     if( !ReadDataFile() )
         refreshImageFromServer();
     else
         checkRefreshDate();     // see if we need to update the database
+    DEBUGF("RETURNING");
     return true;
 }
 
@@ -175,15 +179,6 @@ bool SlimServerInfo::ProcessServerInfo(QByteArray response)
 
 }
 
-// ----------------------------------------------------------------------------------
-//  Image processing
-
-//QPixmap SlimServerInfo::GetAlbumArt( QString album, QString artist )
-//{
-//    QString coverID = AlbumArtist2AlbumInfo().value(album.trimmed()+artist.trimmed()).coverid;\
-//    return Id2Art().value(coverID);
-//}
-
 QList<Album> SlimServerInfo::GetArtistAlbumList(QString artist)
 {
     QList<Album> albumListTemp;
@@ -216,47 +211,36 @@ bool SlimServerInfo::ReadDataFile( void )
     //update the images
     file.open(QIODevice::ReadOnly);
     QDataStream in(&file);   // read the data serialized from the file
+
+    // check version of data
+    qint16 versionNo;
+    in >> versionNo;
+    qDebug() << versionNo << DATAVERSION;
+    if(versionNo != (qint16)DATAVERSION)
+        return false;
+
+
     in >> freshnessDate;
     in >> m_Artist2AlbumIds;
     in >> m_AlbumArtist2AlbumID;
     in >> albumCount;
-
-    for(int t=0; t<albumCount; t++) {
-        Album a;
-        in >> a.albumtitle;
-        in >> a.album_id;
-        in >> a.artist;
-        in >> a.artist_album;
-        in >> a.artist_id;
-        in >> a.coverid;
-        in >> a.year;
-        m_albumList.append(a);
-        DEBUGF("READING:"<< a.albumtitle << a.album_id << a.artist << a.artist_album << a.artist_id << a.coverid << a.year);
-        DEBUGF("ALBUM NUMBER:" <<t);
-    }
+    in >> m_albumList;
+    in >> m_AlbumID2AlbumInfo;
+    in >> m_artistList;
 
     DEBUGF("reading in info on " << albumCount << " files");
 
-    m_AlbumID2AlbumInfo.clear();
-    for( int c = 0; c < albumCount; c++ ) {
-        QString key;
-        Album a;
-        in >> key;
-        in >> a.albumtitle;
-        in >> a.album_id;
-        in >> a.artist;
-        in >> a.artist_album;
-        in >> a.artist_id;
-        in >> a.coverid;
-        in >> a.year;
-        m_AlbumID2AlbumInfo.insert(key,a);
+#ifdef SLIMSERVERINFO_DEBUG
+    QListIterator<Artist> art(m_artistList);
+    while(art.hasNext()) {
+        Artist a = art.next();
+        qDebug() << a.id << a.name << a.textKey;
     }
-#ifdef SLIMCLI_DEBUG
-    QHashIterator< QString, Album > aa(m_AlbumID2AlbumInfo);
-    aa.toBack();
-    while(aa.hasPrevious()) {
-        aa.previous();
-        Album a = aa.value();
+
+    QListIterator<Album> al(m_albumList);
+    while(al.hasNext()) {
+        Album a = al.next();
+        qDebug() << a.albumTextKey << a.albumtitle << a.artist;
     }
 #endif
 
@@ -277,30 +261,21 @@ void SlimServerInfo::WriteDataFile( void )
     QFile file;
     file.setFileName(DATAFILE);
 
-    //update the images
-    file.open(QIODevice::WriteOnly);
+    //update the information
+    if(!file.open(QIODevice::WriteOnly)) {
+        DEBUGF("Error opening file for writing");
+        return;
+    }
     QDataStream out(&file);   // read the data serialized from the file
+    out << (qint16)DATAVERSION; // set data verion number
+
     out << lastServerRefresh;
     out << m_Artist2AlbumIds;
     out << m_AlbumArtist2AlbumID;
     out << (qint16)m_AlbumID2AlbumInfo.count();
-
-    QListIterator<Album> al(m_albumList);
-    DEBUGF("m_albumList count is" << m_albumList.count());
-    al.toBack();
-    while(al.hasPrevious()) {
-        Album a = al.previous();
-        DEBUGF("WRITING:"<< a.albumtitle << a.album_id << a.artist << a.artist_album << a.artist_id << a.coverid << a.year);
-        out << a.albumtitle << a.album_id << a.artist << a.artist_album << a.artist_id << a.coverid << a.year;
-    }
-
-    QHashIterator< QString, Album > aa(m_AlbumID2AlbumInfo);
-    aa.toBack();
-    while(aa.hasPrevious()) {
-        aa.previous();
-        Album a = aa.value();
-        out << aa.key() << a.albumtitle << a.album_id << a.artist << a.artist_album << a.artist_id << a.coverid << a.year;
-    }
+    out << m_albumList;
+    out << m_AlbumID2AlbumInfo;
+    out << m_artistList
 
     DEBUGF( "Writing file of size: " << file.size() );
     file.close();
@@ -332,6 +307,7 @@ void SlimServerInfo::DatabaseUpdated(void)
     m_AlbumID2AlbumInfo = db->AlbumID2AlbumInfo();
     m_Artist2AlbumIds = db->Artist2AlbumIds();
     m_albumList = db->GetAllAlbumList();
+    m_artistList = db->GetAllArtistList();
     db->exit();
     db->deleteLater();
 }

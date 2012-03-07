@@ -54,12 +54,21 @@
 // #define SQUEEZEPICFLOW_DEBUG
 // #define SLIMIMAGECACHE_DEBUG
 
+// forward declaration of classes
+class SlimCLI;
+class SlimDevice;
+class SlimServerInfo;
+class SlimImageCache;
+class SlimDatabaseFetch;
+class SqueezePictureFlow;
+class SqueezeDisplay;
+
 // Path to directories
 #define DATAPATH "/.qtsqueeze3/info/"
 #define DATAFILE "qtsqueeze3.dat"
-#define IMAGEPATH "/.qtsqueeze3/images/"
+//#define IMAGEPATH "/.qtsqueeze3/images/"
 
-
+#define DATAVERSION 3
 
 // Define Squeezebox Player Types
 // From server/Slim/Networking/Slimproto.pm from 7.4r24879
@@ -102,21 +111,14 @@
 
 #define unpackFixedPoint(ptr, off) (((unpackN4(ptr, off) & 0xFFFF0000) >> 16) + ((unpackN4(ptr, off) & 0xFFFF) / (float)0xFFFF))
 
-
-// forward declaration of classes
-class SlimCLI;
-class SlimDevice;
-class SlimServerInfo;
-class SlimImageCache;
-class SlimDatabaseFetch;
-class SqueezePictureFlow;
-
-
 enum { NODEVICELIST = 0, YESDEVICELIST, PLUGINCONTROL, VFDCONTROL };
 typedef enum { NOSCROLL= 0, PAUSE_SCROLL, SCROLL, FADE_IN, FADE_OUT } scrollStatus;
 typedef enum { transNONE = 0, transLEFT = -1, transRIGHT = 1, transUP = 2, transDOWN = -2} transitionType;
 typedef enum { DISCONNECTED = 0, CONNECTED, BUFFERING, PLAYING, PAUSED, STOPPED } interfaceState;
 typedef enum { CLI_DISCONNECTED = 0, CLI_CONNECTED, SETUP_SERVER, SETUP_DEVICES, SETUP_IMAGES, CLI_READY } cliState;
+typedef enum { TRACKSELECT = 0x1,
+               ALBUMSELECT = 0x2,
+               AUTOSELECTON = 0x4 } picflowType;
 
 typedef enum { NOLOGIN=101,
                CONNECTION_ERROR,
@@ -192,10 +194,22 @@ public:
     QByteArray artist_id;
     QByteArray coverid;
     QString artist_album;
+    QString albumTextKey;   // key for alphasort of album
+};
+
+class Artist
+{
+public:
+    QString name;
+    QString id;
+    QString textKey;
 };
 
 QDataStream & operator<< (QDataStream& stream, const Album& al);
 QDataStream & operator>> (QDataStream& stream, Album& al);
+
+QDataStream & operator<< (QDataStream& stream, const Artist& art);
+QDataStream & operator>> (QDataStream& stream, Artist& art);
 
 typedef QList< TrackData > CurrentPlayList;
 

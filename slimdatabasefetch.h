@@ -33,6 +33,7 @@ public:
     SlimItemList Artist2AlbumIds(void) {return m_Artist2AlbumIds;}
     SlimAlbumItem AlbumID2AlbumInfo(void) {return m_AlbumID2AlbumInfo;}    // AlbumID to Album Info
     QList<Album> GetAllAlbumList(void) {return m_albumList;}
+    QList<Artist> GetAllArtistList(void) {return m_artistList;}
 
 signals:
     void FinishedUpdatingDatabase(void);
@@ -66,12 +67,14 @@ private:
     bool isAuthenticated;     // have we been authenticated?
     QByteArray MaxRequestSize;      // max size of any cli request (used for limiting each request for albums, artists, songs, etc., so we don't time out or overload things)
     int iTimeOut;             // number of milliseconds before CLI blocking requests time out
+    bool gotAlbums;
+    bool gotArtists;
 
     SlimItem m_AlbumArtist2AlbumID;         // Album+Artist name to Album ID
     SlimItemList m_Artist2AlbumIds;    // Artist name to list of albums
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
     QList<Album> m_albumList;
-
+    QList<Artist> m_artistList;             // alpha sorted list of artist names
 };
 
 #endif // SLIMDATABASEFETCH_H

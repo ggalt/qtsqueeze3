@@ -22,6 +22,7 @@ QDataStream & operator<< (QDataStream& stream, const Album& al)
     stream << al.artist_id;
     stream << al.coverid;
     stream << al.artist_album;
+    stream << al.albumTextKey;
     return stream;
 }
 
@@ -35,6 +36,23 @@ QDataStream & operator>> (QDataStream& stream, Album& al)
     stream >> al.artist_id;
     stream >> al.coverid;
     stream >> al.artist_album;
+    stream >> al.albumTextKey;
+    return stream;
+}
+
+QDataStream & operator<< (QDataStream& stream, const Artist& art)
+{
+    stream << art.id;
+    stream << art.name;
+    stream << art.textKey;
+    return stream;
+}
+
+QDataStream & operator>> (QDataStream& stream, Artist& art)
+{
+    stream >> art.id;
+    stream >> art.name;
+    stream >> art.textKey;
     return stream;
 }
 
@@ -73,8 +91,8 @@ MainWindow::MainWindow(QWidget *parent)
     imageCache = new SlimImageCache();
     m_disp = new SqueezeDisplay(ui->lblSlimDisplay, this);
     playlistCoverFlow = new SqueezePictureFlow(ui->tabPlaylist);
-    artistselectCoverFlow = new SqueezePictureFlow(ui->tabArtist,false);
-    albumselectCoverFlow = new SqueezePictureFlow(ui->tabAlbum,false);
+    artistselectCoverFlow = new SqueezePictureFlow(ui->tabArtist,ALBUMSELECT);
+    albumselectCoverFlow = new SqueezePictureFlow(ui->tabAlbum,ALBUMSELECT);
 
     loadDisplayConfig();
     loadConnectionConfig();
@@ -110,9 +128,12 @@ void MainWindow::resizeEvent(QResizeEvent *e)
     ui->arrowKeyFrame->move(ui->arrowKeyFrame->x(), ui->controlFrame->height() - 3 - ui->arrowKeyFrame->height());
     ui->keypadFrame->move(ui->keypadFrame->x(),ui->controlFrame->height() - 3 - ui->keypadFrame->height());
     m_disp->resetDimensions();
-    playlistCoverFlow->resetDimensions(ui->tabPlaylist);
-    artistselectCoverFlow->resetDimensions(ui->tabArtist);
-    albumselectCoverFlow->resetDimensions(ui->tabAlbum);
+    playlistCoverFlow->resetDimensions(ui->tabWidget->currentWidget());
+    artistselectCoverFlow->resetDimensions(ui->tabWidget->currentWidget());
+    albumselectCoverFlow->resetDimensions(ui->tabWidget->currentWidget());
+    if(activeDevice)
+        if(activeDevice->getDisplayBuffer())
+            m_disp->PaintSqueezeDisplay(activeDevice->getDisplayBuffer());
 }
 
 
@@ -311,9 +332,19 @@ void MainWindow::SetupSelectionCoverFlows(void)
         albumselectCoverFlow->clear();
 
         QList<Album> artists;
-        QHashIterator< QString, QStringList > artistIt(serverInfo->Artist2AlbumIds());
-        while(artistIt.hasNext()){
-            artists.append(serverInfo->GetArtistAlbumList(artistIt.next().key()));
+//        QHashIterator< QString, QStringList > artistIt(serverInfo->Artist2AlbumIds());
+//        while(artistIt.hasNext()){
+//            artists.append(serverInfo->GetArtistAlbumList(artistIt.next().key()));
+//        }
+//        artistselectCoverFlow->LoadAlbumList(artists);
+
+        QListIterator<Artist> artIt(serverInfo->GetAllArtistList());
+        while(artIt.hasNext()) {
+            Artist a = artIt.next();
+            QListIterator<QString> albumIt(serverInfo->Artist2AlbumIds().value(a.name));
+            while(albumIt.hasNext()) {
+                artists.append(serverInfo->AlbumID2AlbumInfo().value(albumIt.next()));
+            }
         }
         artistselectCoverFlow->LoadAlbumList(artists);
     }

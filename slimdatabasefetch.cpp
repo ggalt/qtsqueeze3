@@ -16,6 +16,8 @@ SlimDatabaseFetch::SlimDatabaseFetch(QObject *parent) :
     SlimServerAddr = "127.0.0.1";
     cliPort = 9090;        // default, but user can reset
     MaxRequestSize = "500";    // max size of any cli request (used for limiting each request for albums, artists, songs, etc., so we don't time out or overload things)
+    gotAlbums=false;
+    gotArtists=false;
 }
 
 SlimDatabaseFetch::~SlimDatabaseFetch(void)
@@ -65,7 +67,7 @@ void SlimDatabaseFetch::cliConnected(void)
                 .arg( cliPassword ).toAscii();
         slimCliSocket->write(cmd);      // NOTE: no relevant response given except for a disconnect on error
     }
-    cmd = QString("albums 0 %1 tags:t,y,a,S,j\n").arg(QString(MaxRequestSize)).toAscii();  // = album title, year, artist, artist_id, artwork_track_id
+    cmd = QString("albums 0 %1 tags:t,y,a,S,j,s\n").arg(QString(MaxRequestSize)).toAscii();  // = album title, year, artist, artist_id, artwork_track_id
     slimCliSocket->write(cmd);      // send the request, which will start the process
 }
 
@@ -129,23 +131,27 @@ bool SlimDatabaseFetch::ProcessResponse(void)
     int c = 0;
 
     bool gotAlbumID = false;    // set this so that the first time through, we don't try to write out a bunch of garbage
+    bool gotArtistID = false;
+
     QByteArray album_id;
     QByteArray artist_name;
     QByteArray artist_id;
     QByteArray cover_id;
     QByteArray album_title;
     QByteArray album_year;
+    QByteArray textkey;
 
     for( QList<QByteArray>::Iterator it = list.begin(); it != list.end(); ++it, c++ )
     {
         QString field = QUrl::fromPercentEncoding( *it );   // convert from escape encoded
 
-        // we want to preserve the fields 0-2, which contain the original command (e.g., "albums 0 10 tags:t,y,a,S,j") and ignore
+        // we want to preserve the fields 0-2, which contain the original command (e.g., "albums 0 10 tags:t,y,a,S,j,s") and ignore
         // the fourth field, which contains the tags requested
         switch( c )
         {
         case 0:
             requestType = field.trimmed();
+            qDebug() << "REquest type is: " << requestType << c << field;
             break;
         case 1:
             startPosition = field.trimmed();
@@ -163,118 +169,151 @@ bool SlimDatabaseFetch::ProcessResponse(void)
             tagLine = field.trimmed();
             break;
         default:	// this is where most of the processing will occur
-            if( field.section( ':', 0, 0 ).trimmed() == "id" ) {
-                if(!gotAlbumID)
-                    gotAlbumID = true;
-                else {
-                    // process what we've retrieved so far under the last album_id
-                    // into the album info structure
-                    Album a;
-                    a.album_id = album_id;
-                    a.artist = artist_name;
-                    a.artist_id = artist_id;
-                    a.coverid = cover_id;
-                    a.albumtitle = album_title;
-                    a.year = album_year;
-                    a.artist_album = album_title.trimmed().toUpper()+artist_name.trimmed().toUpper();
-                    m_AlbumArtist2AlbumID.insert(QString(album_title.trimmed()+artist_name.trimmed()), QString(album_id.trimmed()));
-                    m_AlbumID2AlbumInfo.insert(album_id.trimmed(),a);
-                    m_albumList.append(a);
-                    DEBUGF("Adding album" << a.artist << a.albumtitle << m_albumList.count());
-                    if(m_Artist2AlbumIds.contains(artist_name.trimmed())) {
-                        QStringList temp = m_Artist2AlbumIds.value(artist_name.trimmed());
-                        temp.append(album_id.trimmed());
-                        m_Artist2AlbumIds.insert(QString(artist_name.trimmed()),temp);     // removes existing record for artist and substitutes new list
+            if(requestType.toLower()=="albums") {
+                if( field.section( ':', 0, 0 ).trimmed() == "id" ) {
+                    // "id" is the first field, and we need to capture it, but it also triggers gathering the information
+                    // so for the very first time through, we simply skip the data collection and writing step
+                    // since we haven't gathered any data yet
+                    if(!gotAlbumID)
+                        gotAlbumID = true;
+                    else {
+                        // process what we've retrieved so far under the last album_id
+                        // into the album info structure
+                        Album a;
+                        a.albumTextKey = textkey;
+                        a.album_id = album_id;
+                        a.artist = artist_name;
+                        a.artist_id = artist_id;
+                        a.coverid = cover_id;
+                        a.albumtitle = album_title;
+                        a.year = album_year;
+                        a.artist_album = album_title.trimmed().toUpper()+artist_name.trimmed().toUpper();
+                        m_AlbumArtist2AlbumID.insert(QString(album_title.trimmed()+artist_name.trimmed()), QString(album_id.trimmed()));
+                        m_AlbumID2AlbumInfo.insert(album_id.trimmed(),a);
+                        m_albumList.append(a);
+                        DEBUGF("Adding album" << a.artist << a.albumtitle << m_albumList.count());
+                        if(m_Artist2AlbumIds.contains(artist_name.trimmed())) {
+                            QStringList temp = m_Artist2AlbumIds.value(artist_name.trimmed());
+                            temp.append(album_id.trimmed());
+                            m_Artist2AlbumIds.insert(QString(artist_name.trimmed()),temp);     // removes existing record for artist and substitutes new list
+                        }
+                        else {
+                            QStringList album_id_list;
+                            album_id_list.append(album_id.trimmed());
+                            m_Artist2AlbumIds.insert(artist_name.trimmed(),album_id_list);
+                        }
+                    }
+
+                    // start over
+                    // clear all of the values in case the next album doesn't contain one of them
+                    album_id.clear();
+                    artist_name.clear();
+                    artist_id.clear();
+                    cover_id.clear();
+                    album_title.clear();
+                    album_year.clear();
+                    textkey.clear();
+
+                    // if the first field is an "id", then we know we have an "id:<album id number>"
+                    album_id = field.section( ':', 1, 1 ).toAscii();	// preserve the id tag
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "year" ) {
+                    album_year = field.section( ':', 1, 1 ).toAscii();
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "artwork_track_id" ) {
+                    cover_id = field.section( ':', 1, 1 ).toAscii();
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "title" ) {
+                    album_title = field.section( ':', 1, 1 ).toAscii();
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "artist_id" ) {
+                    artist_id = field.section( ':', 1, 1 ).toAscii();
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "artist" ) {
+                    artist_name = field.section( ':', 1, 1 ).toAscii();
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "textkey" ) {
+                    textkey = field.section( ':', 1, 1 ).toAscii();
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "count" )	// last field is the total count of items of this type, if more than 500, get the rest
+                {
+                    QString thisCount = field.section( ':', 1, 1 );	// OK, what is the real number of items available from the server
+                    int fullCount = thisCount.toInt();  // make it a number for convenience
+
+                    if( fullCount > ReceiveCount )	// if we didn't get enough, get the rest
+                    {
+                        QByteArray cmd = QString("albums %1 %2 tags:t,y,a,S,j,s\n").arg(ReceiveCount).arg(QString(MaxRequestSize)).toAscii();
+                        slimCliSocket->write(cmd);
+                        return true;
                     }
                     else {
-                        QStringList album_id_list;
-                        album_id_list.append(album_id.trimmed());
-                        m_Artist2AlbumIds.insert(artist_name.trimmed(),album_id_list);
+                        gotAlbums = true;
+                        QByteArray cmd = QString("artists 0 %1 tags:s\n").arg(QString(MaxRequestSize)).toAscii();  // = album title, year, artist, artist_id, artwork_track_id
+                        slimCliSocket->write(cmd);      // send the request, which will start the process
+                    }
+
+                }	// end of else/if field.section == count
+            }   // end of if(requestType=="albums")
+            else if(requestType.toLower()=="artists") {
+                if( field.section( ':', 0, 0 ).trimmed() == "id" ) {
+                    // "id" is the first field, and we need to capture it, but it also triggers gathering the information
+                    // so for the very first time through, we simply skip the data collection and writing step
+                    // since we haven't gathered any data yet
+                    if(!gotArtistID)
+                        gotArtistID = true;
+                    else {
+                        // process what we've retrieved so far under the last artist_id
+                        // into the artist info structure
+                        Artist a;
+                        a.id = artist_id;
+                        a.name = artist_name;
+                        a.textKey = textkey;
+
+                        m_artistList.append(a);
+                        DEBUGF("Adding artist" << a.name << a.id << m_artistList.count());
+                    }
+
+                    // start over
+                    // clear all of the values in case the next album doesn't contain one of them
+                    artist_name.clear();
+                    artist_id.clear();
+                    textkey.clear();
+
+                    // if the first field is an "id", then we know we have an "id:<album id number>"
+                    artist_id = field.section( ':', 1, 1 ).toAscii();	// preserve the id tag
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "artist" ) {
+                    artist_name = field.section( ':', 1, 1 ).toAscii();
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "textkey" ) {
+                    textkey = field.section( ':', 1, 1 ).toAscii();
+                }
+                else if( field.section( ':', 0, 0 ).trimmed() == "count" )	// last field is the total count of items of this type, if more than 500, get the rest
+                {
+                    QString thisCount = field.section( ':', 1, 1 );	// OK, what is the real number of items available from the server
+                    int fullCount = thisCount.toInt();  // make it a number for convenience
+
+                    if( fullCount > ReceiveCount )	// if we didn't get enough, get the rest
+                    {
+                        QByteArray cmd = QString("artists %1 %2 tags:s\n").arg(ReceiveCount).arg(QString(MaxRequestSize)).toAscii();
+                        slimCliSocket->write(cmd);
+                        return true;
+                    }
+                    else {
+                        gotArtists= true;
+                        emit FinishedUpdatingDatabase();
                     }
                 }
-                // start over
-                // clear all of the values in case the next album doesn't contain one of them
-                album_id.clear();
-                artist_name.clear();
-                artist_id.clear();
-                cover_id.clear();
-                album_title.clear();
-                album_year.clear();
+            } // end of if(requestType=="artists")
+            else {
+                emit FinishedUpdatingDatabase();
+            }
 
-                // if the first field is an "id", then we know we have an "id:<album id number>"
-                album_id = field.section( ':', 1, 1 ).toAscii();	// preserve the id tag
-            }
-            else if( field.section( ':', 0, 0 ).trimmed() == "year" ) {
-                album_year = field.section( ':', 1, 1 ).toAscii();
-            }
-            else if( field.section( ':', 0, 0 ).trimmed() == "artwork_track_id" ) {
-                cover_id = field.section( ':', 1, 1 ).toAscii();
-            }
-            else if( field.section( ':', 0, 0 ).trimmed() == "title" ) {
-                album_title = field.section( ':', 1, 1 ).toAscii();
-            }
-            else if( field.section( ':', 0, 0 ).trimmed() == "artist_id" ) {
-                artist_id = field.section( ':', 1, 1 ).toAscii();
-            }
-            else if( field.section( ':', 0, 0 ).trimmed() == "artist" ) {
-                artist_name = field.section( ':', 1, 1 ).toAscii();
-            }
-            else if( field.section( ':', 0, 0 ).trimmed() == "count" )	// last field is the total count of items of this type, if more than 500, get the rest
-            {
-                QString thisCount = field.section( ':', 1, 1 );	// OK, what is the real number of items available from the server
-                int fullCount = thisCount.toInt();  // make it a number for convenience
-
-                if( fullCount > ReceiveCount )	// if we didn't get enough, get the rest
-                {
-                    QByteArray cmd = QString("albums %1 %2 tags:t,y,a,S,j\n").arg(ReceiveCount).arg(QString(MaxRequestSize)).toAscii();
-                    slimCliSocket->write(cmd);
-                    return true;
-                }
-                else {
-                    emit FinishedUpdatingDatabase();
-                }
-
-            }	// end of else/if field.section == count
         }	// end of switch statement
     }		// end for loop
     return true;
 }
 
-//void SlimDatabaseFetch::RequestArtwork(QByteArray coverID)
-//{
-//    finishedImages = false;
-//    QString urlString = QString("http://%1:%2/music/%3/%4")
-//            .arg(SlimServerAddr)
-//            .arg(httpPort)
-//            .arg(QString(coverID))
-//            .arg(imageSizeStr);
-//    QNetworkRequest req;
-//    req.setUrl(QUrl(urlString));
-//    QNetworkReply *reply = slimHttp->get(req);
-//    httpReplyList.insert(reply,coverID);
-//}
-
-//void SlimDatabaseFetch::ArtworkReqply(QNetworkReply *reply)
-//{
-//    QPixmap p;
-//    QImageReader reader(reply);
-//    QByteArray coverID = httpReplyList.value(reply);
-
-
-//    p.fromImageReader(&reader);
-//    if( p.isNull() )    // oops, no image returned, substitute default image
-//        p.load(QString::fromUtf8(":/img/lib/images/noAlbumImage.png"));
-
-//    m_Id2Art.insert(coverID,p);
-//    httpReplyList.remove(reply);
-//    delete reply;
-
-//    if(httpReplyList.isEmpty()) {
-//        finishedImages = true;
-//        if(finishedData)
-//            emit FinishedUpdatingDatabase();
-//    }
-//}
 
 /* vim: set expandtab tabstop=4 shiftwidth=4: */
 

@@ -6,13 +6,13 @@
 #define DEBUGF(...)
 #endif
 
-SqueezePictureFlow::SqueezePictureFlow(QWidget* parent, bool autoselect)
+SqueezePictureFlow::SqueezePictureFlow(QWidget* parent, picflowType flags)
     :PictureFlow(parent)
 {
     DEBUGF("");
     albumList.clear();
     titleColor = Qt::white;
-    autoSelect = autoselect;
+    m_Flags = flags;
     isReady = false;
 }
 
@@ -110,13 +110,20 @@ void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
         return;
     }
 
-    if(autoSelect) { // clicking on the next image means load that item
+    if(m_Flags & AUTOSELECTON) { // clicking on the next image means load that item
         if(event->x() > width()/2)
             emit NextSlide();
         else
             emit PrevSlide();
     }
-    PictureFlow::mousePressEvent(event);
+    else {
+        if(event->x() > (2*width())/3)
+            showNext();
+        else if(event->x() < width()/3)
+            showPrevious();
+        else
+            emit SelectSlide(centerIndex());
+    }
 }
 
 //void mouseReleaseEvent(QMouseEvent *event)
@@ -150,7 +157,7 @@ void SqueezePictureFlow::resetDimensions(QWidget *win)
 
 void SqueezePictureFlow::paintEvent (QPaintEvent *e)
 {
-//    DEBUGF("");
+    //    DEBUGF("");
     PictureFlow::paintEvent(e);
 
     if (slideCount() < 1)
@@ -164,7 +171,11 @@ void SqueezePictureFlow::paintEvent (QPaintEvent *e)
 
     if( centerIndex() < albumList.count() && centerIndex() >= 0 ) {
         const Album *a = &albumList.at( centerIndex() );
-        QString title = QString(a->songtitle) + " - " + QString(a->albumtitle);
+        QString title;
+        if(m_Flags & TRACKSELECT)
+            title = QString(a->songtitle) + " - " + QString(a->albumtitle);
+        else
+            title = QString(a->artist) + " - " + QString(a->albumtitle);
 
         // Draw Title
         QFont fnt;
@@ -172,7 +183,7 @@ void SqueezePictureFlow::paintEvent (QPaintEvent *e)
         fnt.setBold(true);
         p.setPen(titleColor);
         p.setFont(fnt);
-//        p.setFont(QFont(p.font().family(), p.font().pointSize() + 1, QFont::Bold));
+        //        p.setFont(QFont(p.font().family(), p.font().pointSize() + 1, QFont::Bold));
         p.drawText(cw - (QFontMetrics(p.font()).width( title ) / 2), wh - 30, title );
     }
     p.end();
