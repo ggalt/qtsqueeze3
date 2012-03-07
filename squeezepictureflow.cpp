@@ -105,10 +105,10 @@ void SqueezePictureFlow::clear()
 void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
 {
     DEBUGF("");
-    if(event->type()== QEvent::MouseButtonDblClick) {  // selected current center image
-        emit SelectSlide(centerIndex());
-        return;
-    }
+//    if(event->type()== QEvent::MouseButtonDblClick) {  // selected current center image
+//        emit SelectSlide(centerIndex());
+//        return;
+//    }
 
     if(m_Flags & AUTOSELECTON) { // clicking on the next image means load that item
         if(event->x() > width()/2)
@@ -124,6 +124,11 @@ void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
         else
             emit SelectSlide(centerIndex());
     }
+}
+
+void SqueezePictureFlow::JumpTo(QString textkey)
+{
+    qDebug() << "jumping to " << textkey;
 }
 
 //void mouseReleaseEvent(QMouseEvent *event)
@@ -158,11 +163,10 @@ void SqueezePictureFlow::resetDimensions(QWidget *win)
 void SqueezePictureFlow::paintEvent (QPaintEvent *e)
 {
     //    DEBUGF("");
+//    if (slideCount() < 1)
+//        return;
+
     PictureFlow::paintEvent(e);
-
-    if (slideCount() < 1)
-        return;
-
     QPainter p(this);
 
     // White Pen for Title Info

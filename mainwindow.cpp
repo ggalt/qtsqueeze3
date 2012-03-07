@@ -9,6 +9,15 @@
 #define DEBUGF(...)
 #endif
 
+char keypadKey[8][4] ={{'A','B','C',' '},
+                       {'D','E','F',' '},
+                       {'G','H','I',' '},
+                       {'J','K','L',' '},
+                       {'M','N','O',' '},
+                       {'P','Q','R','S'},
+                       {'T','U','V',' '},
+                       {'W','X','Y','Z'}};
+
 // globally declared so that multiple classes access the same image cache
 SlimImageCache *imageCache;
 
@@ -65,6 +74,11 @@ MainWindow::MainWindow(QWidget *parent)
     squeezePlayer = new QProcess( this );
     slimCLI = new SlimCLI( this );
     serverInfo = new SlimServerInfo(this);
+
+    lastKey=0;
+    keyOffset=0;
+    connect(&keypadTimer, SIGNAL(timeout()),
+            this,SLOT(ResetKeypadTimer()));
 
     mySettings = new QSettings("qtsqueeze3", "qtsqueeze3");
     activeDevice = NULL;
@@ -176,6 +190,7 @@ bool MainWindow::Create(void)
     }
     args.append(SlimServerAddr);
     DEBUGF( "player command " << program << " " << args );
+    qDebug() << "startiong player with command " << program << " " << args;
 
     QTime progstart;
     progstart.start();
@@ -257,7 +272,7 @@ bool MainWindow::Create(void)
     connect( ui->btnDownVolume ,SIGNAL(clicked()), this, SLOT(slotVolDown()) );
 
     DEBUGF("###Create Return");
-//    slotEnablePlayer();
+    //    slotEnablePlayer();
     return true;
 }
 
@@ -332,11 +347,6 @@ void MainWindow::SetupSelectionCoverFlows(void)
         albumselectCoverFlow->clear();
 
         QList<Album> artists;
-//        QHashIterator< QString, QStringList > artistIt(serverInfo->Artist2AlbumIds());
-//        while(artistIt.hasNext()){
-//            artists.append(serverInfo->GetArtistAlbumList(artistIt.next().key()));
-//        }
-//        artistselectCoverFlow->LoadAlbumList(artists);
 
         QListIterator<Artist> artIt(serverInfo->GetAllArtistList());
         while(artIt.hasNext()) {
@@ -347,7 +357,37 @@ void MainWindow::SetupSelectionCoverFlows(void)
             }
         }
         artistselectCoverFlow->LoadAlbumList(artists);
+        connect(artistselectCoverFlow, SIGNAL(SelectSlide(int)),
+                this,SLOT(ArtistAlbumCoverFlowSelect()));
     }
+}
+
+void MainWindow::ArtistAlbumCoverFlowSelect(void)
+{
+    DEBUGF(QString("playlistcontrol cmd:load album_id:%1").arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
+    activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:load album_id:%1").arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
+}
+
+void MainWindow::UpdateCoverflowFromKeypad(int key)
+{
+    if(key == lastKey && keypadTimer.isActive()) {
+        keypadTimer.stop();
+        keyOffset>2 ? keyOffset=0 : keyOffset++;
+        if(keypadKey[key-2][keyOffset]==' ')
+            keyOffset=0;
+    }
+    lastKey=key;
+    if(activeDevice->getDisplayBuffer()->line0=="Artists") {
+        artistselectCoverFlow->JumpTo(QString(keypadKey[key-2][keyOffset]));
+    }
+    activeDevice->SendDeviceCommand(QString("button %1\n").arg(key));
+    keypadTimer.start(1000);
+}
+
+void MainWindow::ResetKeypadTimer(void)
+{
+    keypadTimer.stop();
+    keyOffset = 0;
 }
 
 void MainWindow::slotLeftArrow( void )

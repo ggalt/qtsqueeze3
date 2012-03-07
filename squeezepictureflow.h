@@ -32,6 +32,11 @@ public:
 
     bool IsReady(void) { return isReady; }
 
+    picflowType GetFlags(void) {return m_Flags;}
+    Album GetCenterAlbum(void) {return albumList.at(centerIndex());}
+
+    void JumpTo(QString textkey);
+
 signals:
     void NextSlide();
     void PrevSlide();

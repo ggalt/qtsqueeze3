@@ -62,6 +62,8 @@ public slots:
     void slotplaylistCoverFlowReady(void);
 
     void SetupSelectionCoverFlows(void);
+    void ArtistAlbumCoverFlowSelect(void);
+    void ResetKeypadTimer(void);
 
     void slotDisablePlayer( void );
     void slotEnablePlayer( void );
@@ -104,14 +106,16 @@ public slots:
     void slotNowPlaying( void ) { activeDevice->SendDeviceCommand( QString( "button now_playing\n" ) ); }
     void slot0PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 0\n" ) ); }
     void slot1PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 1\n" ) ); }
-    void slot2PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 2\n" ) ); }
-    void slot3PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 3\n" ) ); }
-    void slot4PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 4\n" ) ); }
-    void slot5PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 5\n" ) ); }
-    void slot6PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 6\n" ) ); }
-    void slot7PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 7\n" ) ); }
-    void slot8PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 8\n" ) ); }
-    void slot9PAD( void ) { activeDevice->SendDeviceCommand( QString( "button 9\n" ) ); }
+    // BUTTONS 2-9 are handled differently because we want them
+    // to update the "artist" and "album" coverflows as well
+    void slot2PAD( void ){UpdateCoverflowFromKeypad(2);}
+    void slot3PAD( void ){UpdateCoverflowFromKeypad(3);}
+    void slot4PAD( void ){UpdateCoverflowFromKeypad(4);}
+    void slot5PAD( void ){UpdateCoverflowFromKeypad(5);}
+    void slot6PAD( void ){UpdateCoverflowFromKeypad(6);}
+    void slot7PAD( void ){UpdateCoverflowFromKeypad(7);}
+    void slot8PAD( void ){UpdateCoverflowFromKeypad(8);}
+    void slot9PAD( void ){UpdateCoverflowFromKeypad(9);}
 
 protected:
     void resizeEvent(QResizeEvent *e);
@@ -122,6 +126,7 @@ private:
     void loadDisplayConfig(void);
     void loadConnectionConfig(void);
 
+    void UpdateCoverflowFromKeypad(int key);
 
     Ui::MainWindow *ui;
     QProcess *squeezePlayer;
@@ -146,6 +151,9 @@ private:
     SqueezePictureFlow *playlistCoverFlow;
     SqueezePictureFlow *albumselectCoverFlow;
     SqueezePictureFlow *artistselectCoverFlow;
+    QTimer keypadTimer;
+    int lastKey;
+    int keyOffset;
 
     QColor coverflowBackground;
     QColor tempcoverflowBackground;
