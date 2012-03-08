@@ -18,8 +18,8 @@
 #include <QPoint>
 #include <QProcess>
 #include <QPixmap>
-#include <QHttp>
 #include <QKeyEvent>
+#include <QTime>
 #include <QTimer>
 #include <QNetworkInterface>
 #include <QMainWindow>
@@ -64,6 +64,7 @@ public slots:
     void SetupSelectionCoverFlows(void);
     void ArtistAlbumCoverFlowSelect(void);
     void ResetKeypadTimer(void);
+    void ChangeToAlbumSelection(int tab);
 
     void slotDisablePlayer( void );
     void slotEnablePlayer( void );
@@ -133,6 +134,7 @@ private:
     SlimCLI *slimCLI;
     SlimDevice *activeDevice;
     SlimServerInfo *serverInfo;
+    QTime progstart;
 
     QByteArray MacAddress;      // MAC address of this machine (which will become the MAC address for our player)
     QString SlimServerAddr;   // server IP address

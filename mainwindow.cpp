@@ -9,14 +9,16 @@
 #define DEBUGF(...)
 #endif
 
-char keypadKey[8][4] ={{'A','B','C',' '},
-                       {'D','E','F',' '},
-                       {'G','H','I',' '},
-                       {'J','K','L',' '},
-                       {'M','N','O',' '},
-                       {'P','Q','R','S'},
-                       {'T','U','V',' '},
-                       {'W','X','Y','Z'}};
+char keypadKey[10][5]={{'0',' ',' ',' ',' '},
+                       {'1',' ',' ',' ',' '},
+                       {'A','B','C','2',' '},
+                       {'D','E','F','3',' '},
+                       {'G','H','I','4',' '},
+                       {'J','K','L','5',' '},
+                       {'M','N','O','6',' '},
+                       {'P','Q','R','S','7'},
+                       {'T','U','V','8',' '},
+                       {'W','X','Y','Z','9'}};
 
 // globally declared so that multiple classes access the same image cache
 SlimImageCache *imageCache;
@@ -192,7 +194,6 @@ bool MainWindow::Create(void)
     DEBUGF( "player command " << program << " " << args );
     qDebug() << "startiong player with command " << program << " " << args;
 
-    QTime progstart;
     progstart.start();
 
     squeezePlayer->start( program, args );
@@ -364,6 +365,8 @@ void MainWindow::SetupSelectionCoverFlows(void)
         artistselectCoverFlow->LoadAlbumList(artists);
         connect(artistselectCoverFlow, SIGNAL(SelectSlide(int)),
                 this,SLOT(ArtistAlbumCoverFlowSelect()));
+        connect(ui->tabWidget, SIGNAL(currentChanged(int)),
+                this, SLOT(ChangeToAlbumSelection(int)));
     }
 }
 
@@ -377,13 +380,13 @@ void MainWindow::UpdateCoverflowFromKeypad(int key)
 {
     if(key == lastKey && keypadTimer.isActive()) {
         keypadTimer.stop();
-        keyOffset>2 ? keyOffset=0 : keyOffset++;
-        if(keypadKey[key-2][keyOffset]==' ')
+        keyOffset>=4 ? keyOffset=0 : keyOffset++;
+        if(keypadKey[key][keyOffset]==' ')
             keyOffset=0;
     }
     lastKey=key;
     if(activeDevice->getDisplayBuffer()->line0=="Artists") {
-        artistselectCoverFlow->JumpTo(QString(keypadKey[key-2][keyOffset]));
+        artistselectCoverFlow->JumpTo(QString(keypadKey[key][keyOffset]));
     }
     activeDevice->SendDeviceCommand(QString("button %1\n").arg(key));
     keypadTimer.start(1000);
@@ -395,11 +398,20 @@ void MainWindow::ResetKeypadTimer(void)
     keyOffset = 0;
 }
 
+void MainWindow::ChangeToAlbumSelection(int tab)
+{
+    if(tab==1) {    // artist tab
+        activeDevice->SendDeviceCommand(QString("ir %1 %2").arg(IR_menu_browse_artist,0,16).arg(progstart.elapsed()));
+        qDebug() << QString("ir %1 %2").arg(IR_menu_browse_artist,0,16).arg(progstart.elapsed());
+    }
+}
+
 void MainWindow::slotLeftArrow( void )
 {
     DEBUGF("");
     m_disp->LeftArrowEffect();
     activeDevice->SendDeviceCommand( QString( "button arrow_left\n" ) );
+
 }
 
 void MainWindow::slotRightArrow( void )
