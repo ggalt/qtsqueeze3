@@ -347,13 +347,18 @@ void MainWindow::SetupSelectionCoverFlows(void)
         albumselectCoverFlow->clear();
 
         QList<Album> artists;
+        artistselectCoverFlow->GetAlbumJumpList()->clear();
 
         QListIterator<Artist> artIt(serverInfo->GetAllArtistList());
+        int slideCount = 0;
         while(artIt.hasNext()) {
             Artist a = artIt.next();
+            if(!artistselectCoverFlow->GetAlbumJumpList()->contains(a.textKey))
+                artistselectCoverFlow->GetAlbumJumpList()->insert(a.textKey,slideCount);
             QListIterator<QString> albumIt(serverInfo->Artist2AlbumIds().value(a.name));
             while(albumIt.hasNext()) {
                 artists.append(serverInfo->AlbumID2AlbumInfo().value(albumIt.next()));
+                slideCount++;
             }
         }
         artistselectCoverFlow->LoadAlbumList(artists);
