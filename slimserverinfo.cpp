@@ -275,7 +275,7 @@ void SlimServerInfo::WriteDataFile( void )
     out << (qint16)m_AlbumID2AlbumInfo.count();
     out << m_albumList;
     out << m_AlbumID2AlbumInfo;
-    out << m_artistList
+    out << m_artistList;
 
     DEBUGF( "Writing file of size: " << file.size() );
     file.close();
