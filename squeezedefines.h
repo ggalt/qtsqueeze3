@@ -48,8 +48,8 @@
 // #define SQUEEZEMAINWINDOW_DEBUG
 // #define SLIMCLI_DEBUG
 // #define SLIMDEVICE_DEBUG
- #define SLIMDATABASE_DEBUG
- #define SLIMSERVERINFO_DEBUG
+// #define SLIMDATABASE_DEBUG
+// #define SLIMSERVERINFO_DEBUG
 // #define SQUEEZEDISPLAY_DEBUG
 // #define SQUEEZEPICFLOW_DEBUG
 // #define SLIMIMAGECACHE_DEBUG
@@ -68,7 +68,7 @@ class SqueezeDisplay;
 #define DATAFILE "qtsqueeze3.dat"
 //#define IMAGEPATH "/.qtsqueeze3/images/"
 
-#define DATAVERSION 3
+#define DATAVERSION 3       // simply a check to change when we alter the data stored
 
 // Define Squeezebox Player Types
 // From server/Slim/Networking/Slimproto.pm from 7.4r24879
@@ -119,6 +119,8 @@ typedef enum { CLI_DISCONNECTED = 0, CLI_CONNECTED, SETUP_SERVER, SETUP_DEVICES,
 typedef enum { TRACKSELECT = 0x1,
                ALBUMSELECT = 0x2,
                AUTOSELECTON = 0x4 } picflowType;
+
+typedef enum { DISPLAY_PLAYLIST, DISPLAY_ARTISTSELECTION, DISPLAY_ALBUMSELECTION } coverflowType;
 
 typedef enum { NOLOGIN=101,
                CONNECTION_ERROR,
@@ -205,14 +207,7 @@ public:
     QString textKey;
 };
 
-QDataStream & operator<< (QDataStream& stream, const Album& al);
-QDataStream & operator>> (QDataStream& stream, Album& al);
-
-QDataStream & operator<< (QDataStream& stream, const Artist& art);
-QDataStream & operator>> (QDataStream& stream, Artist& art);
-
 typedef QList< TrackData > CurrentPlayList;
-
 typedef QHash< QString, SlimDevice* > SlimDevices;
 typedef QHash< QString, QPixmap> SlimImageItem;
 typedef QHash< QString, QString > SlimItem;
@@ -232,10 +227,16 @@ public:
     SlimAlbumItem m_AlbumID2AlbumInfo;    // AlbumID to Album Info
 };
 
-typedef struct s_imageIndexCheck{
-    int index;
-    bool loaded;
-} imageIndexCheck;
+QDataStream & operator<< (QDataStream& stream, const Album& al);
+QDataStream & operator>> (QDataStream& stream, Album& al);
+
+QDataStream & operator<< (QDataStream& stream, const Artist& art);
+QDataStream & operator>> (QDataStream& stream, Artist& art);
+
+//typedef struct s_imageIndexCheck{
+//    int index;
+//    bool loaded;
+//} imageIndexCheck;
 
 //namespace Art{
 //   QHash<QString, QPixmap> images;

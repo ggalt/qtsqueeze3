@@ -25,7 +25,8 @@ HEADERS += pictureflow.h \
     squeezepictureflow.h \
     squeezedisplay.h \
     slimimagecache2.h
-FORMS += mainwindow.ui
+FORMS += mainwindow.ui \
+    settingsdialog.ui
 RESOURCES += qtsqueeze3.qrc
 
 

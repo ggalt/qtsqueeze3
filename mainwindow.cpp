@@ -2,6 +2,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "ui_settingsdialog.h"
 
 #ifdef SQUEEZEMAINWINDOW_DEBUG
 #define DEBUGF(...) qDebug() << this->objectName() << Q_FUNC_INFO << __VA_ARGS__;
@@ -72,7 +73,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     DEBUGF("");
     ui->setupUi(this);
-    this->setWindowTitle("QtSqueeze3");
+    setWindowTitle("QtSqueeze3");
     squeezePlayer = new QProcess( this );
     slimCLI = new SlimCLI( this );
     serverInfo = new SlimServerInfo(this);
@@ -84,17 +85,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     mySettings = new QSettings("qtsqueeze3", "qtsqueeze3");
     activeDevice = NULL;
-    //    PortAudioDevice = "";
     isStartUp = true;
 
-    connect(ui->btnApplyConnection, SIGNAL(clicked()),this,SLOT(updateConnectionConfig()));
-    connect(ui->btnDefaultsConnection, SIGNAL(clicked()), this, SLOT(setConfigConnection2Defaults()));
-    connect(ui->btnApplyDisplay,SIGNAL(clicked()),this,SLOT(updateDisplayConfig()));
-    connect(ui->btnDefaultsDisplay,SIGNAL(clicked()),this,SLOT(setConfigDisplay2Defaults()));
-
-    connect(ui->btnCoverFlowColor,SIGNAL(clicked()),this,SLOT(setCoverFlowColor()));
-    connect(ui->btnDisplayBackgroundColor,SIGNAL(clicked()),this,SLOT(setDisplayBackgroundColor()));
-    connect(ui->btnDisplayTextColor,SIGNAL(clicked()),this,SLOT(setDisplayTextColor()));
+    loadConfig();  // load configuration files
 
     QPixmap splash;
     splash.load( ":/img/lib/images/squeezeplayer_large.png" );
@@ -106,12 +99,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     imageCache = new SlimImageCache();
     m_disp = new SqueezeDisplay(ui->lblSlimDisplay, this);
-    playlistCoverFlow = new SqueezePictureFlow(ui->tabPlaylist);
-    artistselectCoverFlow = new SqueezePictureFlow(ui->tabArtist,ALBUMSELECT);
-    albumselectCoverFlow = new SqueezePictureFlow(ui->tabAlbum,ALBUMSELECT);
+    playlistCoverFlow = new SqueezePictureFlow(ui->cfPlaylistWidget);
+    artistselectCoverFlow = new SqueezePictureFlow(ui->cfArtistSelectWidget,ALBUMSELECT);
+    albumselectCoverFlow = new SqueezePictureFlow(ui->cfAlbumSelectWidget,ALBUMSELECT);
 
-    loadDisplayConfig();
-    loadConnectionConfig();
+    applyDisplayConfig();
     getImages = true;
     m_disp->Init();
     imageCache->Init(SlimServerAddr,(qint16)SlimServerHttpPort.toInt());
@@ -127,7 +119,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     imageCache->Stop();
-    mySettings->setValue("UI/CurrentTab",ui->tabWidget->currentIndex());
+    //    mySettings->setValue("UI/CurrentTab",ui->tabWidget->currentIndex());
     mySettings->sync();
     squeezePlayer->close();
     imageCache->deleteLater();
@@ -137,16 +129,29 @@ MainWindow::~MainWindow()
 void MainWindow::resizeEvent(QResizeEvent *e)
 {
     QMainWindow::resizeEvent(e);
-    ui->tabWidget->setGeometry(0, height() - ui->tabWidget->height(), width(), ui->tabWidget->height());
-    ui->controlFrame->setGeometry(0,0,width(),ui->tabWidget->y()- 5);
+
+    bool hidePlaylist = playlistCoverFlow->isHidden();
+    bool hideArtistList = artistselectCoverFlow->isHidden();
+    bool hideAlbumList = albumselectCoverFlow->isHidden();
+
+    ui->controlFrame->setGeometry(0,0,width(),height()/2);
     ui->lblSlimDisplay->setGeometry(ui->lblSlimDisplay->x(), ui->lblSlimDisplay->y(), ui->controlFrame->width() - 2*ui->lblSlimDisplay->x(), ui->controlFrame->height() - ui->controlFrame_2->height() - 3);
     ui->controlFrame_2->move(ui->controlFrame_2->x(), ui->controlFrame->height() - 3 - ui->controlFrame_2->height());
     ui->arrowKeyFrame->move(ui->arrowKeyFrame->x(), ui->controlFrame->height() - 3 - ui->arrowKeyFrame->height());
     ui->keypadFrame->move(ui->keypadFrame->x(),ui->controlFrame->height() - 3 - ui->keypadFrame->height());
     m_disp->resetDimensions();
-    playlistCoverFlow->resetDimensions(ui->tabWidget->currentWidget());
-    artistselectCoverFlow->resetDimensions(ui->tabWidget->currentWidget());
-    albumselectCoverFlow->resetDimensions(ui->tabWidget->currentWidget());
+    ui->cfPlaylistWidget->setGeometry(0,(ui->controlFrame->geometry().bottom()+1), width(), height() - (ui->controlFrame->geometry().bottom()+2));
+    ui->cfArtistSelectWidget->setGeometry(ui->cfPlaylistWidget->rect());
+    ui->cfAlbumSelectWidget->setGeometry(ui->cfPlaylistWidget->rect());
+    playlistCoverFlow->resetDimensions(ui->cfPlaylistWidget);
+    artistselectCoverFlow->resetDimensions(ui->cfArtistSelectWidget);
+    albumselectCoverFlow->resetDimensions(ui->cfAlbumSelectWidget);
+    playlistCoverFlow->setHidden(hidePlaylist);
+    ui->cfPlaylistWidget->setHidden(hidePlaylist);
+    artistselectCoverFlow->setHidden(hideArtistList);
+    ui->cfArtistSelectWidget->setHidden(hideArtistList);
+    albumselectCoverFlow->setHidden(hideAlbumList);
+    ui->cfAlbumSelectWidget->setHidden(hideAlbumList);
     if(activeDevice)
         if(activeDevice->getDisplayBuffer())
             m_disp->PaintSqueezeDisplay(activeDevice->getDisplayBuffer());
@@ -161,9 +166,6 @@ bool MainWindow::Create(void)
     to the program to do the rest of the processing, while displaying a progress bar to keep the user interested
 */
     slotDisablePlayer();
-
-    DEBUGF("SETTING UP INFO ON CONFIG PAGE");
-    setupConfig();  // load defaults into config
 
     // SET UP PLAYER INFO
     getplayerMACAddress();
@@ -226,10 +228,6 @@ bool MainWindow::Create(void)
 
     DEBUGF("###Setup Display");
     //    SetUpDisplay();
-
-    // establish the proper URL for the web interface
-    QUrl slimWeb( QString( "http://") + SlimServerAddr + QString( ":"+SlimServerHttpPort+"/" ) );
-    ui->webView->setUrl( slimWeb );
 
     // set up connection between interface buttons and the slimserver
     connect( ui->btn0, SIGNAL(clicked()), this, SLOT(slot0PAD()) );
@@ -322,14 +320,13 @@ void MainWindow::slotCreateplaylistCoverFlow( void )
     //  playlistCoverFlow = new SqueezePictureFlow( ui->cfWidget );
     //  playlistCoverFlow->setMinimumSize( flowRect.width(), flowRect.height() );
     //  playlistCoverFlow->setContentsMargins( 50, 0, playlistCoverFlow->width() - 50, playlistCoverFlow->height() );
-    playlistCoverFlow->resetDimensions(ui->tabPlaylist);
+    playlistCoverFlow->resetDimensions(ui->cfPlaylistWidget);
     playlistCoverFlow->clear();
-    ui->cfWidget->setEnabled( false );
-    ui->cfWidget->resize(ui->tabPlaylist->width(),ui->tabPlaylist->height());
-    DEBUGF("setting playlistCoverFlow widget to " << ui->cfWidget->width() << " by "  << ui->cfWidget->height());
 
     playlistCoverFlow->LoadAlbumList(activeDevice->getDevicePlayList());
-    ui->cfWidget->setEnabled( true );
+    ui->cfArtistSelectWidget->hide();
+    ui->cfAlbumSelectWidget->hide();
+    ui->cfPlaylistWidget->show();
     DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
     int playListIndex = activeDevice->getDevicePlaylistIndex();
     if( playListIndex > 4 )
@@ -341,8 +338,8 @@ void MainWindow::SetupSelectionCoverFlows(void)
 {
     if(isStartUp) {
         isStartUp = false;
-        artistselectCoverFlow->resetDimensions(ui->tabArtist);
-        albumselectCoverFlow->resetDimensions(ui->tabAlbum);
+        artistselectCoverFlow->resetDimensions(ui->cfArtistSelectWidget);
+        albumselectCoverFlow->resetDimensions(ui->cfAlbumSelectWidget);
 
         artistselectCoverFlow->clear();
         albumselectCoverFlow->clear();
@@ -365,8 +362,8 @@ void MainWindow::SetupSelectionCoverFlows(void)
         artistselectCoverFlow->LoadAlbumList(artists);
         connect(artistselectCoverFlow, SIGNAL(SelectSlide(int)),
                 this,SLOT(ArtistAlbumCoverFlowSelect()));
-        connect(ui->tabWidget, SIGNAL(currentChanged(int)),
-                this, SLOT(ChangeToAlbumSelection(int)));
+        //        connect(ui->tabWidget, SIGNAL(currentChanged(int)),
+        //                this, SLOT(ChangeToAlbumSelection(int)));
     }
 }
 
@@ -374,6 +371,39 @@ void MainWindow::ArtistAlbumCoverFlowSelect(void)
 {
     DEBUGF(QString("playlistcontrol cmd:load album_id:%1").arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
     activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:load album_id:%1").arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
+}
+
+void MainWindow::ChangeCoverflowDisplay(void)
+{
+    DEBUGF("");
+    if(lastMenuHeading == activeDevice->getDisplayBuffer()->line0) {
+        return;
+    }
+
+    lastMenuHeading = activeDevice->getDisplayBuffer()->line0;
+    if(activeDevice->getDisplayBuffer()->line0=="Artists") {
+        playlistCoverFlow->hide();
+        ui->cfPlaylistWidget->hide();
+        albumselectCoverFlow->hide();
+        ui->cfAlbumSelectWidget->hide();
+        artistselectCoverFlow->show();
+        ui->cfArtistSelectWidget->show();
+    }
+    else if(activeDevice->getDisplayBuffer()->line0=="Albums") {
+        playlistCoverFlow->hide();
+        ui->cfPlaylistWidget->hide();
+        artistselectCoverFlow->hide();
+        albumselectCoverFlow->show();
+        ui->cfAlbumSelectWidget->show();
+    }
+    else {
+        albumselectCoverFlow->hide();
+        ui->cfAlbumSelectWidget->hide();
+        artistselectCoverFlow->hide();
+        ui->cfArtistSelectWidget->hide();
+        playlistCoverFlow->show();
+        ui->cfPlaylistWidget->show();
+    }
 }
 
 void MainWindow::UpdateCoverflowFromKeypad(int key)
@@ -398,20 +428,19 @@ void MainWindow::ResetKeypadTimer(void)
     keyOffset = 0;
 }
 
-void MainWindow::ChangeToAlbumSelection(int tab)
-{
-    if(tab==1) {    // artist tab
-        activeDevice->SendDeviceCommand(QString("ir %1 %2").arg(IR_menu_browse_artist,0,16).arg(progstart.elapsed()));
-        qDebug() << QString("ir %1 %2").arg(IR_menu_browse_artist,0,16).arg(progstart.elapsed());
-    }
-}
+//void MainWindow::ChangeToAlbumSelection(int tab)
+//{
+//    if(tab==1) {    // artist tab
+//        activeDevice->SendDeviceCommand(QString("ir %1 %2").arg(IR_menu_browse_artist,0,16).arg(progstart.elapsed()));
+//        qDebug() << QString("ir %1 %2").arg(IR_menu_browse_artist,0,16).arg(progstart.elapsed());
+//    }
+//}
 
 void MainWindow::slotLeftArrow( void )
 {
     DEBUGF("");
     m_disp->LeftArrowEffect();
     activeDevice->SendDeviceCommand( QString( "button arrow_left\n" ) );
-
 }
 
 void MainWindow::slotRightArrow( void )
@@ -455,6 +484,8 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
              m_disp, SLOT(slotResetSlimDisplay()) );
     connect( activeDevice, SIGNAL(SlimDisplayUpdate()),
              m_disp, SLOT(slotUpdateSlimDisplay()) );
+    connect( activeDevice, SIGNAL(SlimDisplayUpdate()),
+             this, SLOT(ChangeCoverflowDisplay()) );
     connect( activeDevice, SIGNAL(playlistCoverFlowUpdate( int )),
              this, SLOT(slotUpdateplaylistCoverFlow(int)) );
     connect( activeDevice, SIGNAL(playlistCoverFlowCreate()),
@@ -463,63 +494,53 @@ void MainWindow::slotSetActivePlayer( SlimDevice *d )
              this, SLOT(slotplaylistCoverFlowReady()));
 }
 
-void MainWindow::loadDisplayConfig(void)
+void MainWindow::applyDisplayConfig(void)
 {
     DEBUGF("DISPLAY CONFIG");
     if( m_disp==NULL)
         DEBUGF("display isn't allocated");
-    m_disp->setTextColor(QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt()));
-    m_disp->setDisplayBackgroundColor(QColor::fromRgb(mySettings->value("UI/DisplayBackground",QColor(Qt::black).rgb()).toUInt()));
-    coverflowBackground = QColor::fromRgb(mySettings->value("UI/CoverFlowColor",QColor(Qt::white).rgb()).toUInt());
-    temptextcolorGeneral = m_disp->getTextColor();
-    tempdisplayBackgroundColor = m_disp->getDisplayBackgroundColor();
+    m_disp->setTextColor(displayTextColor);
+    m_disp->setDisplayBackgroundColor(displayBackground);
+    playlistCoverFlow->setBackgroundColor(coverflowBackground);
+    albumselectCoverFlow->setBackgroundColor(coverflowBackground);
+    artistselectCoverFlow->setBackgroundColor(coverflowBackground);
+    tempdisplayTextColor = m_disp->getTextColor();
+    tempdisplayBackground = m_disp->getDisplayBackgroundColor();
     tempcoverflowBackground = coverflowBackground;
-    m_disp->setScrollSpeed(mySettings->value("UI/ScrollSpeed",30).toInt());
-    m_disp->setScrollInterval(mySettings->value("UI/ScrollInterval",5000).toInt());
+    m_disp->setScrollSpeed(scrollSpeed);
+    m_disp->setScrollInterval(scrollInterval);
 }
 
-void MainWindow::loadConnectionConfig(void)
-{
-    DEBUGF("CONNECTION CONFIG");
-    SlimServerAddr = mySettings->value("Server/Address","127.0.0.1").toString();
-    SlimServerAudioPort = mySettings->value("Server/AudioPort","3483").toString();
-    SlimServerCLIPort = mySettings->value("Server/CLIPort", "9090").toString();
-    SlimServerHttpPort = mySettings->value("Server/HttpPort", "9000").toString();
-    PortAudioDevice = mySettings->value("Audio/Device","").toString();
-}
+//void MainWindow::applyConnectionConfig(void)
+//{
+//    DEBUGF("CONNECTION CONFIG");
+//    SlimServerAddr = mySettings->value("Server/Address","127.0.0.1").toString();
+//    SlimServerAudioPort = mySettings->value("Server/AudioPort","3483").toString();
+//    SlimServerCLIPort = mySettings->value("Server/CLIPort", "9090").toString();
+//    SlimServerHttpPort = mySettings->value("Server/HttpPort", "9000").toString();
+//    PortAudioDevice = mySettings->value("Audio/Device","").toString();
+//}
 
-void MainWindow::updateDisplayConfig(void)
-{
-    DEBUGF("");
-    mySettings->setValue("UI/CoverFlowColor",(uint)tempcoverflowBackground.rgb());
-    mySettings->setValue("UI/DisplayBackground",(uint)tempdisplayBackgroundColor.rgb());
-    mySettings->setValue("UI/DisplayTextColor", (uint)temptextcolorGeneral.rgb());
-    mySettings->setValue("UI/ScrollInterval",ui->spnInterval->value());
-    mySettings->setValue("UI/ScrollSpeed",ui->spnSpeed->value());
-    mySettings->sync();
-
-    loadDisplayConfig();
-    //    playlistCoverFlow->setBackgroundColor(coverflowBackground);
-    QPixmap p = QPixmap(64,37);
-    p.fill(coverflowBackground.rgb());
-    ui->lblCoverFlowColor->setPixmap(p);
-    p.fill(m_disp->getDisplayBackgroundColor().rgb());
-    ui->lblDisplayBackgroundColor->setPixmap(p);
-    p.fill(m_disp->getTextColor().rgb());
-    ui->lblDisplayTextColor->setPixmap(p);
-}
-
-void MainWindow::updateConnectionConfig(void)
+void MainWindow::saveDisplayConfig(void)
 {
     DEBUGF("");
-    mySettings->setValue("Server/Address",ui->txtServerAddress->text());
-    mySettings->setValue("Server/AudioPort",ui->txtAudioPort->text());
-    mySettings->setValue("Server/CLIPort", ui->txtCLIPort->text());
-    mySettings->setValue("Server/HttpPort", ui->txtHttpPort->text());
-    mySettings->setValue("Audio/Device",ui->cbAudioOutput->currentText());
+    mySettings->setValue("UI/CoverFlowColor",(uint)coverflowBackground.rgb());
+    mySettings->setValue("UI/DisplayBackground",(uint)displayBackground.rgb());
+    mySettings->setValue("UI/DisplayTextColor", (uint)displayTextColor.rgb());
+    mySettings->setValue("UI/ScrollInterval",scrollInterval);
+    mySettings->setValue("UI/ScrollSpeed",scrollSpeed);
     mySettings->sync();
+}
 
-    ui->lblUpdateOnRestart->setText("Changes Take Effect on Restart");
+void MainWindow::saveConnectionConfig(void)
+{
+    DEBUGF("");
+    mySettings->setValue("Server/Address",SlimServerAddr);
+    mySettings->setValue("Server/AudioPort",SlimServerAudioPort);
+    mySettings->setValue("Server/CLIPort", SlimServerCLIPort);
+    mySettings->setValue("Server/HttpPort", SlimServerHttpPort);
+    mySettings->setValue("Audio/Device", PortAudioDevice);
+    mySettings->sync();
 }
 
 void MainWindow::setConfigDisplay2Defaults(void)
@@ -532,8 +553,12 @@ void MainWindow::setConfigDisplay2Defaults(void)
     mySettings->setValue("UI/ScrollSpeed",30);
     mySettings->sync();
 
-    loadDisplayConfig();
-    //    CoverFlow->setBackgroundColor(coverflowBackground);
+    coverflowBackground = QColor::fromRgb(mySettings->value("UI/CoverFlowColor",QColor(Qt::white).rgb()).toUInt());
+    displayBackground = QColor::fromRgb(mySettings->value("UI/DisplayBackground",QColor(Qt::black).rgb()).toUInt());
+    displayTextColor = QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt());
+    scrollInterval = mySettings->value("UI/ScrollInterval",5000).toInt();
+    scrollSpeed = mySettings->value("UI/ScrollSpeed",30).toInt();
+
 }
 
 void MainWindow::setConfigConnection2Defaults(void)
@@ -546,11 +571,9 @@ void MainWindow::setConfigConnection2Defaults(void)
     mySettings->setValue("Audio/Device","");
     mySettings->sync();
 
-
-    ui->lblUpdateOnRestart->setText("Changes Take Effect on Restart");
 }
 
-void MainWindow::setupConfig(void)
+void MainWindow::loadConfig(void)
 {
     DEBUGF("");
     QProcess proc;
@@ -561,34 +584,22 @@ void MainWindow::setupConfig(void)
     proc.waitForReadyRead(2000);
 
     QByteArray m_out = proc.readAllStandardOutput();
-    QList<QByteArray> t = m_out.split('\n');
+    outDevs = m_out.split('\n');
     proc.close();
 
-    QListIterator<QByteArray> i(t);
-    if(i.peekNext().left(6) == "Output") {
-        i.next();
-    }
-    while(i.hasNext()){
-        ui->cbAudioOutput->addItem(i.next());
-    }
+    tempcoverflowBackground = coverflowBackground = QColor::fromRgb(mySettings->value("UI/CoverFlowColor",QColor(Qt::white).rgb()).toUInt());
+    tempdisplayBackground = displayBackground = QColor::fromRgb(mySettings->value("UI/DisplayBackground",QColor(Qt::black).rgb()).toUInt());
+    tempdisplayTextColor = displayTextColor = QColor::fromRgb(mySettings->value("UI/DisplayTextColor",QColor(Qt::cyan).rgb()).toUInt());
+    scrollInterval = mySettings->value("UI/ScrollInterval",5000).toInt();
+    scrollSpeed = mySettings->value("UI/ScrollSpeed",30).toInt();
 
-    ui->txtServerAddress->setText(mySettings->value("Server/Address","127.0.0.1").toString());
-    ui->txtAudioPort->setText(mySettings->value("Server/AudioPort","3483").toString());
-    ui->txtCLIPort->setText(mySettings->value("Server/CLIPort", "9090").toString());
-    ui->txtHttpPort->setText(mySettings->value("Server/HttpPort", "9000").toString());
-    ui->cbAudioOutput->setCurrentIndex(ui->cbAudioOutput->findText(mySettings->value("Audio/Device","").toString()));
-    ui->tabWidget->setCurrentIndex(mySettings->value("UI/CurrentTab",-1).toInt());
-
-    QPixmap p = QPixmap(64,37);
-    p.fill(coverflowBackground.rgb());
-    ui->lblCoverFlowColor->setPixmap(p);
-    p.fill(m_disp->getDisplayBackgroundColor().rgb());
-    ui->lblDisplayBackgroundColor->setPixmap(p);
-    p.fill(m_disp->getTextColor().rgb());
-    ui->lblDisplayTextColor->setPixmap(p);
-
-    ui->spnInterval->setValue(mySettings->value("UI/ScrollInterval",5000).toInt());
-    ui->spnSpeed->setValue(mySettings->value("UI/ScrollSpeed",30).toInt());
+    lmsUsername = mySettings->value("Server/Username","").toString();
+    lmsPassword = mySettings->value("Server/Password","").toString();
+    SlimServerAddr = mySettings->value("Server/Address","127.0.0.1").toString();
+    SlimServerAudioPort = mySettings->value("Server/AudioPort","3483").toString();
+    SlimServerCLIPort = mySettings->value("Server/CLIPort", "9090").toString();
+    SlimServerHttpPort = mySettings->value("Server/HttpPort", "9000").toString();
+    PortAudioDevice = mySettings->value("Audio/Device","").toString();
 }
 
 void MainWindow::setCoverFlowColor(void)
@@ -596,8 +607,7 @@ void MainWindow::setCoverFlowColor(void)
     DEBUGF("");
     QColorDialog *dlg = new QColorDialog(coverflowBackground);
     dlg->exec();
-    coverflowBackground = tempcoverflowBackground = dlg->selectedColor();
-    playlistCoverFlow->setBackgroundColor(coverflowBackground);
+    tempcoverflowBackground = dlg->selectedColor();
 }
 
 void MainWindow::setDisplayBackgroundColor(void)
@@ -605,7 +615,7 @@ void MainWindow::setDisplayBackgroundColor(void)
     DEBUGF("");
     QColorDialog *dlg = new QColorDialog(m_disp->getDisplayBackgroundColor());
     dlg->exec();
-    m_disp->setDisplayBackgroundColor(dlg->selectedColor());
+    tempdisplayBackground = dlg->selectedColor();
 }
 
 void MainWindow::setDisplayTextColor(void)
@@ -613,7 +623,7 @@ void MainWindow::setDisplayTextColor(void)
     DEBUGF("");
     QColorDialog *dlg = new QColorDialog(m_disp->getTextColor());
     dlg->exec();
-    m_disp->setTextColor(dlg->selectedColor());
+    tempdisplayTextColor = dlg->selectedColor();
 }
 
 
@@ -666,7 +676,87 @@ void MainWindow::SqueezePlayerOutput( void )
     DEBUGF(errMsg);
 }
 
+void MainWindow::on_btnSetup_clicked()
+{
+    QDialog dlg;
+    Ui_Dialog *dlgUI = new Ui_Dialog();
+    dlgUI->setupUi(&dlg);
+
+    QListIterator<QByteArray> i(outDevs);
+    if(i.peekNext().left(6) == "Output") {
+        i.next();
+    }
+    while(i.hasNext()){
+        dlgUI->cbAudioOutput->addItem(i.next());
+    }
+
+    QPixmap p = QPixmap(64,37);
+    p.fill(coverflowBackground.rgb());
+    dlgUI->lblCoverFlowColor->setPixmap(p);
+    p.fill(m_disp->getDisplayBackgroundColor().rgb());
+    dlgUI->lblDisplayBackgroundColor->setPixmap(p);
+    p.fill(m_disp->getTextColor().rgb());
+    dlgUI->lblDisplayTextColor->setPixmap(p);
+    dlgUI->spnInterval->setValue(scrollInterval);
+    dlgUI->spnSpeed->setValue(scrollSpeed);
+
+    dlgUI->txtServerAddress->setText(SlimServerAddr);
+    dlgUI->txtHttpPort->setText(SlimServerHttpPort);
+    dlgUI->txtCLIPort->setText(SlimServerCLIPort);
+    dlgUI->txtAudioPort->setText(SlimServerAudioPort);
+    dlgUI->txtPassword->setText(lmsPassword);
+    dlgUI->txtUsername->setText(lmsUsername);
+
+    int audioItem = -2;
+    if(PortAudioDevice.length()>0) {
+        audioItem = dlgUI->cbAudioOutput->findText(PortAudioDevice);
+        dlgUI->cbAudioOutput->setCurrentIndex(audioItem);
+    }
+
+    connect(dlgUI->btnCoverFlowColor,SIGNAL(clicked()),
+            this,SLOT(setCoverFlowColor()));
+    connect(dlgUI->btnDisplayBackgroundColor,SIGNAL(clicked()),
+            this,SLOT(setDisplayBackgroundColor()));
+    connect(dlgUI->btnDisplayTextColor,SIGNAL(clicked()),
+            this,SLOT(setDisplayTextColor()));
+    connect(dlgUI->btnConnectionDefaults,SIGNAL(clicked()),
+            this,SLOT(setConfigConnection2Defaults()));
+    connect(dlgUI->btnDisplayDefaults,SIGNAL(clicked()),
+            this,SLOT(setConfigDisplay2Defaults()));
+
+    dlg.exec();
+    if(dlg.result()==QDialog::Accepted) {
+        scrollInterval = dlgUI->spnInterval->value();
+        scrollSpeed = dlgUI->spnSpeed->value();
+        coverflowBackground = tempcoverflowBackground;
+        displayBackground = tempdisplayBackground;
+        displayTextColor = tempdisplayTextColor;
+
+        SlimServerAddr = dlgUI->txtServerAddress->text();
+        SlimServerHttpPort = dlgUI->txtHttpPort->text();
+        SlimServerCLIPort = dlgUI->txtCLIPort->text();
+        SlimServerAudioPort = dlgUI->txtAudioPort->text();
+        lmsPassword = dlgUI->txtPassword->text();
+        lmsUsername = dlgUI->txtUsername->text();
+        if(dlgUI->cbAudioOutput->currentIndex()==audioItem)
+            PortAudioDevice = dlgUI->cbAudioOutput->currentText();
+        applyDisplayConfig();
+    }
+
+    disconnect(dlgUI->btnCoverFlowColor,SIGNAL(clicked()),
+               this,SLOT(setCoverFlowColor()));
+    disconnect(dlgUI->btnDisplayBackgroundColor,SIGNAL(clicked()),
+               this,SLOT(setDisplayBackgroundColor()));
+    disconnect(dlgUI->btnDisplayTextColor,SIGNAL(clicked()),
+               this,SLOT(setDisplayTextColor()));
+    disconnect(dlgUI->btnConnectionDefaults,SIGNAL(clicked()),
+               this,SLOT(setConfigConnection2Defaults()));
+    disconnect(dlgUI->btnDisplayDefaults,SIGNAL(clicked()),
+               this,SLOT(setConfigDisplay2Defaults()));
+
+}
 
 
 /* vim: set expandtab tabstop=4 shiftwidth=4: */
+
 

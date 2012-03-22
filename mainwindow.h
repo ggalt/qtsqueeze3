@@ -64,16 +64,17 @@ public slots:
     void SetupSelectionCoverFlows(void);
     void ArtistAlbumCoverFlowSelect(void);
     void ResetKeypadTimer(void);
-    void ChangeToAlbumSelection(int tab);
+    void ChangeCoverflowDisplay(void);
+//    void ChangeToAlbumSelection(int tab);
 
     void slotDisablePlayer( void );
     void slotEnablePlayer( void );
     void slotSetActivePlayer( void );
     void slotSetActivePlayer( SlimDevice *d );
 
-    void updateDisplayConfig(void);
-    void updateConnectionConfig(void);
-    void setupConfig(void);
+    void saveDisplayConfig(void);
+    void saveConnectionConfig(void);
+    void loadConfig(void);
     void setConfigDisplay2Defaults(void);
     void setConfigConnection2Defaults(void);
 
@@ -121,11 +122,14 @@ public slots:
 protected:
     void resizeEvent(QResizeEvent *e);
 
+private slots:
+    void on_btnSetup_clicked();
+
 private:
     void getplayerMACAddress( void );
 
-    void loadDisplayConfig(void);
-    void loadConnectionConfig(void);
+    void applyDisplayConfig(void);
+//    void applyConnectionConfig(void);
 
     void UpdateCoverflowFromKeypad(int key);
 
@@ -135,6 +139,19 @@ private:
     SlimDevice *activeDevice;
     SlimServerInfo *serverInfo;
     QTime progstart;
+
+    QSettings *mySettings;
+    QList<QByteArray> outDevs;
+    QColor coverflowBackground;
+    QColor displayBackground;
+    QColor displayTextColor;
+    QColor tempdisplayTextColor;
+    QColor tempdisplayBackground;
+    QColor tempcoverflowBackground;
+    quint16 scrollInterval;
+    quint16 scrollSpeed;
+    QString lmsUsername;
+    QString lmsPassword;
 
     QByteArray MacAddress;      // MAC address of this machine (which will become the MAC address for our player)
     QString SlimServerAddr;   // server IP address
@@ -146,9 +163,6 @@ private:
     // for display of the slim device interface
     SqueezeDisplay *m_disp;
 
-    QColor temptextcolorGeneral;
-    QColor tempdisplayBackgroundColor;
-
     QRect flowRect;
     SqueezePictureFlow *playlistCoverFlow;
     SqueezePictureFlow *albumselectCoverFlow;
@@ -156,15 +170,12 @@ private:
     QTimer keypadTimer;
     int lastKey;
     int keyOffset;
+    QString lastMenuHeading;
 
-    QColor coverflowBackground;
-    QColor tempcoverflowBackground;
     bool getImages;
 
     QSplashScreen *waitWindow;
     bool isStartUp;
-
-    QSettings *mySettings;
 };
 
 
