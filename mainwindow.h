@@ -171,6 +171,7 @@ private:
     int lastKey;
     int keyOffset;
     QString lastMenuHeading;
+    coverflowType cfType;
 
     bool getImages;
 

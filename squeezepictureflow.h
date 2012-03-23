@@ -46,6 +46,8 @@ signals:
 
 public slots:
     void FetchCovers(void);
+    void GoToNextSlide(void) {showNext();}
+    void GoToPrevSlide(void) {showPrevious();}
 
 protected:
     //  void keyPressEvent(QKeyEvent* event);

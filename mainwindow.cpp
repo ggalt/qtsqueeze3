@@ -95,8 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
     waitWindow->setGeometry( ( geometry().width() - 400 )/ 2, ( geometry().height() - 200 )/2,
                              400, 200 );
 
-    DEBUGF("lblSlimDisplay is:" << ui->lblSlimDisplay->rect());
-
+    cfType = DISPLAY_PLAYLIST;
     imageCache = new SlimImageCache();
     m_disp = new SqueezeDisplay(ui->lblSlimDisplay, this);
     playlistCoverFlow = new SqueezePictureFlow(ui->cfPlaylistWidget);
@@ -140,9 +139,10 @@ void MainWindow::resizeEvent(QResizeEvent *e)
     ui->arrowKeyFrame->move(ui->arrowKeyFrame->x(), ui->controlFrame->height() - 3 - ui->arrowKeyFrame->height());
     ui->keypadFrame->move(ui->keypadFrame->x(),ui->controlFrame->height() - 3 - ui->keypadFrame->height());
     m_disp->resetDimensions();
-    ui->cfPlaylistWidget->setGeometry(0,(ui->controlFrame->geometry().bottom()+1), width(), height() - (ui->controlFrame->geometry().bottom()+2));
-    ui->cfArtistSelectWidget->setGeometry(ui->cfPlaylistWidget->rect());
-    ui->cfAlbumSelectWidget->setGeometry(ui->cfPlaylistWidget->rect());
+
+    ui->cfPlaylistWidget->setGeometry(0,(ui->controlFrame->geometry().bottom()+1), width(), height()-(ui->controlFrame->geometry().bottom()+2));
+    ui->cfArtistSelectWidget->setGeometry(0,(ui->controlFrame->geometry().bottom()+1), width(), height()-(ui->controlFrame->geometry().bottom()+2));
+    ui->cfAlbumSelectWidget->setGeometry(0,(ui->controlFrame->geometry().bottom()+1), width(), height()-(ui->controlFrame->geometry().bottom()+2));
     playlistCoverFlow->resetDimensions(ui->cfPlaylistWidget);
     artistselectCoverFlow->resetDimensions(ui->cfArtistSelectWidget);
     albumselectCoverFlow->resetDimensions(ui->cfAlbumSelectWidget);
@@ -362,8 +362,6 @@ void MainWindow::SetupSelectionCoverFlows(void)
         artistselectCoverFlow->LoadAlbumList(artists);
         connect(artistselectCoverFlow, SIGNAL(SelectSlide(int)),
                 this,SLOT(ArtistAlbumCoverFlowSelect()));
-        //        connect(ui->tabWidget, SIGNAL(currentChanged(int)),
-        //                this, SLOT(ChangeToAlbumSelection(int)));
     }
 }
 
@@ -381,6 +379,45 @@ void MainWindow::ChangeCoverflowDisplay(void)
     }
 
     lastMenuHeading = activeDevice->getDisplayBuffer()->line0;
+
+/*
+
+    QString curArtist;
+    switch(cfType) {
+    case DISPLAY_ARTISTSELECTION:
+        curArtist = artistselectCoverFlow->GetCenterAlbum().artist;
+        while(artistselectCoverFlow->GetCenterAlbum().artist == curArtist) {
+            artistselectCoverFlow->showNext();
+            curArtist = artistselectCoverFlow->GetCenterAlbum().artist;
+        }
+        break;
+    case DISPLAY_ALBUMSELECTION:
+        albumselectCoverFlow->showNext();
+        break;
+    case DISPLAY_PLAYLIST:
+    default:
+        break;
+    }
+    QString curArtist;
+    switch(cfType) {
+    case DISPLAY_ARTISTSELECTION:
+         curArtist = artistselectCoverFlow->GetCenterAlbum().artist;
+        while(artistselectCoverFlow->GetCenterAlbum().artist == curArtist) {
+            artistselectCoverFlow->showPrevious();
+            curArtist = artistselectCoverFlow->GetCenterAlbum().artist;
+        }
+        break;
+    case DISPLAY_ALBUMSELECTION:
+        albumselectCoverFlow->showPrevious();
+        break;
+    case DISPLAY_PLAYLIST:
+    default:
+        break;
+    }
+
+
+  */
+
     if(activeDevice->getDisplayBuffer()->line0=="Artists") {
         playlistCoverFlow->hide();
         ui->cfPlaylistWidget->hide();
@@ -388,6 +425,7 @@ void MainWindow::ChangeCoverflowDisplay(void)
         ui->cfAlbumSelectWidget->hide();
         artistselectCoverFlow->show();
         ui->cfArtistSelectWidget->show();
+        cfType = DISPLAY_ARTISTSELECTION;
     }
     else if(activeDevice->getDisplayBuffer()->line0=="Albums") {
         playlistCoverFlow->hide();
@@ -395,6 +433,7 @@ void MainWindow::ChangeCoverflowDisplay(void)
         artistselectCoverFlow->hide();
         albumselectCoverFlow->show();
         ui->cfAlbumSelectWidget->show();
+        cfType = DISPLAY_ALBUMSELECTION;
     }
     else {
         albumselectCoverFlow->hide();
@@ -403,6 +442,7 @@ void MainWindow::ChangeCoverflowDisplay(void)
         ui->cfArtistSelectWidget->hide();
         playlistCoverFlow->show();
         ui->cfPlaylistWidget->show();
+        cfType = DISPLAY_PLAYLIST;
     }
 }
 
