@@ -128,8 +128,8 @@ void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
 
 void SqueezePictureFlow::JumpTo(QString textkey)
 {
-    if(m_albumJumpList.contains(textkey))
-        setCenterIndex(m_albumJumpList.value(textkey));
+    if(m_albumKeyTextJumpList.contains(textkey))
+        setCenterIndex(m_albumKeyTextJumpList.value(textkey));
 }
 
 //void mouseReleaseEvent(QMouseEvent *event)

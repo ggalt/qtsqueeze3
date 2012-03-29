@@ -63,6 +63,7 @@ public slots:
 
     void SetupSelectionCoverFlows(void);
     void ArtistAlbumCoverFlowSelect(void);
+    void AlbumCoverFlowSelect(void);
     void ResetKeypadTimer(void);
     void ChangeCoverflowDisplay(void);
 //    void ChangeToAlbumSelection(int tab);

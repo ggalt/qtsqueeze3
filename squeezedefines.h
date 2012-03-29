@@ -197,6 +197,7 @@ public:
     QByteArray coverid;
     QString artist_album;
     QString albumTextKey;   // key for alphasort of album
+    QString artistTextKey;  // what is alpha sort of artist associated with album
 };
 
 class Artist

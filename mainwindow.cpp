@@ -344,15 +344,18 @@ void MainWindow::SetupSelectionCoverFlows(void)
         artistselectCoverFlow->clear();
         albumselectCoverFlow->clear();
 
+        // set up Artist Selection Coverflow
         QList<Album> artists;
-        artistselectCoverFlow->GetAlbumJumpList()->clear();
+        artistselectCoverFlow->GetAlbumKeyTextJumpList()->clear();
+        artistselectCoverFlow->GetTitleJumpList()->clear();
 
         QListIterator<Artist> artIt(serverInfo->GetAllArtistList());
         int slideCount = 0;
         while(artIt.hasNext()) {
             Artist a = artIt.next();
-            if(!artistselectCoverFlow->GetAlbumJumpList()->contains(a.textKey))
-                artistselectCoverFlow->GetAlbumJumpList()->insert(a.textKey,slideCount);
+            artistselectCoverFlow->GetTitleJumpList()->insert(a.name,slideCount);   // map artist name to slide count
+            if(!artistselectCoverFlow->GetAlbumKeyTextJumpList()->contains(a.textKey))
+                artistselectCoverFlow->GetAlbumKeyTextJumpList()->insert(a.textKey,slideCount);
             QListIterator<QString> albumIt(serverInfo->Artist2AlbumIds().value(a.name));
             while(albumIt.hasNext()) {
                 artists.append(serverInfo->AlbumID2AlbumInfo().value(albumIt.next()));
@@ -362,13 +365,37 @@ void MainWindow::SetupSelectionCoverFlows(void)
         artistselectCoverFlow->LoadAlbumList(artists);
         connect(artistselectCoverFlow, SIGNAL(SelectSlide(int)),
                 this,SLOT(ArtistAlbumCoverFlowSelect()));
+
+        // set up Album Selection Coverflow
+        albumselectCoverFlow->GetAlbumKeyTextJumpList()->clear();
+        albumselectCoverFlow->GetTitleJumpList()->clear();
+        slideCount = 0; // reset
+        QListIterator<Album> albumIt(serverInfo->GetAllAlbumList());
+        while(albumIt.hasNext()) {
+            Album a = albumIt.next();
+            albumselectCoverFlow->GetTitleJumpList()->insert(a.albumtitle,slideCount);
+            if(!albumselectCoverFlow->GetAlbumKeyTextJumpList()->contains(a.albumTextKey))
+                albumselectCoverFlow->GetAlbumKeyTextJumpList()->insert(a.albumTextKey,slideCount);
+            slideCount++;
+        }
+        albumselectCoverFlow->LoadAlbumList(serverInfo->GetAllAlbumList());
+        connect(albumselectCoverFlow, SIGNAL(SelectSlide(int)),
+                this,SLOT(AlbumCoverFlowSelect()));
     }
 }
 
 void MainWindow::ArtistAlbumCoverFlowSelect(void)
 {
     DEBUGF(QString("playlistcontrol cmd:load album_id:%1").arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
-    activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:load album_id:%1").arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
+    activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:load album_id:%1")
+                                    .arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
+}
+
+void MainWindow::AlbumCoverFlowSelect(void)
+{
+    DEBUGF("");
+    activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:load album_id:%1")
+                                    .arg(albumselectCoverFlow->GetCenterAlbum().album_id.data()));
 }
 
 void MainWindow::ChangeCoverflowDisplay(void)
@@ -380,7 +407,7 @@ void MainWindow::ChangeCoverflowDisplay(void)
 
     lastMenuHeading = activeDevice->getDisplayBuffer()->line0;
 
-/*
+    /*
 
     QString curArtist;
     switch(cfType) {
@@ -423,6 +450,12 @@ void MainWindow::ChangeCoverflowDisplay(void)
         ui->cfPlaylistWidget->hide();
         albumselectCoverFlow->hide();
         ui->cfAlbumSelectWidget->hide();
+        if(artistselectCoverFlow->GetTitleJumpList()->contains(activeDevice->getDisplayBuffer()->line1)) {
+            artistselectCoverFlow->setCenterIndex(
+                        artistselectCoverFlow->GetTitleJumpList()->value(activeDevice->getDisplayBuffer()->line1));
+        } else {
+            artistselectCoverFlow->setCenterIndex(0);
+        }
         artistselectCoverFlow->show();
         ui->cfArtistSelectWidget->show();
         cfType = DISPLAY_ARTISTSELECTION;
@@ -431,6 +464,13 @@ void MainWindow::ChangeCoverflowDisplay(void)
         playlistCoverFlow->hide();
         ui->cfPlaylistWidget->hide();
         artistselectCoverFlow->hide();
+        ui->cfArtistSelectWidget->hide();
+        if(albumselectCoverFlow->GetTitleJumpList()->contains(activeDevice->getDisplayBuffer()->line1)) {
+            albumselectCoverFlow->setCenterIndex(
+                        albumselectCoverFlow->GetTitleJumpList()->value(activeDevice->getDisplayBuffer()->line1));
+        } else {
+            albumselectCoverFlow->setCenterIndex(0);
+        }
         albumselectCoverFlow->show();
         ui->cfAlbumSelectWidget->show();
         cfType = DISPLAY_ALBUMSELECTION;
@@ -457,6 +497,8 @@ void MainWindow::UpdateCoverflowFromKeypad(int key)
     lastKey=key;
     if(activeDevice->getDisplayBuffer()->line0=="Artists") {
         artistselectCoverFlow->JumpTo(QString(keypadKey[key][keyOffset]));
+    } else if(activeDevice->getDisplayBuffer()->line0=="Albums") {
+        albumselectCoverFlow->JumpTo(QString(keypadKey[key][keyOffset]));
     }
     activeDevice->SendDeviceCommand(QString("button %1\n").arg(key));
     keypadTimer.start(1000);

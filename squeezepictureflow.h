@@ -25,7 +25,8 @@ public:
     void LoadAlbumList(QList<Album> list);
     void LoadAlbumList(QList<TrackData> list);
     QList<Album> *GetAlbumList(void) {return &albumList; }
-    QHash<QString,int> *GetAlbumJumpList(void) {return &m_albumJumpList;}
+    QHash<QString,int> *GetAlbumKeyTextJumpList(void) {return &m_albumKeyTextJumpList;}
+    QHash<QString,int> *GetTitleJumpList(void) {return &m_titleJumpList;}
 
     void setBackgroundColor(const QColor& c);
     void clear();
@@ -58,7 +59,8 @@ protected:
 
 private:
     QList<Album> albumList;
-    QHash<QString,int> m_albumJumpList;
+    QHash<QString,int> m_titleJumpList;
+    QHash<QString,int> m_albumKeyTextJumpList;     //
     QColor titleColor;
     picflowType m_Flags;
     bool isReady;
