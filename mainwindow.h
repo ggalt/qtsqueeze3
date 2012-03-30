@@ -87,10 +87,10 @@ public slots:
     void slotRewind( void ) { activeDevice->SendDeviceCommand( QString( "button rew.single\n" ) ); }
     void slotPrev( void ) { activeDevice->SendDeviceCommand( QString( "button rew\n" ) ); }
     void slotStop( void ) { activeDevice->SendDeviceCommand( QString( "button pause.hold\n" ) ); }
-    void slotPlay( void ) { activeDevice->SendDeviceCommand( QString( "button play.single\n" ) ); }
+    void slotPlay( void );
     void slotPause( void ) { activeDevice->SendDeviceCommand( QString( "button pause\n" ) ); }
     void slotFForward( void ) { activeDevice->SendDeviceCommand( QString( "button fwd.single\n" ) ); }
-    void slotAdd( void ) { activeDevice->SendDeviceCommand( QString( "button add.single\n" ) ); }
+    void slotAdd( void );
     //  void slotPower( void ) { activeDevice->SendDeviceCommand( QString( "button power\n" ) ); close(); }
     void slotPower( void ) { close(); }
     void slotVolUp( void ) { activeDevice->SendDeviceCommand( QString( "button volup\n" ) ); }
@@ -171,7 +171,8 @@ private:
     QTimer keypadTimer;
     int lastKey;
     int keyOffset;
-    QString lastMenuHeading;
+    QString lastMenuHeading0;
+    QString lastMenuHeading1;
     coverflowType cfType;
 
     bool getImages;

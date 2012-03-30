@@ -49,6 +49,7 @@ public slots:
     void FetchCovers(void);
     void GoToNextSlide(void) {showNext();}
     void GoToPrevSlide(void) {showPrevious();}
+    void FlipToSlide(int slide);
 
 protected:
     //  void keyPressEvent(QKeyEvent* event);

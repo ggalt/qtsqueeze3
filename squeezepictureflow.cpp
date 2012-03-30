@@ -129,7 +129,23 @@ void SqueezePictureFlow::mousePressEvent(QMouseEvent* event)
 void SqueezePictureFlow::JumpTo(QString textkey)
 {
     if(m_albumKeyTextJumpList.contains(textkey))
-        setCenterIndex(m_albumKeyTextJumpList.value(textkey));
+        FlipToSlide(m_albumKeyTextJumpList.value(textkey));
+}
+
+void SqueezePictureFlow::FlipToSlide(int slide)
+{
+    // make a quick transition to a far-away slide
+    DEBUGF("");
+    int curIndex = centerIndex();
+    DEBUGF(QString("Current index is %1 and slide number is %2").arg(curIndex).arg(slide));
+    DEBUGF(QString("absolute value is %1").arg(abs(slide-curIndex)));
+    if(abs(slide-curIndex) > 4 ) {
+        if(slide > curIndex)
+            setCenterIndex(slide-4);
+        else
+            setCenterIndex(slide+4);
+    }
+    showSlide(slide);
 }
 
 //void mouseReleaseEvent(QMouseEvent *event)

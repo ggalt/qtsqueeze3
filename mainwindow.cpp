@@ -277,10 +277,7 @@ bool MainWindow::Create(void)
 
 void MainWindow::slotplaylistCoverFlowReady(void)
 {
-    int playListIndex = activeDevice->getDevicePlaylistIndex();
-    if( playListIndex > 4 )
-        playlistCoverFlow->setCenterIndex( playListIndex - 4 );
-    playlistCoverFlow->showSlide( playListIndex );
+    playlistCoverFlow->FlipToSlide(activeDevice->getDevicePlaylistIndex());
 
     // check to see if we have all images, and mark it so we
     // don't redo it
@@ -298,19 +295,19 @@ void MainWindow::slotUpdateplaylistCoverFlow( int trackIndex )
 {
     DEBUGF("");
 
-    int currSlide = playlistCoverFlow->centerIndex();
-    DEBUGF( "UPDATE playlistCoverFlow TO INDEX: " << trackIndex );
-    if( abs( trackIndex - currSlide ) > 4 ) {
-        if( trackIndex > currSlide ) {
-            playlistCoverFlow->showSlide( currSlide + 2 );
-            playlistCoverFlow->setCenterIndex( trackIndex - 2 );
-        }
-        else {
-            playlistCoverFlow->showSlide( currSlide - 2 );
-            playlistCoverFlow->setCenterIndex( trackIndex + 2 );
-        }
-    }
-    playlistCoverFlow->showSlide( trackIndex );
+    //    int currSlide = playlistCoverFlow->centerIndex();
+    //    DEBUGF( "UPDATE playlistCoverFlow TO INDEX: " << trackIndex );
+    //    if( abs( trackIndex - currSlide ) > 4 ) {
+    //        if( trackIndex > currSlide ) {
+    //            playlistCoverFlow->showSlide( currSlide + 2 );
+    //            playlistCoverFlow->setCenterIndex( trackIndex - 2 );
+    //        }
+    //        else {
+    //            playlistCoverFlow->showSlide( currSlide - 2 );
+    //            playlistCoverFlow->setCenterIndex( trackIndex + 2 );
+    //        }
+    //    }
+    playlistCoverFlow->FlipToSlide(trackIndex );
 }
 
 void MainWindow::slotCreateplaylistCoverFlow( void )
@@ -327,11 +324,7 @@ void MainWindow::slotCreateplaylistCoverFlow( void )
     ui->cfArtistSelectWidget->hide();
     ui->cfAlbumSelectWidget->hide();
     ui->cfPlaylistWidget->show();
-    DEBUGF( "CURRENT PLAYLIST INDEX IS: " << activeDevice->getDevicePlaylistIndex() );
-    int playListIndex = activeDevice->getDevicePlaylistIndex();
-    if( playListIndex > 4 )
-        playlistCoverFlow->setCenterIndex( playListIndex - 4 );
-    playlistCoverFlow->showSlide( playListIndex );
+    playlistCoverFlow->FlipToSlide(activeDevice->getDevicePlaylistIndex());
 }
 
 void MainWindow::SetupSelectionCoverFlows(void)
@@ -401,11 +394,13 @@ void MainWindow::AlbumCoverFlowSelect(void)
 void MainWindow::ChangeCoverflowDisplay(void)
 {
     DEBUGF("");
-    if(lastMenuHeading == activeDevice->getDisplayBuffer()->line0) {
+    if(lastMenuHeading0 == activeDevice->getDisplayBuffer()->line0
+            && lastMenuHeading1 == activeDevice->getDisplayBuffer()->line1) {
         return;
     }
 
-    lastMenuHeading = activeDevice->getDisplayBuffer()->line0;
+    lastMenuHeading0 = activeDevice->getDisplayBuffer()->line0;
+    lastMenuHeading1 = activeDevice->getDisplayBuffer()->line1;
 
     /*
 
@@ -450,8 +445,9 @@ void MainWindow::ChangeCoverflowDisplay(void)
         ui->cfPlaylistWidget->hide();
         albumselectCoverFlow->hide();
         ui->cfAlbumSelectWidget->hide();
+
         if(artistselectCoverFlow->GetTitleJumpList()->contains(activeDevice->getDisplayBuffer()->line1)) {
-            artistselectCoverFlow->setCenterIndex(
+            artistselectCoverFlow->FlipToSlide(
                         artistselectCoverFlow->GetTitleJumpList()->value(activeDevice->getDisplayBuffer()->line1));
         } else {
             artistselectCoverFlow->setCenterIndex(0);
@@ -466,7 +462,7 @@ void MainWindow::ChangeCoverflowDisplay(void)
         artistselectCoverFlow->hide();
         ui->cfArtistSelectWidget->hide();
         if(albumselectCoverFlow->GetTitleJumpList()->contains(activeDevice->getDisplayBuffer()->line1)) {
-            albumselectCoverFlow->setCenterIndex(
+            albumselectCoverFlow->FlipToSlide(
                         albumselectCoverFlow->GetTitleJumpList()->value(activeDevice->getDisplayBuffer()->line1));
         } else {
             albumselectCoverFlow->setCenterIndex(0);
@@ -518,18 +514,54 @@ void MainWindow::ResetKeypadTimer(void)
 //    }
 //}
 
+void MainWindow::slotPlay( void )
+{
+    if(cfType==DISPLAY_ARTISTSELECTION)
+        ArtistAlbumCoverFlowSelect();
+    else if(cfType==DISPLAY_ALBUMSELECTION)
+        AlbumCoverFlowSelect();
+    else
+        activeDevice->SendDeviceCommand( QString( "button play.single\n" ) );
+    slotNowPlaying();
+}
+
+void MainWindow::slotAdd( void )
+{
+    if(cfType==DISPLAY_ARTISTSELECTION)
+        activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:add album_id:%1")
+                                        .arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
+    else if(cfType==DISPLAY_ALBUMSELECTION)
+        activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:add album_id:%1")
+                                        .arg(albumselectCoverFlow->GetCenterAlbum().album_id.data()));
+    else
+        activeDevice->SendDeviceCommand( QString( "button add.single\n" ) );
+    slotNowPlaying();
+}
+
 void MainWindow::slotLeftArrow( void )
 {
     DEBUGF("");
-    m_disp->LeftArrowEffect();
-    activeDevice->SendDeviceCommand( QString( "button arrow_left\n" ) );
+    if(cfType==DISPLAY_ARTISTSELECTION) {
+        artistselectCoverFlow->showPrevious();
+    } else if(cfType== DISPLAY_ALBUMSELECTION) {
+        albumselectCoverFlow->showPrevious();
+    } else {
+        m_disp->LeftArrowEffect();
+        activeDevice->SendDeviceCommand( QString( "button arrow_left\n" ) );
+    }
 }
 
 void MainWindow::slotRightArrow( void )
 {
     DEBUGF("");
-    m_disp->RightArrowEffect();
-    activeDevice->SendDeviceCommand( QString( "button arrow_right\n" ) );
+    if(cfType==DISPLAY_ARTISTSELECTION) {
+        artistselectCoverFlow->showNext();
+    } else if(cfType== DISPLAY_ALBUMSELECTION) {
+        albumselectCoverFlow->showNext();
+    } else {
+        m_disp->RightArrowEffect();
+        activeDevice->SendDeviceCommand( QString( "button arrow_right\n" ) );
+    }
 }
 
 void MainWindow::slotUpArrow( void )
