@@ -516,24 +516,24 @@ void MainWindow::ResetKeypadTimer(void)
 
 void MainWindow::slotPlay( void )
 {
-    if(cfType==DISPLAY_ARTISTSELECTION)
-        ArtistAlbumCoverFlowSelect();
-    else if(cfType==DISPLAY_ALBUMSELECTION)
-        AlbumCoverFlowSelect();
-    else
+//    if(cfType==DISPLAY_ARTISTSELECTION)
+//        ArtistAlbumCoverFlowSelect();
+//    else if(cfType==DISPLAY_ALBUMSELECTION)
+//        AlbumCoverFlowSelect();
+//    else
         activeDevice->SendDeviceCommand( QString( "button play.single\n" ) );
     slotNowPlaying();
 }
 
 void MainWindow::slotAdd( void )
 {
-    if(cfType==DISPLAY_ARTISTSELECTION)
-        activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:add album_id:%1")
-                                        .arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
-    else if(cfType==DISPLAY_ALBUMSELECTION)
-        activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:add album_id:%1")
-                                        .arg(albumselectCoverFlow->GetCenterAlbum().album_id.data()));
-    else
+//    if(cfType==DISPLAY_ARTISTSELECTION)
+//        activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:add album_id:%1")
+//                                        .arg(artistselectCoverFlow->GetCenterAlbum().album_id.data()));
+//    else if(cfType==DISPLAY_ALBUMSELECTION)
+//        activeDevice->SendDeviceCommand(QString("playlistcontrol cmd:add album_id:%1")
+//                                        .arg(albumselectCoverFlow->GetCenterAlbum().album_id.data()));
+//    else
         activeDevice->SendDeviceCommand( QString( "button add.single\n" ) );
     slotNowPlaying();
 }
@@ -541,27 +541,27 @@ void MainWindow::slotAdd( void )
 void MainWindow::slotLeftArrow( void )
 {
     DEBUGF("");
-    if(cfType==DISPLAY_ARTISTSELECTION) {
-        artistselectCoverFlow->showPrevious();
-    } else if(cfType== DISPLAY_ALBUMSELECTION) {
-        albumselectCoverFlow->showPrevious();
-    } else {
+//    if(cfType==DISPLAY_ARTISTSELECTION) {
+//        artistselectCoverFlow->showPrevious();
+//    } else if(cfType== DISPLAY_ALBUMSELECTION) {
+//        albumselectCoverFlow->showPrevious();
+//    } else {
         m_disp->LeftArrowEffect();
         activeDevice->SendDeviceCommand( QString( "button arrow_left\n" ) );
-    }
+//    }
 }
 
 void MainWindow::slotRightArrow( void )
 {
     DEBUGF("");
-    if(cfType==DISPLAY_ARTISTSELECTION) {
-        artistselectCoverFlow->showNext();
-    } else if(cfType== DISPLAY_ALBUMSELECTION) {
-        albumselectCoverFlow->showNext();
-    } else {
+//    if(cfType==DISPLAY_ARTISTSELECTION) {
+//        artistselectCoverFlow->showNext();
+//    } else if(cfType== DISPLAY_ALBUMSELECTION) {
+//        albumselectCoverFlow->showNext();
+//    } else {
         m_disp->RightArrowEffect();
         activeDevice->SendDeviceCommand( QString( "button arrow_right\n" ) );
-    }
+//    }
 }
 
 void MainWindow::slotUpArrow( void )
