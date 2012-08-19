@@ -84,6 +84,8 @@ MainWindow::MainWindow(QWidget *parent)
             this,SLOT(ResetKeypadTimer()));
 
     mySettings = new QSettings("qtsqueeze3", "qtsqueeze3");
+    if(!mySettings->contains("Server/Address")) // we have no setting for the server IP, probably means this is our first running and need to setup
+        on_btnSetup_clicked();
     activeDevice = NULL;
     isStartUp = true;
 
